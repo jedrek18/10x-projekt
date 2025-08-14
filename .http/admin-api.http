@@ -1,0 +1,18 @@
+### Admin API - local testing (VS Code REST Client compatible)
+
+@baseUrl = http://localhost:4321
+@cookie = sb:token={{PUT_YOUR_DEV_COOKIE_HERE}}
+
+### Audit logs - default params
+GET {{baseUrl}}/api/admin/audit-logs
+Cookie: {{cookie}}
+
+### Audit logs - with filters
+GET {{baseUrl}}/api/admin/audit-logs?limit=25&offset=0&action=save
+Cookie: {{cookie}}
+
+### KPI totals
+GET {{baseUrl}}/api/admin/kpi-totals
+Cookie: {{cookie}}
+
+

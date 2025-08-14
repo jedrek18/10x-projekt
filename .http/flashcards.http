@@ -1,0 +1,46 @@
+### Create manual flashcard
+POST http://localhost:4321/api/flashcards
+Content-Type: application/json
+Authorization: Bearer {{SUPABASE_JWT}}
+
+{
+  "front": "What is spaced repetition?",
+  "back": "A learning technique that increases intervals between reviews."
+}
+
+### List flashcards (paginated)
+GET http://localhost:4321/api/flashcards?limit=10&offset=0&order=created_at.desc
+Authorization: Bearer {{SUPABASE_JWT}}
+
+### Get single flashcard
+GET http://localhost:4321/api/flashcards/{{CARD_ID}}
+Authorization: Bearer {{SUPABASE_JWT}}
+
+### Update flashcard content
+PATCH http://localhost:4321/api/flashcards/{{CARD_ID}}
+Content-Type: application/json
+Authorization: Bearer {{SUPABASE_JWT}}
+
+{
+  "front": "Define spaced repetition?"
+}
+
+### Soft delete flashcard
+DELETE http://localhost:4321/api/flashcards/{{CARD_ID}}
+Authorization: Bearer {{SUPABASE_JWT}}
+
+### Batch save AI proposals (idempotent)
+POST http://localhost:4321/api/flashcards:batch-save
+Content-Type: application/json
+Idempotency-Key: {{REQUEST_ID}}
+Authorization: Bearer {{SUPABASE_JWT}}
+
+{
+  "items": [
+    { "front": "Q1", "back": "A1", "source": "ai" },
+    { "front": "Q1", "back": "A1", "source": "ai" },
+    { "front": "Q2", "back": "A2", "source": "ai_edited" }
+  ]
+}
+
+

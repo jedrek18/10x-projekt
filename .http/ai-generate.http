@@ -1,0 +1,51 @@
+### Non-SSE request
+POST http://localhost:4321/api/ai/generate
+Content-Type: application/json
+Authorization: Bearer {{SUPABASE_JWT}}
+
+{
+  "source_text": "{{LONG_SOURCE_TEXT_1000_CHARS}}",
+  "max_proposals": 12
+}
+
+### SSE request
+POST http://localhost:4321/api/ai/generate
+Content-Type: application/json
+Accept: text/event-stream
+Authorization: Bearer {{SUPABASE_JWT}}
+
+{
+  "source_text": "{{LONG_SOURCE_TEXT_1000_CHARS}}",
+  "max_proposals": 10
+}
+
+### 401 (no auth)
+POST http://localhost:4321/api/ai/generate
+Content-Type: application/json
+
+{
+  "source_text": "{{LONG_SOURCE_TEXT_1000_CHARS}}",
+  "max_proposals": 10
+}
+
+### 415 (wrong content-type)
+POST http://localhost:4321/api/ai/generate
+Content-Type: text/plain
+Authorization: Bearer {{SUPABASE_JWT}}
+
+{
+  "source_text": "{{LONG_SOURCE_TEXT_1000_CHARS}}",
+  "max_proposals": 10
+}
+
+### 422 (invalid body)
+POST http://localhost:4321/api/ai/generate
+Content-Type: application/json
+Authorization: Bearer {{SUPABASE_JWT}}
+
+{
+  "source_text": "too short",
+  "max_proposals": 100
+}
+
+

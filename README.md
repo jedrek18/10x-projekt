@@ -139,6 +139,49 @@ From `package.json`:
 
 ---
 
+## Admin API (development)
+
+Endpoints require an authenticated session and admin rights (`profiles.is_admin = true`). Use a browser session cookie or a service role token in dev.
+
+### GET `/api/admin/audit-logs`
+
+Query params:
+
+- `limit` (1..100, default 50)
+- `offset` (>=0, default 0)
+- `action` (optional)
+- `user_id` (UUID, optional)
+- `card_id` (UUID, optional)
+
+Response: `{ items: AdminAuditLogDTO[] }`
+
+### GET `/api/admin/kpi-totals`
+
+Response: `AdminKpiTotalsDTO`
+
+### Manual testing (cURL)
+
+Assumes a cookie-based session. Replace the cookie value with your browser cookie for the dev origin.
+
+```bash
+curl -i \
+  -H "Cookie: sb:token=<your-dev-cookie>" \
+  "http://localhost:4321/api/admin/audit-logs?limit=25&offset=0"
+
+curl -i \
+  -H "Cookie: sb:token=<your-dev-cookie>" \
+  "http://localhost:4321/api/admin/kpi-totals"
+```
+
+Edge cases to verify:
+
+- 401 when not authenticated
+- 403 when authenticated but not admin
+- Filters: by `action`, `user_id`, `card_id`
+- Pagination boundaries: `limit=1`, `offset=0`, `offset` beyond range
+
+---
+
 ## Project scope
 
 ### In scope (MVP)

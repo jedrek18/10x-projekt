@@ -1,0 +1,28 @@
+### Events API - local testing (VS Code REST Client compatible)
+
+@baseUrl = http://localhost:4321
+@cookie = sb:token={{PUT_YOUR_DEV_COOKIE_HERE}}
+
+### Create event: generation
+POST {{baseUrl}}/api/events
+Content-Type: application/json
+Cookie: {{cookie}}
+
+{
+  "event_name": "generation",
+  "request_id": "00000000-0000-4000-8000-000000000001",
+  "properties": { "returned_count": 12 }
+}
+
+### Create event: save
+POST {{baseUrl}}/api/events
+Content-Type: application/json
+Cookie: {{cookie}}
+
+{
+  "event_name": "save",
+  "request_id": "00000000-0000-4000-8000-000000000002",
+  "properties": { "items": 3 }
+}
+
+
