@@ -229,3 +229,4 @@ To enable reuse, add a `LICENSE` file (e.g., MIT, Apache-2.0, or other).
 
 - See `docs/flashcards-api.md` for flashcards endpoints
 - See `docs/progress-api.md` for daily progress endpoints
+- See `docs/srs-api.md` for SRS (study) endpoints
