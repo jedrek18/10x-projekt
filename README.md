@@ -222,3 +222,10 @@ Edge cases to verify:
 
 **TBD.** This repository currently has no declared license.
 To enable reuse, add a `LICENSE` file (e.g., MIT, Apache-2.0, or other).
+
+---
+
+## API
+
+- See `docs/flashcards-api.md` for flashcards endpoints
+- See `docs/progress-api.md` for daily progress endpoints

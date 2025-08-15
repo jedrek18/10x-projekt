@@ -42,6 +42,9 @@ export interface UserDailyProgressUpdateCommand {
   goal_override: number | null;
 }
 
+// Response wrapper for listing progress entries
+export type GetProgressResponseDTO = { items: UserDailyProgressDTO[] };
+
 /**
  * Flashcards
  */
