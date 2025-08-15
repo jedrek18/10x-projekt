@@ -3,6 +3,7 @@ export const prerender = false;
 import type { APIRoute } from "astro";
 import { auditLogsQuerySchema } from "../../../lib/validation/admin";
 import { assertIsAdmin, ForbiddenError, listAuditLogs, UnauthorizedError } from "../../../lib/services/admin.service";
+import { json, errorJson } from "../../../lib/http";
 
 export const GET: APIRoute = async ({ url, locals }) => {
   try {
@@ -12,40 +13,22 @@ export const GET: APIRoute = async ({ url, locals }) => {
     const queryParams = Object.fromEntries(url.searchParams.entries());
     const parsed = auditLogsQuerySchema.safeParse(queryParams);
     if (!parsed.success) {
-      return new Response(
-        JSON.stringify({
-          error: "Invalid query",
-          details: parsed.error.flatten(),
-        }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
+      return errorJson("Invalid query", "validation_failed", 400, parsed.error.flatten());
     }
 
     const items = await listAuditLogs(supabase, parsed.data);
-    return new Response(JSON.stringify({ items }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
+    return json({ items }, 200);
   } catch (error) {
     // Log internal error details for developers; keep response generic
     // eslint-disable-next-line no-console
     console.error("[api/admin/audit-logs] GET failed", error);
     if (error instanceof UnauthorizedError) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      });
+      return errorJson("Unauthorized", "unauthorized", 401);
     }
     if (error instanceof ForbiddenError) {
-      return new Response(JSON.stringify({ error: "Forbidden" }), {
-        status: 403,
-        headers: { "Content-Type": "application/json" },
-      });
+      return errorJson("Forbidden", "forbidden", 403);
     }
-    return new Response(JSON.stringify({ error: "Internal Server Error" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return errorJson("Internal Server Error", "server_error", 500);
   }
 };
 

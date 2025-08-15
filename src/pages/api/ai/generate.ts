@@ -9,6 +9,7 @@ import {
   logEventGeneration,
   UnauthorizedError,
 } from "../../../lib/services/ai.service";
+import { json, errorJson, validationFailed } from "../../../lib/http";
 
 export const POST: APIRoute = async ({ request, locals }) => {
   try {
@@ -19,26 +20,17 @@ export const POST: APIRoute = async ({ request, locals }) => {
     const TIMEOUT_MS = 30000;
     const contentType = request.headers.get("content-type") || "";
     if (!contentType.includes("application/json")) {
-      return new Response(JSON.stringify({ error: "Unsupported Media Type" }), {
-        status: 415,
-        headers: { "Content-Type": "application/json" },
-      });
+      return errorJson("Unsupported Media Type", "unsupported_media_type", 415);
     }
 
     const json = await request.json().catch(() => null);
     if (!json || typeof json !== "object") {
-      return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
+      return errorJson("Invalid JSON body", "invalid_json", 400);
     }
 
     const parsed = generateSchema.safeParse(json);
     if (!parsed.success) {
-      return new Response(
-        JSON.stringify({ error: "Validation failed", details: parsed.error.flatten() }),
-        { status: 422, headers: { "Content-Type": "application/json" } }
-      );
+      return validationFailed(parsed.error.flatten());
     }
 
     if (acceptsSse) {
@@ -115,29 +107,17 @@ export const POST: APIRoute = async ({ request, locals }) => {
       properties: { returned_count: result.returned_count },
     });
 
-    return new Response(JSON.stringify(result), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
+    return json(result, 200);
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error("[api/ai/generate] POST failed", error);
     if (error instanceof UnauthorizedError) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      });
+      return errorJson("Unauthorized", "unauthorized", 401);
     }
     if ((error as Error)?.name === "AbortError") {
-      return new Response(JSON.stringify({ error: "Request timeout" }), {
-        status: 408,
-        headers: { "Content-Type": "application/json" },
-      });
+      return errorJson("Request timeout", "timeout", 408);
     }
-    return new Response(JSON.stringify({ error: "Internal Server Error" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return errorJson("Internal Server Error", "server_error", 500);
   }
 };
 

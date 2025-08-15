@@ -2,6 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from "astro";
 import { assertIsAdmin, ForbiddenError, getKpiTotals, UnauthorizedError } from "../../../lib/services/admin.service";
+import { json, errorJson } from "../../../lib/http";
 
 export const GET: APIRoute = async ({ locals }) => {
   try {
@@ -9,30 +10,18 @@ export const GET: APIRoute = async ({ locals }) => {
     await assertIsAdmin(supabase);
 
     const data = await getKpiTotals(supabase);
-    return new Response(JSON.stringify(data), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
+    return json(data, 200);
   } catch (error) {
     // Log internal error details for developers; keep response generic
     // eslint-disable-next-line no-console
     console.error("[api/admin/kpi-totals] GET failed", error);
     if (error instanceof UnauthorizedError) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      });
+      return errorJson("Unauthorized", "unauthorized", 401);
     }
     if (error instanceof ForbiddenError) {
-      return new Response(JSON.stringify({ error: "Forbidden" }), {
-        status: 403,
-        headers: { "Content-Type": "application/json" },
-      });
+      return errorJson("Forbidden", "forbidden", 403);
     }
-    return new Response(JSON.stringify({ error: "Internal Server Error" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return errorJson("Internal Server Error", "server_error", 500);
   }
 };
 
