@@ -181,7 +181,29 @@
   * **NotFound** (`/404`)
   * **NetworkBanner** (offline/timeout/503)
   * **AuthGuard** (przekierowania z zachowaniem intencji)
-* **Telemetria/KPI (admin-only, poza MVP UI):** brak widoku.
+* **Telemetria/KPI (admin-only):** dostępne w `Admin`.
+
+---
+
+### 2.10 Admin (Panel administratora)
+
+* **Ścieżka:** `/admin` (opcjonalne sub-ścieżki: `/admin/kpi`, `/admin/audit-logs`)
+* **Główny cel:** przegląd metryk KPI i logów audytowych w celu weryfikacji działania systemu i liczenia KPI.
+* **Kluczowe informacje:**
+
+  * Karty KPI: `generated_total`, `saved_manual_total`, `saved_ai_total`, `saved_ai_edited_total` (wg US-014/US-030).
+  * Tabela logów audytowych: kolumny `created_at`, `action`, `acted_by`, `card_id`, `target_user_id`, `details` (skrót JSON), paginacja 25/str.
+  * Filtry: `action`, `user_id` (acted_by/target), `card_id`.
+* **Kluczowe komponenty:**
+
+  * **AdminGuard** (sprawdza uprawnienia admina; `403` → komunikat/redirect)
+  * **KpiTotalsCards** (4 kafelki + opcjonalny wskaźnik akceptowalności AI = (ai + ai_edited) / generated_total, gdy `generated_total > 0`)
+  * **AuditLogTable** (kolumny jak wyżej; zawijanie; kopiowanie ID)
+  * **AuditLogFilters** (selecty/inputs dla `action`, `user_id`, `card_id`)
+  * **Pagination** (na podstawie `X-Total-Count`/`Link` lub parametrów `limit/offset`)
+* **UX/A11y/Security:** widok wyłącznie dla adminów; jasna obsługa `403`. Karty czytelnie opisane. Tabela dostępna klawiaturą. Odświeżanie ręczne lub interwał (opcjonalnie).
+* **API użyte:** `GET /api/admin/kpi-totals`, `GET /api/admin/audit-logs`.
+* **Powiązane FR/US:** US-014 (telemetria i etykiety), US-030 (liczniki KPI), sekcja 2.8 Admin w planie API.
 
 ---
 
