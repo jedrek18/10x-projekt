@@ -1,0 +1,25 @@
+---
+import type { LandingCopy } from "@/lib/i18n-landing";
+
+interface Props {
+  copy: Pick<LandingCopy, "policy" | "languageLabel">;
+}
+
+const { copy } = Astro.props as Props;
+---
+
+<footer class="mt-16 flex items-center justify-center">
+  <nav aria-label="Footer">
+    <a
+      href="/#privacy"
+      rel="nofollow"
+      class="text-sm text-muted-foreground transition-colors hover:text-foreground"
+    >
+      <span data-lang="en">{copy.policy}</span>
+      <span data-lang="pl">Prywatność i regulamin</span>
+    </a>
+  </nav>
+  
+</footer>
+
+

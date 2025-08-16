@@ -118,3 +118,40 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Landing hero decorative background */
+@keyframes heroGradientPulse {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translate3d(2%, -2%, 0) scale(1.05);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate3d(-2%, 2%, 0) scale(1.03);
+    opacity: 0.7;
+  }
+}
+
+.landing-hero__bg {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(40% 40% at 30% 20%, var(--color-primary) / 0.08, transparent 60%),
+    radial-gradient(35% 35% at 70% 60%, var(--color-ring) / 0.08, transparent 60%);
+  filter: blur(40px);
+  animation: heroGradientPulse 12s ease-in-out infinite alternate;
+  isolation: isolate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-hero__bg {
+    animation: none;
+  }
+}
+
+/* Language content toggling */
+[data-lang="pl"] { display: none; }
+html[lang="pl"] [data-lang="en"] { display: none; }
+html[lang="pl"] [data-lang="pl"] { display: inline; }

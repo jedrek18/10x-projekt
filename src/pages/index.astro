@@ -1,8 +1,32 @@
 ---
-import Welcome from "../components/Welcome.astro";
 import Layout from "../layouts/Layout.astro";
+import LandingHero from "../components/Landing/LandingHero.astro";
+import AuthButtons from "../components/Landing/AuthButtons.astro";
+import FooterLinks from "../components/Landing/FooterLinks.astro";
+import LanguageSelector from "../components/Landing/LanguageSelector.tsx";
+import { landingCopy, DEFAULT_LANGUAGE } from "../lib/i18n-landing";
+
+const copy = landingCopy[DEFAULT_LANGUAGE];
 ---
 
 <Layout>
-  <Welcome />
+  <div class="fixed top-4 right-4 z-[60] flex items-center gap-2">
+    <span class="text-sm text-muted-foreground hidden md:inline">{copy.languageLabel}</span>
+    <LanguageSelector client:visible />
+    <noscript>
+      <label class="sr-only" for="lang-ns">Language</label>
+      <select id="lang-ns" class="border bg-background rounded-md px-3 py-2 text-sm">
+        <option value="en">English (EN)</option>
+        <option value="pl">Polski (PL)</option>
+      </select>
+    </noscript>
+  </div>
+
+  <LandingHero copy={copy}>
+    <div slot="actions">
+      <AuthButtons copy={copy} />
+    </div>
+  </LandingHero>
+
+  <FooterLinks copy={copy} />
 </Layout>

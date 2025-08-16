@@ -1,0 +1,38 @@
+---
+import type { LandingCopy } from "@/lib/i18n-landing";
+
+interface Props {
+  copy: LandingCopy;
+}
+
+const { copy } = Astro.props as Props;
+---
+
+<section class="landing-hero relative overflow-hidden">
+  <div class="mx-auto max-w-3xl py-24 px-6 text-center md:py-32">
+    <h1 class="text-4xl md:text-6xl font-bold tracking-tight">
+      <span data-lang="en">{copy.title}</span>
+      <span data-lang="pl">Opanuj dowolny temat z powtórkami rozłożonymi w czasie</span>
+    </h1>
+    <p class="mt-4 text-lg text-muted-foreground md:text-xl">
+      <span data-lang="en">{copy.subtitle}</span>
+      <span data-lang="pl">Twórz fiszki, ucz się efektywnie i śledź dzienny postęp.</span>
+    </p>
+
+    <div class="mt-8 flex items-center justify-center gap-3">
+      <slot name="actions" />
+    </div>
+
+    <div class="mt-6">
+      <slot name="language" />
+    </div>
+  </div>
+
+  <div class="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
+    <div class="landing-hero__bg"></div>
+  </div>
+
+  <div class="sr-only" aria-live="polite" id="language-live-region"></div>
+</section>
+
+
