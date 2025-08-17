@@ -107,12 +107,10 @@ export interface AppCopy {
   processingRating: string;
   studySessionComplete: string;
   studySessionCompleteDescription: string;
-  manageFlashcards: string;
   generateNewCards: string;
   failedToLoadStudyQueue: string;
   loadingStudyQueue: string;
   initializingStudySession: string;
-  tryAgain: string;
   pendingReviews: string;
   pendingReviewsDescription: string;
   rating: string;
@@ -488,12 +486,10 @@ export const appCopy: I18nDictionary = {
     processingRating: "Processing your rating...",
     studySessionComplete: "Study session complete!",
     studySessionCompleteDescription: "You've reviewed all available cards for today.",
-    manageFlashcards: "Manage Flashcards",
     generateNewCards: "Generate New Cards",
     failedToLoadStudyQueue: "Failed to load study queue",
     loadingStudyQueue: "Loading study queue...",
     initializingStudySession: "Initializing study session...",
-    tryAgain: "Try Again",
     pendingReviews: "Pending reviews",
     pendingReviewsDescription:
       "{count} review{count, plural, one {} other {s}} waiting to be synced when you're back online.",
@@ -842,12 +838,10 @@ export const appCopy: I18nDictionary = {
     processingRating: "Przetwarzanie oceny...",
     studySessionComplete: "Sesja nauki zakończona!",
     studySessionCompleteDescription: "Przejrzałeś wszystkie dostępne fiszki na dziś.",
-    manageFlashcards: "Zarządzaj fiszkami",
     generateNewCards: "Generuj nowe fiszki",
     failedToLoadStudyQueue: "Nie udało się załadować kolejki nauki",
     loadingStudyQueue: "Ładowanie kolejki nauki...",
     initializingStudySession: "Inicjalizacja sesji nauki...",
-    tryAgain: "Spróbuj ponownie",
     pendingReviews: "Oczekujące powtórki",
     pendingReviewsDescription:
       "{count} powtórk{count, plural, one {a} other {i}} oczekuje na synchronizację gdy będziesz online.",

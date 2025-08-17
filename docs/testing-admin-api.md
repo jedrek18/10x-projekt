@@ -23,7 +23,7 @@
 - GET `/api/flashcards/{id}`
 - PATCH `/api/flashcards/{id}`
 - DELETE `/api/flashcards/{id}`
-- POST `/api/flashcards:batch-save` (zalecany nagłówek `Idempotency-Key`)
+- POST `/api/flashcards/batch-save` (zalecany nagłówek `Idempotency-Key`)
 
 Walidacja:
 

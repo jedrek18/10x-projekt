@@ -30,7 +30,7 @@ DELETE http://localhost:4321/api/flashcards/{{CARD_ID}}
 Authorization: Bearer {{SUPABASE_JWT}}
 
 ### Batch save AI proposals (idempotent)
-POST http://localhost:4321/api/flashcards:batch-save
+POST http://localhost:4321/api/flashcards/batch-save
 Content-Type: application/json
 Idempotency-Key: {{REQUEST_ID}}
 Authorization: Bearer {{SUPABASE_JWT}}

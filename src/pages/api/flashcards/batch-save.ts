@@ -1,10 +1,10 @@
 export const prerender = false;
 
 import type { APIRoute } from "astro";
-import { batchSaveSchema } from "../../lib/validation/flashcards";
-import { batchSaveFlashcards, ValidationError } from "../../lib/services/flashcards.service";
-import { UnauthorizedError } from "../../lib/services/ai.service";
-import { json, errorJson, validationFailed } from "../../lib/http";
+import { batchSaveSchema } from "../../../lib/validation/flashcards";
+import { batchSaveFlashcards, ValidationError } from "../../../lib/services/flashcards.service";
+import { UnauthorizedError } from "../../../lib/services/ai.service";
+import { json, errorJson, validationFailed } from "../../../lib/http";
 
 export const POST: APIRoute = async ({ request, locals }) => {
   try {
@@ -38,7 +38,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     return json(result, 201);
   } catch (error) {
     // eslint-disable-next-line no-console
-    console.error("[api/flashcards:batch-save] POST failed", error);
+    console.error("[api/flashcards/batch-save] POST failed", error);
     if (error instanceof UnauthorizedError) {
       return errorJson("Unauthorized", "unauthorized", 401);
     }

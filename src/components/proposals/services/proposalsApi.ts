@@ -21,7 +21,7 @@ export async function saveBatch(items: FlashcardBatchSaveItem[], options: SaveBa
   try {
     const request: FlashcardBatchSaveRequest = { items };
 
-    const response = await fetch("/api/flashcards:batch-save", {
+    const response = await fetch("/api/flashcards/batch-save", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

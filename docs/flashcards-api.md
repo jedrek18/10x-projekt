@@ -9,7 +9,7 @@ Endpoints for managing user flashcards. All endpoints require a valid Supabase s
 - GET `/api/flashcards/{id}`
 - PATCH `/api/flashcards/{id}`
 - DELETE `/api/flashcards/{id}`
-- POST `/api/flashcards:batch-save` (idempotency via `Idempotency-Key`)
+- POST `/api/flashcards/batch-save` (idempotency via `Idempotency-Key`)
 
 ## Parameters and Validation
 
