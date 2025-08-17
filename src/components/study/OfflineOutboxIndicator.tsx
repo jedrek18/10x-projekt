@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Clock, Upload } from "lucide-react";
+import { Clock } from "lucide-react";
 import { t, tWithParams } from "../../lib/i18n";
 import { usePreferredLanguage } from "../../lib/usePreferredLanguage";
 import type { OutboxStats } from "./types";
