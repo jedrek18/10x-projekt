@@ -72,6 +72,62 @@ export interface AppCopy {
   startStudy: string;
   noCardsToStudy: string;
   checkingCards: string;
+  studyQueue: string;
+  cardsAvailable: string;
+  dueForReview: string;
+  newCards: string;
+  dailyProgress: string;
+  increaseGoal: string;
+  increaseDailyGoal: string;
+  newDailyGoal: string;
+  currentGoal: string;
+  goalUpdated: string;
+  goalUpdateFailed: string;
+  goalUpdateDescription: string;
+  goalUpdateErrorDescription: string;
+  updating: string;
+  updateGoal: string;
+  question: string;
+  answer: string;
+  noAnswerProvided: string;
+  showAnswer: string;
+  card: string;
+  due: string;
+  howWellDidYouKnow: string;
+  rateYourKnowledge: string;
+  again: string;
+  againDescription: string;
+  hard: string;
+  hardDescription: string;
+  good: string;
+  goodDescription: string;
+  easy: string;
+  easyDescription: string;
+  press: string;
+  processingRating: string;
+  studySessionComplete: string;
+  studySessionCompleteDescription: string;
+  manageFlashcards: string;
+  generateNewCards: string;
+  failedToLoadStudyQueue: string;
+  loadingStudyQueue: string;
+  initializingStudySession: string;
+  tryAgain: string;
+  pendingReviews: string;
+  pendingReviewsDescription: string;
+  rating: string;
+  keyboardShortcuts: string;
+  keyboardShortcutsDescription: string;
+  key: string;
+  action: string;
+  revealAnswer: string;
+  rateAgain: string;
+  rateHard: string;
+  rateGood: string;
+  rateEasy: string;
+  showHelp: string;
+  progress: string;
+  reviewsCompleted: string;
 
   // Pagination
   showing: string;
@@ -397,6 +453,64 @@ export const appCopy: I18nDictionary = {
     startStudy: "Start Study",
     noCardsToStudy: "No cards to study",
     checkingCards: "Checking available cards...",
+    studyQueue: "Study Queue",
+    cardsAvailable: "cards available",
+    dueForReview: "due for review",
+    newCards: "new cards",
+    dailyProgress: "Daily Progress",
+    increaseGoal: "Increase Goal",
+    increaseDailyGoal: "Increase Daily Goal",
+    newDailyGoal: "New daily goal",
+    currentGoal: "Current goal: {goal} reviews per day",
+    goalUpdated: "Goal updated",
+    goalUpdateFailed: "Failed to update goal",
+    goalUpdateDescription: "Daily goal set to {goal} reviews",
+    goalUpdateErrorDescription: "An unexpected error occurred",
+    updating: "Updating...",
+    updateGoal: "Update Goal",
+    question: "Question",
+    answer: "Answer",
+    noAnswerProvided: "No answer provided",
+    showAnswer: "Show Answer",
+    card: "Card",
+    due: "Due",
+    howWellDidYouKnow: "How well did you know this?",
+    rateYourKnowledge: "Rate your knowledge to schedule the next review",
+    again: "Again",
+    againDescription: "I didn't know this at all",
+    hard: "Hard",
+    hardDescription: "I knew this but it was difficult",
+    good: "Good",
+    goodDescription: "I knew this well",
+    easy: "Easy",
+    easyDescription: "I knew this very well",
+    press: "Press {key}",
+    processingRating: "Processing your rating...",
+    studySessionComplete: "Study session complete!",
+    studySessionCompleteDescription: "You've reviewed all available cards for today.",
+    manageFlashcards: "Manage Flashcards",
+    generateNewCards: "Generate New Cards",
+    failedToLoadStudyQueue: "Failed to load study queue",
+    loadingStudyQueue: "Loading study queue...",
+    initializingStudySession: "Initializing study session...",
+    tryAgain: "Try Again",
+    pendingReviews: "Pending reviews",
+    pendingReviewsDescription:
+      "{count} review{count, plural, one {} other {s}} waiting to be synced when you're back online.",
+    rating: "Rating",
+    keyboardShortcuts: "Keyboard Shortcuts",
+    keyboardShortcutsDescription:
+      "Use these keyboard shortcuts to navigate and interact with flashcards more efficiently.",
+    key: "Key",
+    action: "Action",
+    revealAnswer: "Reveal answer",
+    rateAgain: "Rate: Again (0)",
+    rateHard: "Rate: Hard (1)",
+    rateGood: "Rate: Good (2)",
+    rateEasy: "Rate: Easy (3)",
+    showHelp: "Show this help",
+    progress: "Progress",
+    reviewsCompleted: "reviews completed",
 
     // Pagination
     showing: "Showing",
@@ -693,6 +807,64 @@ export const appCopy: I18nDictionary = {
     startStudy: "Rozpocznij naukę",
     noCardsToStudy: "Brak fiszek do nauki",
     checkingCards: "Sprawdzanie dostępnych fiszek...",
+    studyQueue: "Kolejka nauki",
+    cardsAvailable: "fiszek dostępnych",
+    dueForReview: "do powtórki",
+    newCards: "nowych fiszek",
+    dailyProgress: "Dzienny postęp",
+    increaseGoal: "Zwiększ cel",
+    increaseDailyGoal: "Zwiększ dzienny cel",
+    newDailyGoal: "Nowy dzienny cel",
+    currentGoal: "Obecny cel: {goal} powtórek dziennie",
+    goalUpdated: "Cel zaktualizowany",
+    goalUpdateFailed: "Nie udało się zaktualizować celu",
+    goalUpdateDescription: "Dzienny cel ustawiony na {goal} powtórek",
+    goalUpdateErrorDescription: "Wystąpił nieoczekiwany błąd",
+    updating: "Aktualizowanie...",
+    updateGoal: "Zaktualizuj cel",
+    question: "Pytanie",
+    answer: "Odpowiedź",
+    noAnswerProvided: "Brak odpowiedzi",
+    showAnswer: "Pokaż odpowiedź",
+    card: "Fiszka",
+    due: "Do powtórki",
+    howWellDidYouKnow: "Jak dobrze to znałeś?",
+    rateYourKnowledge: "Oceń swoją wiedzę, aby zaplanować następną powtórkę",
+    again: "Znowu",
+    againDescription: "Wcale tego nie znałem",
+    hard: "Trudne",
+    hardDescription: "Znałem to, ale było trudne",
+    good: "Dobrze",
+    goodDescription: "Znałem to dobrze",
+    easy: "Łatwe",
+    easyDescription: "Znałem to bardzo dobrze",
+    press: "Naciśnij {key}",
+    processingRating: "Przetwarzanie oceny...",
+    studySessionComplete: "Sesja nauki zakończona!",
+    studySessionCompleteDescription: "Przejrzałeś wszystkie dostępne fiszki na dziś.",
+    manageFlashcards: "Zarządzaj fiszkami",
+    generateNewCards: "Generuj nowe fiszki",
+    failedToLoadStudyQueue: "Nie udało się załadować kolejki nauki",
+    loadingStudyQueue: "Ładowanie kolejki nauki...",
+    initializingStudySession: "Inicjalizacja sesji nauki...",
+    tryAgain: "Spróbuj ponownie",
+    pendingReviews: "Oczekujące powtórki",
+    pendingReviewsDescription:
+      "{count} powtórk{count, plural, one {a} other {i}} oczekuje na synchronizację gdy będziesz online.",
+    rating: "Ocena",
+    keyboardShortcuts: "Skróty klawiaturowe",
+    keyboardShortcutsDescription:
+      "Użyj tych skrótów klawiaturowych, aby efektywniej nawigować i wchodzić w interakcję z fiszkami.",
+    key: "Klawisz",
+    action: "Akcja",
+    revealAnswer: "Pokaż odpowiedź",
+    rateAgain: "Ocena: Znowu (0)",
+    rateHard: "Ocena: Trudne (1)",
+    rateGood: "Ocena: Dobrze (2)",
+    rateEasy: "Ocena: Łatwe (3)",
+    showHelp: "Pokaż pomoc",
+    progress: "Postęp",
+    reviewsCompleted: "powtórek ukończonych",
 
     // Pagination
     showing: "Pokazano",

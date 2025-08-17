@@ -1,0 +1,15 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { StudyApp } from "../components/study/StudyApp";
+import { AuthGuard } from "../components/auth/AuthGuard";
+
+export const prerender = false;
+---
+
+<Layout title="Study Flashcards - 10x Flashcards">
+  <main class="container mx-auto px-4 py-8 max-w-4xl">
+    <AuthGuard client:load>
+      <StudyApp client:load />
+    </AuthGuard>
+  </main>
+</Layout>

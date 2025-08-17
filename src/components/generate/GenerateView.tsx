@@ -503,6 +503,13 @@ export function GenerateView() {
             onSaveSuccess={() => {
               // Clear cache after successful save
               handleClearCache();
+              // Clear study queue cache to ensure fresh data
+              try {
+                localStorage.removeItem("study_queue_cache");
+                console.log("Study queue cache cleared after AI save");
+              } catch (error) {
+                console.error("Failed to clear study queue cache:", error);
+              }
             }}
           />
         </div>

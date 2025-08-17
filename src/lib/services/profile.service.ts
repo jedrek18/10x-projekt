@@ -10,6 +10,10 @@ export class NotFoundError extends Error {
 
 export async function getCurrentProfile(supabase: TypedSupabase): Promise<ProfileDTO> {
   const { userId } = await assertAuthenticated(supabase);
+
+  console.log("getCurrentProfile called for userId:", userId);
+
+  // First try to get existing profile
   const { data, error } = await supabase
     .from("profiles")
     .select("user_id, is_admin, created_at")
@@ -17,8 +21,28 @@ export async function getCurrentProfile(supabase: TypedSupabase): Promise<Profil
     .single();
 
   if (error) {
-    throw new NotFoundError("Profile not found");
+    console.log("Profile not found, creating new profile for userId:", userId);
+    // Profile doesn't exist, create it automatically
+    const { data: newProfile, error: insertError } = await supabase
+      .from("profiles")
+      .insert({
+        user_id: userId,
+        is_admin: false,
+        created_at: new Date().toISOString(),
+      })
+      .select("user_id, is_admin, created_at")
+      .single();
+
+    if (insertError) {
+      console.error("Failed to create profile:", insertError);
+      throw new Error(`Failed to create profile: ${insertError.message}`);
+    }
+
+    console.log("Profile created successfully for userId:", userId);
+    return newProfile as ProfileDTO;
   }
+
+  console.log("Existing profile found for userId:", userId);
   return data as ProfileDTO;
 }
 

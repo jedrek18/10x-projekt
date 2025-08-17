@@ -5,6 +5,7 @@ function createMockSupabaseReview(options: { userId: string; card: any; progress
   const state: any = {
     card: options.card,
     progress: options.progress ?? { reviews_done: 0 },
+    profile: { user_id: options.userId, is_admin: false, created_at: new Date().toISOString() },
   };
 
   const auth = {
@@ -29,19 +30,39 @@ function createMockSupabaseReview(options: { userId: string; card: any; progress
         chain._updateVals = vals;
         return chain;
       },
+      insert(vals?: any) {
+        chain._insertVals = vals;
+        return chain;
+      },
       async maybeSingle() {
         if (table === "flashcards") return { data: state.card, error: null } as any;
         if (table === "user_daily_progress") return { data: state.progress, error: null } as any;
+        if (table === "profiles") return { data: state.profile, error: null } as any;
+        if (table === "app_errors") return { data: null, error: null } as any;
         return { data: null, error: null } as any;
       },
+      async single() {
+        return chain.maybeSingle();
+      },
       then(onFulfilled: any) {
+        if (table === "profiles") return Promise.resolve({ data: state.profile, error: null }).then(onFulfilled);
+        if (table === "audit_log") return Promise.resolve({ data: [], error: null }).then(onFulfilled);
+        if (table === "app_errors") return Promise.resolve({ data: [], error: null }).then(onFulfilled);
         return Promise.resolve({ data: [], error: null }).then(onFulfilled);
       },
     };
     return chain as any;
   }
 
-  return { auth, from } as any;
+  // Add RPC method
+  const rpc = async (functionName: string, params: any) => {
+    if (functionName === "update_flashcard_srs_rpc") {
+      return { data: null, error: null } as any;
+    }
+    return { data: null, error: null } as any;
+  };
+
+  return { auth, from, rpc } as any;
 }
 
 describe("reviewCard algorithm", () => {

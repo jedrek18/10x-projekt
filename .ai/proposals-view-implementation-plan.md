@@ -7,6 +7,7 @@ Widok Proposals prezentuje listę propozycji fiszek wygenerowanych przez AI, umo
 ## 2. Routing widoku
 
 np- Ochrona: `AuthGuard` (tylko zalogowani; przy 401/bez sesji — redirect do `/auth/login` z powrotem do intencji).
+
 - Wejścia na widok:
   - Po zakończeniu generacji w `/generate` (sekcja w tym samym ekranie).
   - Po odświeżeniu strony — przywrócenie sesji z LocalStorage, o ile TTL nie wygasł.

@@ -245,6 +245,21 @@ export interface Database {
         Args: { card_id: string };
         Returns: void;
       };
+      update_flashcard_srs_rpc: {
+        Args: {
+          card_id: string;
+          new_state: string;
+          new_due_at: string | null;
+          new_interval_days: number;
+          new_ease_factor: number;
+          new_reps: number;
+          new_lapses: number;
+          new_last_reviewed_at: string;
+          new_last_rating: number | null;
+          new_introduced_on?: string | null;
+        };
+        Returns: void;
+      };
     };
     Enums: Record<never, never>;
     CompositeTypes: Record<never, never>;

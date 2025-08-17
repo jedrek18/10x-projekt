@@ -8,7 +8,8 @@ import type {
   UUID,
   FlashcardState,
 } from "../../types";
-import { assertAuthenticated, UnauthorizedError } from "./ai.service";
+import { assertAuthenticated } from "./ai.service";
+import { getCurrentProfile } from "./profile.service";
 import {
   SRS_DEFAULT_DAILY_GOAL,
   SRS_DEFAULT_NEW_LIMIT,
@@ -42,6 +43,9 @@ function nowIso(): string {
 export async function buildQueue(supabase: TypedSupabase, goalHint?: number): Promise<SrsQueueResponse> {
   const { userId } = await assertAuthenticated(supabase);
 
+  // Ensure user profile exists
+  await getCurrentProfile(supabase);
+
   // Fetch settings
   const { data: settings } = await supabase
     .from("user_settings")
@@ -64,33 +68,34 @@ export async function buildQueue(supabase: TypedSupabase, goalHint?: number): Pr
 
   const effectiveDailyGoal = Math.max(1, progress?.goal_override ?? userDailyGoal);
   const reviewsDoneToday = progress?.reviews_done ?? 0;
+  const remainingForToday = Math.max(effectiveDailyGoal - reviewsDoneToday, 0);
 
-  // Due cards
+  // Due cards - limit to remaining daily goal
   const { data: dueCardsRaw } = await supabase
     .from("flashcards")
-    .select("id,front,state,due_at")
+    .select("id,front,back,state,due_at")
     .eq("user_id", userId)
     .is("deleted_at", null)
     .not("due_at", "is", null)
     .lte("due_at", nowIso())
     .order("due_at", { ascending: true })
-    .limit(200);
+    .limit(remainingForToday); // Limit to remaining daily goal instead of 200
 
   const due = (dueCardsRaw ?? []).map((c) => ({
     id: c.id as UUID,
     front: c.front,
-    back: null,
+    back: c.back,
     state: c.state as FlashcardState,
     due_at: c.due_at,
   }));
 
-  const remainingForToday = Math.max(effectiveDailyGoal - reviewsDoneToday, 0);
-  const maxNewToShow = Math.max(0, Math.min(userNewLimit, SRS_MAX_NEW_PER_DAY_CAP, remainingForToday));
+  // Candidate new cards (not yet introduced) - fill remaining slots
+  const remainingAfterDue = Math.max(remainingForToday - due.length, 0);
+  const maxNewToShow = Math.max(0, Math.min(userNewLimit, SRS_MAX_NEW_PER_DAY_CAP, remainingAfterDue));
 
-  // Candidate new cards (not yet introduced)
   const { data: newCardsRaw } = await supabase
     .from("flashcards")
-    .select("id,front,state")
+    .select("id,front,back,state")
     .eq("user_id", userId)
     .is("deleted_at", null)
     .is("introduced_on", null)
@@ -101,7 +106,7 @@ export async function buildQueue(supabase: TypedSupabase, goalHint?: number): Pr
   const newCards = (newCardsRaw ?? []).map((c) => ({
     id: c.id as UUID,
     front: c.front,
-    back: null,
+    back: c.back,
     state: c.state as FlashcardState,
     due_at: null,
   }));
@@ -119,6 +124,9 @@ export async function buildQueue(supabase: TypedSupabase, goalHint?: number): Pr
 
 export async function promoteNew(supabase: TypedSupabase, cmd: SrsPromoteNewCommand): Promise<SrsPromoteNewResponse> {
   const { userId } = await assertAuthenticated(supabase);
+
+  // Ensure user profile exists
+  await getCurrentProfile(supabase);
 
   const today = getTodayUtcDateString();
   const { data: settings } = await supabase
@@ -213,6 +221,9 @@ export async function promoteNew(supabase: TypedSupabase, cmd: SrsPromoteNewComm
 export async function reviewCard(supabase: TypedSupabase, cmd: SrsReviewCommand): Promise<SrsReviewResultDTO> {
   const { userId } = await assertAuthenticated(supabase);
 
+  // Ensure user profile exists
+  await getCurrentProfile(supabase);
+
   if (cmd.rating < 0 || cmd.rating > 3) {
     throw new ValidationError("rating must be between 0 and 3");
   }
@@ -263,21 +274,17 @@ export async function reviewCard(supabase: TypedSupabase, cmd: SrsReviewCommand)
     dueAt = new Date(now.getTime() + interval * 24 * 60 * 60 * 1000).toISOString();
   }
 
-  const { error: updateErr } = await supabase
-    .from("flashcards")
-    .update({
-      state,
-      due_at: dueAt,
-      interval_days: interval,
-      ease_factor: ease,
-      reps,
-      lapses,
-      last_reviewed_at: nowStr,
-      last_rating: cmd.rating,
-    })
-    .eq("id", cmd.card_id)
-    .eq("user_id", userId)
-    .is("deleted_at", null);
+  const { error: updateErr } = await supabase.rpc("update_flashcard_srs_rpc", {
+    card_id: cmd.card_id,
+    new_state: state,
+    new_due_at: dueAt,
+    new_interval_days: interval,
+    new_ease_factor: ease,
+    new_reps: reps,
+    new_lapses: lapses,
+    new_last_reviewed_at: nowStr,
+    new_last_rating: cmd.rating,
+  });
   if (updateErr) {
     throw new Error(`Failed to update card: ${updateErr.message}`);
   }

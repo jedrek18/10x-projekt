@@ -2,7 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from "astro";
 import { profileUpdateCommandSchema } from "../../lib/validation/profile";
-import { getCurrentProfile, updateCurrentProfile, NotFoundError } from "../../lib/services/profile.service";
+import { getCurrentProfile, updateCurrentProfile } from "../../lib/services/profile.service";
 import { UnauthorizedError } from "../../lib/services/ai.service";
 import { json, errorJson, validationFailed } from "../../lib/http";
 
@@ -16,9 +16,6 @@ export const GET: APIRoute = async ({ locals }) => {
     console.error("[api/me] GET failed", error);
     if (error instanceof UnauthorizedError) {
       return errorJson("Unauthorized", "unauthorized", 401);
-    }
-    if (error instanceof NotFoundError) {
-      return errorJson("Not Found", "not_found", 404);
     }
     return errorJson("Internal Server Error", "server_error", 500);
   }
@@ -51,9 +48,6 @@ export const PATCH: APIRoute = async ({ request, locals }) => {
     console.error("[api/me] PATCH failed", error);
     if (error instanceof UnauthorizedError) {
       return errorJson("Unauthorized", "unauthorized", 401);
-    }
-    if (error instanceof NotFoundError) {
-      return errorJson("Not Found", "not_found", 404);
     }
     return errorJson("Internal Server Error", "server_error", 500);
   }

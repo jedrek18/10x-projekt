@@ -11,6 +11,7 @@ function createMockSupabasePromote(options: {
     settings: { new_limit: options.newLimit },
     progress: { new_introduced: options.introduced },
     candidates: options.candidates.map((id) => ({ id })),
+    profile: { user_id: options.userId, is_admin: false, created_at: new Date().toISOString() },
   };
   const auth = {
     async getUser() {
@@ -43,19 +44,35 @@ function createMockSupabasePromote(options: {
       upsert() {
         return chain;
       },
+      insert() {
+        return chain;
+      },
       async maybeSingle() {
         if (table === "user_settings") return { data: state.settings, error: null } as any;
         if (table === "user_daily_progress") return { data: state.progress, error: null } as any;
+        if (table === "profiles") return { data: state.profile, error: null } as any;
+        if (table === "app_errors") return { data: null, error: null } as any;
         return { data: null, error: null } as any;
+      },
+      async single() {
+        return chain.maybeSingle();
       },
       then(onFulfilled: any) {
         if (table === "flashcards") return Promise.resolve({ data: state.candidates, error: null }).then(onFulfilled);
+        if (table === "profiles") return Promise.resolve({ data: state.profile, error: null }).then(onFulfilled);
+        if (table === "app_errors") return Promise.resolve({ data: [], error: null }).then(onFulfilled);
         return Promise.resolve({ data: [], error: null }).then(onFulfilled);
       },
     };
     return chain as any;
   }
-  return { auth, from } as any;
+
+  // Add RPC method
+  const rpc = async (functionName: string, params: any) => {
+    return { data: null, error: null } as any;
+  };
+
+  return { auth, from, rpc } as any;
 }
 
 async function readJson(res: Response): Promise<any> {

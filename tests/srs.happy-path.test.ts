@@ -16,6 +16,7 @@ function createMockSupabaseSrs(options: {
     dueCards: options.dueCards ?? [],
     newCards: options.newCards ?? [],
     audit: [] as any[],
+    profile: { user_id: options.userId, is_admin: false, created_at: new Date().toISOString() },
   };
 
   const auth = {
@@ -23,14 +24,6 @@ function createMockSupabaseSrs(options: {
       return { data: { user: { id: options.userId } }, error: null } as any;
     },
   } as const;
-
-  function makeThenable(result: any) {
-    return {
-      then(onFulfilled: any) {
-        return Promise.resolve(result).then(onFulfilled);
-      },
-    } as any;
-  }
 
   function from(table: string) {
     const chain: any = {
@@ -66,10 +59,16 @@ function createMockSupabaseSrs(options: {
         chain._upsertValues = values;
         return chain;
       },
+      insert(values?: any) {
+        chain._insertValues = values;
+        return chain;
+      },
       async maybeSingle() {
         if (table === "user_settings") return { data: state.settings, error: null } as any;
         if (table === "user_daily_progress") return { data: state.progress, error: null } as any;
         if (table === "flashcards") return { data: state.dueCards[0] ?? null, error: null } as any;
+        if (table === "profiles") return { data: state.profile, error: null } as any;
+        if (table === "app_errors") return { data: null, error: null } as any;
         return { data: null, error: null } as any;
       },
       async single() {
@@ -84,6 +83,15 @@ function createMockSupabaseSrs(options: {
         }
         if (table === "user_daily_progress") {
           // for list selects not used here
+          return Promise.resolve({ data: [], error: null }).then(onFulfilled);
+        }
+        if (table === "profiles") {
+          return Promise.resolve({ data: state.profile, error: null }).then(onFulfilled);
+        }
+        if (table === "audit_log") {
+          return Promise.resolve({ data: [], error: null }).then(onFulfilled);
+        }
+        if (table === "app_errors") {
           return Promise.resolve({ data: [], error: null }).then(onFulfilled);
         }
         return Promise.resolve({ data: [], error: null }).then(onFulfilled);
@@ -116,6 +124,15 @@ function createMockSupabaseSrs(options: {
           return Promise.resolve({ data: [{ user_id: options.userId }], error: null }).then(onFulfilled);
         }
       }
+      if (table === "profiles" && chain._insertValues) {
+        return Promise.resolve({ data: state.profile, error: null }).then(onFulfilled);
+      }
+      if (table === "audit_log" && chain._insertValues) {
+        return Promise.resolve({ data: [], error: null }).then(onFulfilled);
+      }
+      if (table === "app_errors" && chain._insertValues) {
+        return Promise.resolve({ data: [], error: null }).then(onFulfilled);
+      }
       return origThen.call(chain, onFulfilled);
     };
 
@@ -130,13 +147,23 @@ function createMockSupabaseSrs(options: {
       in: chain.in,
       update: chain.update,
       upsert: chain.upsert,
+      insert: chain.insert,
       maybeSingle: chain.maybeSingle,
       single: chain.single,
       then: chain.then,
     } as any;
   }
 
-  return { auth, from } as any;
+  // Add RPC method
+  const rpc = async (functionName: string, params: any) => {
+    if (functionName === "update_flashcard_srs_rpc") {
+      // Mock the RPC call success
+      return { data: null, error: null } as any;
+    }
+    return { data: null, error: null } as any;
+  };
+
+  return { auth, from, rpc } as any;
 }
 
 async function readJson(res: Response): Promise<any> {

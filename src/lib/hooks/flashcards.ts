@@ -325,9 +325,18 @@ export function useStudyCtaState() {
     }
   }, []);
 
+  const clearCache = useCallback(() => {
+    try {
+      localStorage.removeItem("study_queue_cache");
+      console.log("Study queue cache cleared from CTA state");
+    } catch (error) {
+      console.error("Failed to clear study queue cache:", error);
+    }
+  }, []);
+
   useEffect(() => {
     refresh();
   }, [refresh]);
 
-  return { queue, isLoading, refresh };
+  return { queue, isLoading, refresh, clearCache };
 }

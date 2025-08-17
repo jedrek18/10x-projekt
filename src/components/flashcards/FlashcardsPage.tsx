@@ -21,7 +21,12 @@ export function FlashcardsPage() {
   const { state, fetchPage, add, edit, removeWithUndo, undoLast, refresh, setPageFromUrl } = useFlashcardsList();
 
   const { entry: undoEntry, enqueue: enqueueUndo, undo: undoDelete } = useUndoManager();
-  const { queue, isLoading: isStudyLoading, refresh: refreshStudyCta } = useStudyCtaState();
+  const {
+    queue,
+    isLoading: isStudyLoading,
+    refresh: refreshStudyCta,
+    clearCache: clearStudyCache,
+  } = useStudyCtaState();
 
   // Stan modali
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -83,10 +88,11 @@ export function FlashcardsPage() {
   const handleAddSuccess = useCallback(
     async (created: FlashcardDTO) => {
       await refreshStudyCta();
+      clearStudyCache(); // Wyczyść cache kolejki SRS
       // Odśwież listę aby pokazać nową fiszkę
       await fetchPage(1);
     },
-    [refreshStudyCta, fetchPage]
+    [refreshStudyCta, clearStudyCache, fetchPage]
   );
 
   // Obsługa edycji fiszki
@@ -98,10 +104,11 @@ export function FlashcardsPage() {
   const handleEditSuccess = useCallback(
     async (updated: FlashcardDTO) => {
       await refreshStudyCta();
+      clearStudyCache(); // Wyczyść cache kolejki SRS
       // Odśwież listę aby pokazać zaktualizowaną fiszkę
       await fetchPage(state.page);
     },
-    [refreshStudyCta, fetchPage, state.page]
+    [refreshStudyCta, clearStudyCache, fetchPage, state.page]
   );
 
   // Obsługa usuwania fiszki
@@ -109,8 +116,9 @@ export function FlashcardsPage() {
     async (card: FlashcardListItemVM) => {
       removeWithUndo(card);
       enqueueUndo(card.id);
+      clearStudyCache(); // Wyczyść cache kolejki SRS po usunięciu
     },
-    [removeWithUndo, enqueueUndo]
+    [removeWithUndo, enqueueUndo, clearStudyCache]
   );
 
   // Obsługa cofania usuwania
@@ -118,8 +126,9 @@ export function FlashcardsPage() {
     if (undoEntry) {
       undoDelete();
       await undoLast(undoEntry.id);
+      clearStudyCache(); // Wyczyść cache kolejki SRS po przywróceniu
     }
-  }, [undoEntry, undoDelete, undoLast]);
+  }, [undoEntry, undoDelete, undoLast, clearStudyCache]);
 
   // Obsługa timeout undo
   useEffect(() => {
@@ -129,6 +138,7 @@ export function FlashcardsPage() {
       try {
         // Fiszka już została usunięta w removeWithUndo, więc tylko odświeżamy stan
         await refreshStudyCta();
+        clearStudyCache(); // Wyczyść cache kolejki SRS
         // Odśwież listę aby pokazać aktualny stan po usunięciu
         // Używamy aktualnej wartości strony ze stanu
         await fetchPage(state.page);
@@ -139,7 +149,7 @@ export function FlashcardsPage() {
     }, 5000);
 
     return () => clearTimeout(timeout);
-  }, [undoEntry, refreshStudyCta, fetchPage, state.page]);
+  }, [undoEntry, refreshStudyCta, clearStudyCache, fetchPage, state.page]);
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-6xl">

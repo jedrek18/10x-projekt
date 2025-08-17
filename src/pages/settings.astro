@@ -3,18 +3,21 @@ import Layout from "../layouts/Layout.astro";
 import { UserSettingsView } from "../components/settings/UserSettingsView";
 import { AccountSettingsView } from "../components/account/AccountPage";
 import { SettingsHeader } from "../components/settings/SettingsHeader";
+import { AuthGuard } from "../components/auth/AuthGuard";
 ---
 
 <Layout title="Settings - 10x Flashcards">
   <main class="container mx-auto px-4 py-8 max-w-2xl">
-    <div class="space-y-8">
-      <SettingsHeader client:load />
+    <AuthGuard client:load>
+      <div class="space-y-8">
+        <SettingsHeader client:load />
 
-      <UserSettingsView client:load />
+        <UserSettingsView client:load />
 
-      <div class="border-t pt-8">
-        <AccountSettingsView client:load />
+        <div class="border-t pt-8">
+          <AccountSettingsView client:load />
+        </div>
       </div>
-    </div>
+    </AuthGuard>
   </main>
 </Layout>
