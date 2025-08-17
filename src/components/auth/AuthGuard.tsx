@@ -42,10 +42,14 @@ export function AuthGuard({ children }: AuthGuardProps) {
 
             // Store intended path for redirect after login
             const currentPath = window.location.pathname + window.location.search;
-            localStorage.setItem("auth:intendedPath", currentPath);
+            if (typeof window !== "undefined") {
+              window.localStorage.setItem("auth:intendedPath", currentPath);
+            }
 
             // Redirect to login
-            window.location.assign("/auth/login");
+            if (typeof window !== "undefined") {
+              window.location.assign("/auth/login");
+            }
             return;
           }
 
@@ -57,10 +61,14 @@ export function AuthGuard({ children }: AuthGuardProps) {
 
           // Store intended path for redirect after login
           const currentPath = window.location.pathname + window.location.search;
-          localStorage.setItem("auth:intendedPath", currentPath);
+          if (typeof window !== "undefined") {
+            window.localStorage.setItem("auth:intendedPath", currentPath);
+          }
 
           // Redirect to login
-          window.location.assign("/auth/login");
+          if (typeof window !== "undefined") {
+            window.location.assign("/auth/login");
+          }
         }
       } catch (err) {
         console.warn("Error during session check:", err);
@@ -68,7 +76,9 @@ export function AuthGuard({ children }: AuthGuardProps) {
         setHasSession(false);
 
         // Redirect to login on error
-        window.location.assign("/auth/login");
+        if (typeof window !== "undefined") {
+          window.location.assign("/auth/login");
+        }
       }
     };
 
@@ -87,8 +97,10 @@ export function AuthGuard({ children }: AuthGuardProps) {
 
         // Store intended path and redirect to login
         const currentPath = window.location.pathname + window.location.search;
-        localStorage.setItem("auth:intendedPath", currentPath);
-        window.location.assign("/auth/login");
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem("auth:intendedPath", currentPath);
+          window.location.assign("/auth/login");
+        }
       }
     });
 

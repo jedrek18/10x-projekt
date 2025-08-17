@@ -17,6 +17,7 @@ export default defineConfig({
       // Upewnij się, że zmienne środowiskowe są dostępne
       "import.meta.env.SUPABASE_URL": JSON.stringify(process.env.SUPABASE_URL),
       "import.meta.env.SUPABASE_KEY": JSON.stringify(process.env.SUPABASE_KEY),
+      "import.meta.env.OPENROUTER_API_KEY": JSON.stringify(process.env.OPENROUTER_API_KEY),
     },
   },
   adapter: node({

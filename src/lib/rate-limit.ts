@@ -18,6 +18,28 @@ function getStore(): Map<string, StoreEntry> {
   return g.__RL_STORE__ as Map<string, StoreEntry>;
 }
 
+export function rateLimit(
+  ipAddress: string | null | undefined,
+  now: number = Date.now(),
+  windowMs = 60_000,
+  limit = 30
+): RateLimitResult {
+  const ip = ipAddress || "unknown";
+  const key = `rl:general:${ip}`;
+  const store = getStore();
+  const entry = store.get(key);
+  if (!entry || now - entry.start > windowMs) {
+    store.set(key, { count: 1, start: now });
+    return { limited: false };
+  }
+  entry.count += 1;
+  if (entry.count > limit) {
+    const retryAfterSeconds = Math.ceil((entry.start + windowMs - now) / 1000);
+    return { limited: true, retryAfterSeconds };
+  }
+  return { limited: false };
+}
+
 export function rateLimitPatchUserSettings(
   ipAddress: string | null | undefined,
   now: number = Date.now(),

@@ -30,6 +30,10 @@ export function ProposalList({
 
   // Handle keyboard navigation
   useEffect(() => {
+    if (typeof window === "undefined" || typeof document === "undefined") {
+      return;
+    }
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!listRef.current || !done) return;
 

@@ -35,6 +35,10 @@ export function FlashcardsPage() {
 
   // Synchronizacja z URL - tylko przy pierwszym załadowaniu
   useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
     const urlParams = new URLSearchParams(window.location.search);
     const pageParam = urlParams.get("page");
     const page = pageParam ? parseInt(pageParam, 10) : 1;
@@ -48,6 +52,10 @@ export function FlashcardsPage() {
 
   // Synchronizacja URL z aktualną stroną
   useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
     const urlParams = new URLSearchParams(window.location.search);
     const currentPageParam = urlParams.get("page");
     const currentPage = currentPageParam ? parseInt(currentPageParam, 10) : 1;
@@ -76,6 +84,10 @@ export function FlashcardsPage() {
   // Obsługa zmiany strony
   const handlePageChange = useCallback(
     (newPage: number) => {
+      if (typeof window === "undefined") {
+        return;
+      }
+
       const url = new URL(window.location.href);
       url.searchParams.set("page", newPage.toString());
       window.history.pushState({}, "", url.toString());

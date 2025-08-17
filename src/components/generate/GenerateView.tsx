@@ -10,8 +10,11 @@ import { useGraphemeCounter } from "@/lib/hooks/useGraphemeCounter";
 import { useLocalStorage } from "@/lib/hooks/useLocalStorage";
 import { useAiGeneration } from "@/lib/hooks/useAiGeneration";
 import { usePreferredLanguage } from "@/lib/usePreferredLanguage";
+import { useStudyCtaState } from "@/lib/hooks/flashcards";
 import { t, tWithParams } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { RefreshCw } from "lucide-react";
 import { ProposalsView } from "../proposals/ProposalsView";
 import type { AiGenerateCommand, AiGenerationProposalDTO, UUID } from "@/types";
 
@@ -83,15 +86,17 @@ export function GenerateView() {
 
   // Ensure sourceText is loaded from localStorage on mount (only once)
   useEffect(() => {
-    const stored = localStorage.getItem(LOCAL_STORAGE_KEYS.sourceTextKey);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        if (parsed && parsed !== sourceText) {
-          setSourceText(parsed);
+    if (typeof window !== "undefined") {
+      const stored = window.localStorage.getItem(LOCAL_STORAGE_KEYS.sourceTextKey);
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (parsed && parsed !== sourceText) {
+            setSourceText(parsed);
+          }
+        } catch (error) {
+          console.warn("Failed to parse stored sourceText:", error);
         }
-      } catch (error) {
-        console.warn("Failed to parse stored sourceText:", error);
       }
     }
   }, []); // Empty dependency array - run only once on mount
@@ -108,10 +113,11 @@ export function GenerateView() {
   const [showProposals, setShowProposals] = useLocalStorage("generate:show_proposals", false);
   const [isRestoringFromCache, setIsRestoringFromCache] = useState(false);
   const [hasGenerated, setHasGenerated] = useState(false);
+  const [inputChanged, setInputChanged] = useState(false);
   const isInitialLoadRef = useRef(true);
 
   // Network state
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [isOnline, setIsOnline] = useState(true); // Start with true to avoid hydration mismatch
 
   // i18n
   const { language, isHydrated } = usePreferredLanguage();
@@ -119,6 +125,7 @@ export function GenerateView() {
   // Custom hooks
   const graphemeCount = useGraphemeCounter(sourceText);
   const { start: startGeneration, abort: abortGeneration } = useAiGeneration();
+  const { refresh: refreshStudyCta } = useStudyCtaState();
 
   // Check if we should show proposals on mount (if there's a valid session)
   useEffect(() => {
@@ -127,28 +134,30 @@ export function GenerateView() {
       return;
     }
 
-    const sessionData = localStorage.getItem(LOCAL_STORAGE_KEYS.proposalsSessionKey);
-    if (sessionData) {
-      try {
-        const session = JSON.parse(sessionData);
-        const now = new Date().getTime();
-        const expiresAt = new Date(session.ttlExpiresAt).getTime();
+    if (typeof window !== "undefined") {
+      const sessionData = window.localStorage.getItem(LOCAL_STORAGE_KEYS.proposalsSessionKey);
+      if (sessionData) {
+        try {
+          const session = JSON.parse(sessionData);
+          const now = new Date().getTime();
+          const expiresAt = new Date(session.ttlExpiresAt).getTime();
 
-        // Check if session is still valid
-        if (now < expiresAt && session.items && session.items.length > 0) {
-          // Show proposals view - ProposalsView will handle loading the session
-          setShowProposals(true);
-          setRequestId(session.requestId);
-          // Reset hasGenerated when restoring from cache
-          setHasGenerated(false);
-        } else {
-          // Clear expired session
-          localStorage.removeItem(LOCAL_STORAGE_KEYS.proposalsSessionKey);
+          // Check if session is still valid
+          if (now < expiresAt && session.items && session.items.length > 0) {
+            // Show proposals view - ProposalsView will handle loading the session
+            setShowProposals(true);
+            setRequestId(session.requestId);
+            // Reset hasGenerated when restoring from cache
+            setHasGenerated(false);
+          } else {
+            // Clear expired session
+            window.localStorage.removeItem(LOCAL_STORAGE_KEYS.proposalsSessionKey);
+            setShowProposals(false);
+          }
+        } catch (error) {
+          console.warn("Failed to restore proposals session:", error);
           setShowProposals(false);
         }
-      } catch (error) {
-        console.warn("Failed to restore proposals session:", error);
-        setShowProposals(false);
       }
     }
 
@@ -222,13 +231,28 @@ export function GenerateView() {
       setSourceText(text);
       // Also save directly to localStorage as backup
       try {
-        localStorage.setItem(LOCAL_STORAGE_KEYS.sourceTextKey, JSON.stringify(text));
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem(LOCAL_STORAGE_KEYS.sourceTextKey, JSON.stringify(text));
+        }
       } catch (error) {
         console.warn("Failed to save to localStorage directly:", error);
       }
       setError(null); // Clear errors when user starts typing
+      
+      // Clear cached proposals when source text changes
+      if (showProposals) {
+        setShowProposals(false);
+        setGeneratedProposals([]);
+        setRequestId(undefined);
+        setHasGenerated(false);
+        setInputChanged(true);
+        // Clear the proposals session from localStorage
+        if (typeof window !== "undefined") {
+          window.localStorage.removeItem(LOCAL_STORAGE_KEYS.proposalsSessionKey);
+        }
+      }
     },
-    [setSourceText, setError]
+    [setSourceText, setError, showProposals, setShowProposals, setGeneratedProposals, setRequestId, setHasGenerated, setInputChanged]
   );
 
   // Handle proposals count change
@@ -236,22 +260,37 @@ export function GenerateView() {
     (count: number) => {
       setMaxProposals(count);
       setError(null);
+      
+      // Clear cached proposals when max proposals changes
+      if (showProposals) {
+        setShowProposals(false);
+        setGeneratedProposals([]);
+        setRequestId(undefined);
+        setHasGenerated(false);
+        setInputChanged(true);
+        // Clear the proposals session from localStorage
+        if (typeof window !== "undefined") {
+          window.localStorage.removeItem(LOCAL_STORAGE_KEYS.proposalsSessionKey);
+        }
+      }
     },
-    [setMaxProposals, setError]
+    [setMaxProposals, setError, showProposals, setShowProposals, setGeneratedProposals, setRequestId, setHasGenerated, setInputChanged]
   );
 
   // Check for active session
   const checkActiveSession = useCallback(() => {
-    const sessionData = localStorage.getItem(LOCAL_STORAGE_KEYS.proposalsSessionKey);
-    if (sessionData) {
-      try {
-        const parsed = JSON.parse(sessionData);
-        const now = Date.now();
-        if (parsed.expiresAt && now < parsed.expiresAt) {
-          return true;
+    if (typeof window !== "undefined") {
+      const sessionData = window.localStorage.getItem(LOCAL_STORAGE_KEYS.proposalsSessionKey);
+      if (sessionData) {
+        try {
+          const parsed = JSON.parse(sessionData);
+          const now = Date.now();
+          if (parsed.expiresAt && now < parsed.expiresAt) {
+            return true;
+          }
+        } catch {
+          // Invalid JSON, ignore
         }
-      } catch {
-        // Invalid JSON, ignore
       }
     }
     return false;
@@ -264,6 +303,7 @@ export function GenerateView() {
     // Reset cache restoration flag when starting new generation
     setIsRestoringFromCache(false);
     setHasGenerated(true);
+    setInputChanged(false); // Clear input changed flag when starting new generation
 
     setIsGenerating(true);
     setProgress({
@@ -284,6 +324,7 @@ export function GenerateView() {
 
     startGeneration(command, {
       onProposal: (proposal) => {
+        console.log("GenerateView: onProposal called with:", proposal);
         setGeneratedProposals((prev) => [...prev, proposal]);
         setProgress((prev) =>
           prev
@@ -295,6 +336,7 @@ export function GenerateView() {
         );
       },
       onProgress: (count) => {
+        console.log("GenerateView: onProgress called with:", count);
         setProgress((prev) =>
           prev
             ? {
@@ -305,6 +347,7 @@ export function GenerateView() {
         );
       },
       onDone: (returnedCount, requestId) => {
+        console.log("GenerateView: onDone called with:", returnedCount, requestId);
         setProgress((prev) =>
           prev
             ? {
@@ -323,6 +366,7 @@ export function GenerateView() {
         setShowProposals(true);
       },
       onError: (message) => {
+        console.log("GenerateView: onError called with:", message);
         setError({ code: "generation_failed", message });
         setIsGenerating(false);
         setProgress(null);
@@ -359,7 +403,9 @@ export function GenerateView() {
   // Handle session guard confirmation
   const handleSessionGuardConfirm = useCallback(() => {
     // Clear existing session
-    localStorage.removeItem(LOCAL_STORAGE_KEYS.proposalsSessionKey);
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem(LOCAL_STORAGE_KEYS.proposalsSessionKey);
+    }
     setShowSessionGuard(false);
     handleStartGeneration();
   }, [handleStartGeneration, setShowSessionGuard]);
@@ -402,9 +448,11 @@ export function GenerateView() {
 
   // Handle clear cache
   const handleClearCache = useCallback(() => {
-    localStorage.removeItem(LOCAL_STORAGE_KEYS.sourceTextKey);
-    localStorage.removeItem(LOCAL_STORAGE_KEYS.proposalsSessionKey);
-    localStorage.removeItem("generate:show_proposals");
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem(LOCAL_STORAGE_KEYS.sourceTextKey);
+      window.localStorage.removeItem(LOCAL_STORAGE_KEYS.proposalsSessionKey);
+      window.localStorage.removeItem("generate:show_proposals");
+    }
     setSourceText("");
     setShowProposals(false);
     setGeneratedProposals([]);
@@ -425,6 +473,16 @@ export function GenerateView() {
         language={language}
         isHydrated={isHydrated}
       />
+
+      {/* Input changed banner */}
+      {inputChanged && !isGenerating && (
+        <Alert className="border-blue-200 bg-blue-50">
+          <RefreshCw className="h-4 w-4 text-blue-600" />
+          <AlertDescription className="text-blue-800">
+            {t("inputChangedBanner", isHydrated ? language : "en")}
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Generate interface - always visible */}
       <div className="text-center">
@@ -498,18 +556,24 @@ export function GenerateView() {
             onGoToStudy={() => {
               setShowProposals(false);
               // Navigate to study page
-              window.location.href = "/flashcards";
+              if (typeof window !== "undefined") {
+                window.location.href = "/flashcards";
+              }
             }}
             onSaveSuccess={() => {
               // Clear cache after successful save
               handleClearCache();
               // Clear study queue cache to ensure fresh data
               try {
-                localStorage.removeItem("study_queue_cache");
-                console.log("Study queue cache cleared after AI save");
+                if (typeof window !== "undefined") {
+                  window.localStorage.removeItem("study_queue_cache");
+                  console.log("Study queue cache cleared after AI save");
+                }
               } catch (error) {
                 console.error("Failed to clear study queue cache:", error);
               }
+              // Refresh study CTA state to update queue
+              refreshStudyCta();
             }}
           />
         </div>

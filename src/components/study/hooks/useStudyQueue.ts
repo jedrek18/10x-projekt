@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import type { SrsQueueItemVM, QueueMetaVM, StudyViewState, OutboxItem } from "../types";
 import type { SrsQueueResponse, SrsReviewCommand, SrsReviewResultDTO, ReviewRating } from "../../../types";
+import { useLocalStorage } from "../../../lib/hooks/useLocalStorage";
 
 const QUEUE_CACHE_KEY = "study_queue_cache";
 const QUEUE_CACHE_TTL = 30 * 60 * 1000; // 30 minut
@@ -21,36 +22,25 @@ export function useStudyQueue(outboxEnqueue?: (item: OutboxItem) => void) {
   });
 
   // Śledzenie postępu sesji z persystencją
-  const [sessionProgress, setSessionProgress] = useState(() => {
-    try {
-      const savedProgress = localStorage.getItem(SESSION_PROGRESS_KEY);
-      const savedDate = localStorage.getItem(SESSION_DATE_KEY);
-      const today = new Date().toISOString().split("T")[0];
+  const [sessionProgress, setSessionProgress] = useLocalStorage<number>(SESSION_PROGRESS_KEY, 0);
+  const [sessionDate, setSessionDate] = useLocalStorage<string>(SESSION_DATE_KEY, "");
 
-      // Jeśli data się zmieniła, resetuj postęp
-      if (savedDate !== today) {
-        localStorage.removeItem(SESSION_PROGRESS_KEY);
-        localStorage.removeItem(SESSION_DATE_KEY);
-        return 0;
-      }
-
-      return savedProgress ? parseInt(savedProgress, 10) : 0;
-    } catch (error) {
-      console.warn("Failed to load session progress from localStorage:", error);
-      return 0;
+  // Sprawdź czy data się zmieniła i zresetuj postęp jeśli potrzeba
+  const [isDateChecked, setIsDateChecked] = useState(false);
+  if (!isDateChecked) {
+    const today = new Date().toISOString().split("T")[0];
+    if (sessionDate !== today) {
+      setSessionProgress(0);
+      setSessionDate(today);
     }
-  });
+    setIsDateChecked(true);
+  }
 
   // Zapisywanie postępu sesji
   const updateSessionProgress = useCallback((newProgress: number) => {
     setSessionProgress(newProgress);
-    try {
-      localStorage.setItem(SESSION_PROGRESS_KEY, newProgress.toString());
-      localStorage.setItem(SESSION_DATE_KEY, new Date().toISOString().split("T")[0]);
-    } catch (error) {
-      console.warn("Failed to save session progress to localStorage:", error);
-    }
-  }, []);
+    setSessionDate(new Date().toISOString().split("T")[0]);
+  }, [setSessionProgress, setSessionDate]);
 
   // Pobieranie kolejki z API
   const fetchQueue = useCallback(
@@ -107,7 +97,9 @@ export function useStudyQueue(outboxEnqueue?: (item: OutboxItem) => void) {
           data,
           timestamp: Date.now(),
         };
-        localStorage.setItem(QUEUE_CACHE_KEY, JSON.stringify(cacheData));
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem(QUEUE_CACHE_KEY, JSON.stringify(cacheData));
+        }
 
         setState({
           status: "ready",
@@ -130,50 +122,52 @@ export function useStudyQueue(outboxEnqueue?: (item: OutboxItem) => void) {
   // Ładowanie z cache
   const loadFromCache = useCallback(async () => {
     try {
-      const cached = localStorage.getItem(QUEUE_CACHE_KEY);
-      if (cached) {
-        const { data, timestamp }: { data: SrsQueueResponse; timestamp: number } = JSON.parse(cached);
+      if (typeof window !== "undefined") {
+        const cached = window.localStorage.getItem(QUEUE_CACHE_KEY);
+        if (cached) {
+          const { data, timestamp }: { data: SrsQueueResponse; timestamp: number } = JSON.parse(cached);
 
-        // Sprawdź czy cache jest aktualny
-        if (Date.now() - timestamp < QUEUE_CACHE_TTL) {
-          const items: SrsQueueItemVM[] = [
-            ...data.due.map((card) => ({
-              id: card.id,
-              front: card.front,
-              back: card.back,
-              state: card.state,
-              due_at: card.due_at,
-              revealed: false,
-              pending: false,
-            })),
-            ...data.new.map((card) => ({
-              id: card.id,
-              front: card.front,
-              back: card.back,
-              state: card.state,
-              due_at: card.due_at,
-              revealed: false,
-              pending: false,
-            })),
-          ];
+          // Sprawdź czy cache jest aktualny
+          if (Date.now() - timestamp < QUEUE_CACHE_TTL) {
+            const items: SrsQueueItemVM[] = [
+              ...data.due.map((card) => ({
+                id: card.id,
+                front: card.front,
+                back: card.back,
+                state: card.state,
+                due_at: card.due_at,
+                revealed: false,
+                pending: false,
+              })),
+              ...data.new.map((card) => ({
+                id: card.id,
+                front: card.front,
+                back: card.back,
+                state: card.state,
+                due_at: card.due_at,
+                revealed: false,
+                pending: false,
+              })),
+            ];
 
-          // Użyj postępu sesji zamiast pobierać z API
-          const currentProgress = sessionProgress;
+            // Użyj postępu sesji zamiast pobierać z API
+            const currentProgress = sessionProgress;
 
-          const meta: QueueMetaVM = {
-            due_count: data.meta.due_count,
-            new_selected: data.meta.new_selected,
-            daily_goal: data.meta.daily_goal,
-            reviews_done_today: currentProgress,
-          };
+            const meta: QueueMetaVM = {
+              due_count: data.meta.due_count,
+              new_selected: data.meta.new_selected,
+              daily_goal: data.meta.daily_goal,
+              reviews_done_today: currentProgress,
+            };
 
-          setState({
-            status: "ready",
-            items,
-            currentIndex: 0,
-            meta,
-          });
-          return true;
+            setState({
+              status: "ready",
+              items,
+              currentIndex: 0,
+              meta,
+            });
+            return true;
+          }
         }
       }
     } catch (error) {
@@ -185,8 +179,10 @@ export function useStudyQueue(outboxEnqueue?: (item: OutboxItem) => void) {
   // Czyszczenie cache
   const clearCache = useCallback(() => {
     try {
-      localStorage.removeItem(QUEUE_CACHE_KEY);
-      console.log("Study queue cache cleared");
+      if (typeof window !== "undefined") {
+        window.localStorage.removeItem(QUEUE_CACHE_KEY);
+        console.log("Study queue cache cleared");
+      }
     } catch (error) {
       console.error("Failed to clear study queue cache:", error);
     }

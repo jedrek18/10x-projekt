@@ -13,7 +13,7 @@ export function SettingsHeader() {
 
   // Update page title dynamically
   useEffect(() => {
-    if (isHydrated) {
+    if (isHydrated && typeof window !== "undefined" && typeof document !== "undefined") {
       document.title = `${t("settings", language)} - 10x Flashcards`;
     }
   }, [language, isHydrated]);

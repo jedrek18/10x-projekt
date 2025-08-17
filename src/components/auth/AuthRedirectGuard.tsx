@@ -32,11 +32,15 @@ export function AuthRedirectGuard({ redirectTo, children }: AuthRedirectGuardPro
           setHasSession(true);
 
           // Clear any stored intended path since user is already logged in
-          localStorage.removeItem("auth:intendedPath");
+          if (typeof window !== "undefined") {
+            window.localStorage.removeItem("auth:intendedPath");
+          }
 
           // Redirect to intended destination or default
           const redirectUrl = redirectTo || "/flashcards";
-          window.location.assign(redirectUrl);
+          if (typeof window !== "undefined") {
+            window.location.assign(redirectUrl);
+          }
         } else {
           setHasSession(false);
           setIsCheckingSession(false);
@@ -57,11 +61,15 @@ export function AuthRedirectGuard({ redirectTo, children }: AuthRedirectGuardPro
         setHasSession(true);
 
         // Clear any stored intended path
-        localStorage.removeItem("auth:intendedPath");
+        if (typeof window !== "undefined") {
+          window.localStorage.removeItem("auth:intendedPath");
+        }
 
         // Redirect to intended destination or default
         const redirectUrl = redirectTo || "/flashcards";
-        window.location.assign(redirectUrl);
+        if (typeof window !== "undefined") {
+          window.location.assign(redirectUrl);
+        }
       } else if (event === "SIGNED_OUT") {
         setHasSession(false);
         setIsCheckingSession(false);

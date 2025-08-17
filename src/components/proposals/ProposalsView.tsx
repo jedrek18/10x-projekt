@@ -22,6 +22,7 @@ import { t } from "@/lib/i18n";
 import type { SaveState, BulkActionFlags } from "./types";
 import type { AiGenerationProposalDTO, UUID } from "@/types";
 import type { LanguageCode } from "@/lib/i18n";
+import type { ProposalVM } from "./types";
 
 interface ProposalsViewProps {
   onGoToStudy?: () => void;
@@ -59,29 +60,48 @@ export function ProposalsView({
     counts,
     done,
     replaceFromGenerate,
-    markAccepted,
-    markEdited,
     deleteItem,
     toggleSelect,
     toggleSelectAll,
-    rejectAll,
     getAcceptedItems,
     canSave,
     persist,
     clear,
+    setSession,
   } = useProposalsSession();
 
   const { key: idempotencyKey, clearKey } = useIdempotencyKey(session?.requestId);
 
   // Initialize session with generated proposals if provided
   useEffect(() => {
+    console.log("ProposalsView: useEffect triggered", {
+      generatedProposals: generatedProposals?.length,
+      requestId,
+      maxProposals,
+      sessionRequestId: session?.requestId,
+    });
+
     if (generatedProposals && generatedProposals.length > 0 && requestId && maxProposals) {
       // Only replace if we don't already have a session with the same requestId
       if (!session || session.requestId !== requestId) {
+        console.log("ProposalsView: Calling replaceFromGenerate", {
+          proposalsCount: generatedProposals.length,
+          requestId,
+          maxProposals,
+        });
         replaceFromGenerate(generatedProposals, requestId, maxProposals);
+      } else {
+        console.log("ProposalsView: Skipping replaceFromGenerate - same requestId");
       }
+    } else {
+      console.log("ProposalsView: Not calling replaceFromGenerate", {
+        hasProposals: !!generatedProposals,
+        proposalsLength: generatedProposals?.length,
+        hasRequestId: !!requestId,
+        hasMaxProposals: !!maxProposals,
+      });
     }
-  }, [generatedProposals, requestId, maxProposals, session?.requestId]);
+  }, [generatedProposals, requestId, maxProposals, session?.requestId, replaceFromGenerate]);
 
   // Handle save accepted items
   async function handleSaveAccepted() {
@@ -134,7 +154,7 @@ export function ProposalsView({
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch {
       setSaveState({
         loading: false,
         error: t("networkError", isHydrated ? language : "en"),
@@ -167,14 +187,14 @@ export function ProposalsView({
         return;
       }
 
-      // Create the batch save request directly
-      const itemsToSave = allItems.map((item) => ({
+      // Mark all items as accepted
+      const acceptedItems = allItems.map((item) => ({
         front: item.front,
         back: item.back,
-        source: item.status === "edited" ? "ai_edited" : ("ai" as const),
+        source: item.sourceCandidate,
       }));
 
-      const result = await saveBatch(itemsToSave, { idempotencyKey });
+      const result = await saveBatch(acceptedItems, { idempotencyKey });
 
       if (result.success && result.data) {
         setSaveState({ loading: false, result: result.data });
@@ -195,19 +215,13 @@ export function ProposalsView({
           error: result.error?.message || t("saveFailed", isHydrated ? language : "en"),
         });
 
-        // Handle specific error cases
-        if (result.error?.code === "unauthorized") {
-          // Redirect to login - handled by parent component
-          return;
-        }
-
         toast({
           title: t("saveFailed", isHydrated ? language : "en"),
           description: result.error?.message || t("saveFailed", isHydrated ? language : "en"),
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch {
       setSaveState({
         loading: false,
         error: t("networkError", isHydrated ? language : "en"),
@@ -220,37 +234,29 @@ export function ProposalsView({
     }
   }
 
-  // Handle reject all items
+  // Handle item change
+  const handleItemChange = useCallback(
+    (updated: ProposalVM) => {
+      if (!session) return;
+
+      setSession({
+        ...session,
+        items: session.items.map((item) => (item.id === updated.id ? updated : item)),
+      });
+    },
+    [session, setSession]
+  );
+
+  // Handle reject all
   const handleRejectAll = useCallback(() => {
-    if (!session) return;
     setShowRejectConfirmDialog(true);
-  }, [session]);
+  }, []);
 
   // Handle confirm reject all
   const handleConfirmRejectAll = useCallback(() => {
-    try {
-      // Clear the session
-      clear();
-
-      // Show success message
-      toast({
-        title: t("allProposalsRejected", isHydrated ? language : "en"),
-        description: t("allProposalsRejectedDescription", isHydrated ? language : "en"),
-      });
-
-      // Call parent callback if provided
-      onSaveSuccess?.();
-    } catch (error) {
-      console.error("Error rejecting all proposals:", error);
-      toast({
-        title: t("errorRejectingProposals", isHydrated ? language : "en"),
-        description: t("errorRejectingProposalsDescription", isHydrated ? language : "en"),
-        variant: "destructive",
-      });
-    } finally {
-      setShowRejectConfirmDialog(false);
-    }
-  }, [clear, onSaveSuccess, toast]);
+    setSession(null);
+    setShowRejectConfirmDialog(false);
+  }, [setSession]);
 
   // Handle cancel reject all
   const handleCancelRejectAll = useCallback(() => {
@@ -292,19 +298,6 @@ export function ProposalsView({
     selectedItemIds: session?.items.filter((item) => item.selected).map((item) => item.id) || [],
   });
 
-  // Handle item change (from ProposalCard)
-  const handleItemChange = useCallback(
-    (updated: any) => {
-      if (updated.status === "edited") {
-        markEdited(updated.id, updated.front, updated.back);
-      } else {
-        // For all other status changes, use toggleSelect
-        toggleSelect(updated.id);
-      }
-    },
-    [markEdited, toggleSelect]
-  );
-
   // Handle modal close
   const handleModalClose = useCallback(() => {
     setSaveState({ loading: false, error: undefined, result: undefined });
@@ -335,6 +328,7 @@ export function ProposalsView({
 
   // Show empty state if no session
   if (!session) {
+    console.log("ProposalsView: No session, showing empty state");
     return (
       <div className="text-center py-12">
         <div className="text-gray-500">
@@ -344,6 +338,13 @@ export function ProposalsView({
       </div>
     );
   }
+
+  console.log("ProposalsView: Rendering with session", {
+    sessionDone: session.done,
+    itemsCount: session.items.length,
+    requestId: session.requestId,
+    done,
+  });
 
   return (
     <div className="space-y-6">

@@ -10,7 +10,7 @@ export function StudyNowCTA({ queue, isLoading }: StudyNowCTAProps) {
   const isDisabled = isLoading || !hasCardsToStudy;
 
   const handleClick = () => {
-    if (!isDisabled) {
+    if (!isDisabled && typeof window !== "undefined") {
       window.location.href = "/study";
     }
   };

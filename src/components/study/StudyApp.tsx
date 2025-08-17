@@ -24,6 +24,10 @@ export function StudyApp() {
 
   // Obsługa skrótów klawiaturowych
   useEffect(() => {
+    if (typeof window === "undefined" || typeof document === "undefined") {
+      return;
+    }
+
     const handleKeyDown = (event: KeyboardEvent) => {
       // Pomoc: ? lub h
       if (event.key === "?" || event.key === "h") {

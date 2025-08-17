@@ -8,6 +8,10 @@ interface ToastOptions {
 export function useToast() {
   const toast = ({ title, description, variant = "default", duration = 5000 }: ToastOptions) => {
     // Simple toast implementation - can be replaced with proper toast library later
+    if (typeof window === "undefined" || typeof document === "undefined") {
+      return; // Skip on server-side
+    }
+    
     const toastElement = document.createElement("div");
     toastElement.className = `fixed top-4 right-4 z-50 p-4 rounded-md shadow-lg max-w-sm transform-gpu ${
       variant === "destructive"

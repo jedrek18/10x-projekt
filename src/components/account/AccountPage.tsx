@@ -40,7 +40,9 @@ export function AccountSettingsView() {
 
       if (error || !session) {
         // Redirect to login if no session
-        window.location.assign("/auth/login");
+        if (typeof window !== "undefined") {
+          window.location.assign("/auth/login");
+        }
         return;
       }
 
@@ -50,7 +52,9 @@ export function AccountSettingsView() {
       setUser(user);
     } catch (error) {
       console.error("Session check failed:", error);
-      window.location.assign("/auth/login");
+      if (typeof window !== "undefined") {
+        window.location.assign("/auth/login");
+      }
     } finally {
       setLoading(false);
     }
@@ -65,7 +69,9 @@ export function AccountSettingsView() {
     });
     // Redirect to login after password change
     setTimeout(() => {
-      window.location.assign("/auth/login");
+      if (typeof window !== "undefined") {
+        window.location.assign("/auth/login");
+      }
     }, 2000);
   };
 
@@ -75,7 +81,9 @@ export function AccountSettingsView() {
       description: "You have been successfully signed out.",
       variant: "default",
     });
-    window.location.assign("/auth/login");
+    if (typeof window !== "undefined") {
+      window.location.assign("/auth/login");
+    }
   };
 
   const handleAccountDeleted = () => {
@@ -87,7 +95,9 @@ export function AccountSettingsView() {
     });
     // Redirect to landing page
     setTimeout(() => {
-      window.location.assign("/");
+      if (typeof window !== "undefined") {
+        window.location.assign("/");
+      }
     }, 2000);
   };
 

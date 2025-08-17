@@ -40,14 +40,18 @@ export function Navbar() {
   const handleSignOut = async () => {
     try {
       await supabaseClient.auth.signOut();
-      window.location.href = "/";
+      if (typeof window !== "undefined") {
+        window.location.href = "/";
+      }
     } catch (error) {
       console.error("Error signing out:", error);
     }
   };
 
   const handleSettings = () => {
-    window.location.href = "/settings";
+    if (typeof window !== "undefined") {
+      window.location.href = "/settings";
+    }
   };
 
   if (isLoading) {
@@ -76,7 +80,25 @@ export function Navbar() {
           </a>
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-4">
+          <a 
+            href="/generate" 
+            className="text-sm font-medium hover:text-blue-600 transition-colors cursor-pointer"
+          >
+            {t("generate", language)}
+          </a>
+          <a 
+            href="/study" 
+            className="text-sm font-medium hover:text-blue-600 transition-colors cursor-pointer"
+          >
+            {t("study", language)}
+          </a>
+          <a 
+            href="/ai-tools" 
+            className="text-sm font-medium hover:text-blue-600 transition-colors cursor-pointer"
+          >
+            AI Tools
+          </a>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="flex items-center space-x-2">

@@ -48,16 +48,29 @@ export function useAiGeneration(options: AiGenerationOptions = {}) {
   const abortControllerRef = useRef<AbortController | null>(null);
   const fallbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const parseSseEvent = useCallback((data: string): AiGenerateSseEvent | null => {
+  const parseSseEvent = useCallback((line: string): AiGenerateSseEvent | null => {
     try {
-      const lines = data.split("\n");
-      for (const line of lines) {
-        if (line.startsWith("data: ")) {
-          const jsonData = line.slice(6);
-          if (jsonData === "[DONE]") return null;
-          return JSON.parse(jsonData);
-        }
+      if (line.startsWith("data: ")) {
+        const jsonData = line.slice(6);
+        if (jsonData === "[DONE]") return null;
+        console.log("Parsing SSE data:", jsonData);
+        const parsed = JSON.parse(jsonData);
+        console.log("Parsed SSE event:", parsed);
+        return parsed;
+      } else if (line.startsWith(": ")) {
+        console.log("SSE: Received ping/heartbeat:", line);
+        return null;
+      } else if (line === ":ok") {
+        console.log("SSE: Received ok signal");
+        return null;
       }
+      // If line doesn't start with "data: " or other known prefixes, ignore it silently
+      // (ping, heartbeat, ok signals are handled above)
+      // Other lines like empty lines or unknown formats are ignored
+      // This includes lines that don't match any known pattern
+      // No need to log these as they are expected and harmless
+      // The function will return null if no valid event is found
+      // This is the end of the line processing logic
     } catch (error) {
       console.warn("Failed to parse SSE event:", error);
     }
@@ -122,11 +135,19 @@ export function useAiGeneration(options: AiGenerationOptions = {}) {
               const lines = buffer.split("\n");
               buffer = lines.pop() || "";
 
+              console.log("SSE: Processing lines:", lines.length, "buffer remaining:", buffer.length);
+
               for (const line of lines) {
-                if (line.trim() === "") continue;
+                if (line.trim() === "") {
+                  console.log("SSE: Skipping empty line");
+                  continue;
+                }
 
                 const event = parseSseEvent(line);
-                if (!event) continue;
+                if (!event) {
+                  console.log("SSE: No event parsed from line:", line);
+                  continue;
+                }
 
                 // Clear fallback timeout on any event
                 if (fallbackTimeoutRef.current) {
@@ -134,17 +155,22 @@ export function useAiGeneration(options: AiGenerationOptions = {}) {
                   fallbackTimeoutRef.current = null;
                 }
 
+                console.log("SSE Event received:", event.type, event.data);
                 switch (event.type) {
                   case "proposal":
+                    console.log("Processing proposal:", event.data);
                     onProposal(event.data);
                     break;
                   case "progress":
+                    console.log("Processing progress:", event.data.count);
                     onProgress(event.data.count);
                     break;
                   case "done":
+                    console.log("Processing done:", event.data.returned_count, event.data.request_id);
                     onDone(event.data.returned_count, event.data.request_id);
                     return;
                   case "error":
+                    console.log("Processing error:", event.data.message);
                     onError(event.data.message);
                     return;
                 }

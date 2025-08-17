@@ -16,6 +16,10 @@ export function NetworkStatus({ onOnlineChange, language = "en", isHydrated = tr
   const [isOnline, setIsOnline] = useState(true); // Start with true to avoid hydration mismatch
 
   useEffect(() => {
+    if (typeof window === "undefined" || typeof navigator === "undefined") {
+      return;
+    }
+
     // Set initial state after hydration to avoid mismatch
     setIsOnline(navigator.onLine);
 

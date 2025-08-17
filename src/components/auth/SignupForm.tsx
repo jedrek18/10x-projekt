@@ -129,11 +129,15 @@ export function SignupForm({ redirectTo }: SignupFormProps) {
       // W MVP traktujemy udaną rejestrację jako zalogowanie
       if (data.session) {
         // Clear any stored intended path
-        localStorage.removeItem("auth:intendedPath");
+        if (typeof window !== "undefined") {
+          window.localStorage.removeItem("auth:intendedPath");
+        }
 
         // Redirect to intended destination or default
         const redirectUrl = redirectTo || "/flashcards";
-        window.location.assign(redirectUrl);
+        if (typeof window !== "undefined") {
+          window.location.assign(redirectUrl);
+        }
       } else if (data.user) {
         // Jeśli rejestracja udana ale brak sesji, spróbuj zalogować
         const signInCommand: AuthSignInCommand = {
@@ -153,11 +157,15 @@ export function SignupForm({ redirectTo }: SignupFormProps) {
         }
 
         // Clear any stored intended path
-        localStorage.removeItem("auth:intendedPath");
+        if (typeof window !== "undefined") {
+          window.localStorage.removeItem("auth:intendedPath");
+        }
 
         // Redirect to intended destination or default
         const redirectUrl = redirectTo || "/flashcards";
-        window.location.assign(redirectUrl);
+        if (typeof window !== "undefined") {
+          window.location.assign(redirectUrl);
+        }
       }
     } catch (err) {
       setFormState((prev) => ({
@@ -176,7 +184,9 @@ export function SignupForm({ redirectTo }: SignupFormProps) {
       } = await supabaseClient.auth.getSession();
       if (session) {
         const redirectUrl = redirectTo || "/flashcards";
-        window.location.assign(redirectUrl);
+        if (typeof window !== "undefined") {
+          window.location.assign(redirectUrl);
+        }
       } else {
         // Set focus on email field after component mounts and no session exists
         setTimeout(() => {

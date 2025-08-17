@@ -1,8 +1,8 @@
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useCallback, useMemo, useEffect } from "react";
 import { useLocalStorage } from "@/lib/hooks/useLocalStorage";
 import { useValidation } from "./useValidation";
-import type { ProposalsSessionVM, ProposalVM, ProposalStatus, ProposalCounts, TTLInfo, UUID } from "../types";
-import type { AiGenerationProposalDTO } from "@/types";
+import type { ProposalsSessionVM, ProposalVM, ProposalStatus, ProposalCounts, TTLInfo } from "../types";
+import type { AiGenerationProposalDTO, UUID } from "@/types";
 
 const LOCAL_STORAGE_KEY = "proposals.session.v1";
 const TTL_HOURS = 24;
@@ -59,6 +59,12 @@ export function useProposalsSession() {
   // Replace session from generation
   const replaceFromGenerate = useCallback(
     (batch: AiGenerationProposalDTO[], requestId: UUID, requestedMax: number) => {
+      console.log("useProposalsSession: replaceFromGenerate called", {
+        batchLength: batch.length,
+        requestId,
+        requestedMax,
+      });
+
       const now = new Date();
       const ttlExpiresAt = new Date(now.getTime() + TTL_MS).toISOString();
 
@@ -74,6 +80,10 @@ export function useProposalsSession() {
       }));
 
       const validatedItems = validateMany(items);
+      console.log("useProposalsSession: Validated items", {
+        itemsCount: validatedItems.length,
+        firstItem: validatedItems[0],
+      });
 
       const newSession: ProposalsSessionVM = {
         requestId,
@@ -85,10 +95,17 @@ export function useProposalsSession() {
         ttlExpiresAt,
       };
 
+      console.log("useProposalsSession: Setting new session", {
+        sessionDone: newSession.done,
+        itemsCount: newSession.items.length,
+        requestId: newSession.requestId,
+      });
+
       setSession(newSession);
       // Also save directly to localStorage as backup
       try {
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newSession));
+        console.log("useProposalsSession: Session saved to localStorage");
       } catch (error) {
         console.warn("Failed to save session to localStorage directly:", error);
       }
@@ -262,5 +279,6 @@ export function useProposalsSession() {
     canSave,
     persist,
     clear,
+    setSession,
   };
 }

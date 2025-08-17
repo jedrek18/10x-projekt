@@ -41,6 +41,8 @@ export interface AppCopy {
   settings: string;
   logout: string;
   user: string;
+  generate: string;
+  study: string;
 
   // Flashcards
   myFlashcards: string;
@@ -209,6 +211,7 @@ export interface AppCopy {
   connectionProblem: string;
   connectionProblemDescription: string;
   generationFailed: string;
+  inputChangedBanner: string;
   networkOffline: string;
   networkOfflineDescription: string;
   retry: string;
@@ -420,6 +423,8 @@ export const appCopy: I18nDictionary = {
     settings: "Settings",
     logout: "Logout",
     user: "User",
+    generate: "Generate",
+    study: "Study",
 
     // Flashcards
     myFlashcards: "My Flashcards",
@@ -593,6 +598,7 @@ export const appCopy: I18nDictionary = {
     connectionProblem: "Connection problem",
     connectionProblemDescription: "Server is not responding. Check your connection and try again.",
     generationFailed: "Generation error",
+    inputChangedBanner: "Input has changed. Generate new flashcards to see updated results.",
     networkOffline: "No internet connection",
     networkOfflineDescription: "Some features may be unavailable.",
     retry: "Try again",
@@ -772,6 +778,8 @@ export const appCopy: I18nDictionary = {
     settings: "Ustawienia",
     logout: "Wyloguj",
     user: "Użytkownik",
+    generate: "Generuj",
+    study: "Nauka",
 
     // Flashcards
     myFlashcards: "Moje fiszki",
@@ -945,6 +953,7 @@ export const appCopy: I18nDictionary = {
     connectionProblem: "Problem z połączeniem",
     connectionProblemDescription: "Serwer nie odpowiada. Sprawdź połączenie i spróbuj ponownie.",
     generationFailed: "Błąd generacji",
+    inputChangedBanner: "Dane wejściowe zostały zmienione. Wygeneruj nowe fiszki, aby zobaczyć zaktualizowane wyniki.",
     networkOffline: "Brak połączenia z internetem",
     networkOfflineDescription: "Niektóre funkcje mogą być niedostępne.",
     retry: "Spróbuj ponownie",

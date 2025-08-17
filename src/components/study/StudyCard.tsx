@@ -17,7 +17,9 @@ export const StudyCard = React.memo(function StudyCard({ item, revealed, onRevea
   const [prefersReducedMotion, setPrefersReducedMotion] = React.useState(false);
 
   React.useEffect(() => {
-    setPrefersReducedMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    if (typeof window !== "undefined") {
+      setPrefersReducedMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    }
   }, []);
 
   return (

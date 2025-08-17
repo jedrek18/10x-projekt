@@ -1,0 +1,24 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { AIToolsPanel } from "../components/ai/AIToolsPanel";
+---
+
+<Layout title="AI Language Tools - 10x Projekt">
+  <main class="container mx-auto px-4 py-8">
+    <div class="mb-8 text-center">
+      <h1 class="text-4xl font-bold mb-4">AI Language Tools</h1>
+      <p class="text-xl text-muted-foreground max-w-2xl mx-auto">
+        Enhance your language learning with AI-powered tools for translation, grammar correction, and vocabulary
+        exploration.
+      </p>
+    </div>
+
+    <AIToolsPanel client:load />
+  </main>
+</Layout>
+
+<style>
+  main {
+    min-height: calc(100vh - 200px);
+  }
+</style>

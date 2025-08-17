@@ -17,7 +17,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     const { userId } = await assertAuthenticated(supabase);
 
     const acceptsSse = (request.headers.get("accept") || "").includes("text/event-stream");
-    const TIMEOUT_MS = 30000;
+    const TIMEOUT_MS = 120000; // Zwiększamy timeout do 2 minut
     const contentType = request.headers.get("content-type") || "";
     if (!contentType.includes("application/json")) {
       return errorJson("Unsupported Media Type", "unsupported_media_type", 415);
@@ -55,6 +55,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
               signal: abortController.signal,
             })) {
               const payload = JSON.stringify({ type: event.type, data: event.data });
+              console.log("API: Sending SSE event:", payload);
               controller.enqueue(encoder.encode(`data: ${payload}\n\n`));
               if (event.type === "done") {
                 try {

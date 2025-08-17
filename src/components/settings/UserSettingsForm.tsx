@@ -105,9 +105,11 @@ export function UserSettingsForm({ initial, onSubmit, busy = false }: UserSettin
 
     if (!validateForm()) {
       // Focus first error field
-      const firstErrorField = document.querySelector('[aria-invalid="true"]') as HTMLElement;
-      if (firstErrorField) {
-        firstErrorField.focus();
+      if (typeof window !== "undefined" && typeof document !== "undefined") {
+        const firstErrorField = document.querySelector('[aria-invalid="true"]') as HTMLElement;
+        if (firstErrorField) {
+          firstErrorField.focus();
+        }
       }
       return;
     }

@@ -51,6 +51,10 @@ export function StudyStage({ item, rate, onRated }: StudyStageProps) {
 
   // Obsługa skrótów klawiaturowych
   useEffect(() => {
+    if (typeof window === "undefined" || typeof document === "undefined") {
+      return;
+    }
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!item) return;
 
