@@ -2,16 +2,12 @@
 import Layout from "../../layouts/Layout.astro";
 import { FlashcardsPage } from "../../components/flashcards/FlashcardsPage";
 import { AuthGuard } from "../../components/auth/AuthGuard";
-import LanguageSelector from "../../components/Landing/LanguageSelector.tsx";
 
 export const prerender = false;
 ---
 
 <Layout title="Moje fiszki">
   <AuthGuard client:load>
-    <div class="fixed top-4 right-4 z-[60] flex items-center gap-2">
-      <LanguageSelector client:visible />
-    </div>
     <FlashcardsPage client:load />
   </AuthGuard>
 </Layout>

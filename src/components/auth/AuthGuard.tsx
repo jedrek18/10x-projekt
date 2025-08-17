@@ -80,7 +80,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
   // Show loading state while checking session
   if (isCheckingSession) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50" suppressHydrationWarning>
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-sm text-gray-600">Sprawdzanie sesji...</p>
@@ -92,7 +92,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
   // If user is not logged in, don't render children (redirect is happening)
   if (!hasSession) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50" suppressHydrationWarning>
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-sm text-gray-600">Przekierowywanie do loginu...</p>

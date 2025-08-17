@@ -11,24 +11,29 @@ export class NotFoundError extends Error {
 export async function ensureUserSettingsExists(supabase: TypedSupabase): Promise<UserSettingsDTO> {
   const { userId } = await assertAuthenticated(supabase);
 
-  // Insert default row if missing (ignore on conflict)
-  const { error: insertError } = await supabase
+  // First try to get existing settings
+  const { data: existing, error: selectError } = await supabase
     .from("user_settings")
-    .insert({ user_id: userId } as any)
-    .onConflict("user_id")
-    .ignore();
-  if (insertError) {
-    // Ignore 23505 duplicate errors defensively; otherwise surface
-    if ((insertError as any)?.code !== "23505") {
-      throw insertError;
-    }
+    .select("*")
+    .eq("user_id", userId)
+    .single();
+
+  if (existing) {
+    return existing as UserSettingsDTO;
   }
 
-  const { data, error } = await supabase.from("user_settings").select("*").eq("user_id", userId).single();
-  if (error || !data) {
-    throw new NotFoundError("user_settings row not found");
+  // If not found, insert default row
+  const { data: inserted, error: insertError } = await supabase
+    .from("user_settings")
+    .insert({ user_id: userId })
+    .select()
+    .single();
+
+  if (insertError || !inserted) {
+    throw new Error(`Failed to create user settings: ${insertError?.message || "Unknown error"}`);
   }
-  return data as UserSettingsDTO;
+
+  return inserted as UserSettingsDTO;
 }
 
 export async function getUserSettings(supabase: TypedSupabase): Promise<UserSettingsDTO> {

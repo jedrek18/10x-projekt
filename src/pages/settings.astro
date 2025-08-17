@@ -1,0 +1,17 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { UserSettingsView } from "../components/settings/UserSettingsView";
+---
+
+<Layout title="Settings - 10x Flashcards">
+  <main class="container mx-auto px-4 py-8 max-w-2xl">
+    <div class="space-y-8">
+      <div class="text-center">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Settings</h1>
+        <p class="text-gray-600">Customize your learning preferences and interface</p>
+      </div>
+
+      <UserSettingsView client:load />
+    </div>
+  </main>
+</Layout>

@@ -47,8 +47,7 @@ export function Navbar() {
   };
 
   const handleSettings = () => {
-    // TODO: Przejście do ustawień gdy zostanie zaimplementowane
-    alert("Ustawienia będą dostępne wkrótce");
+    window.location.href = "/settings";
   };
 
   if (isLoading) {
@@ -72,7 +71,9 @@ export function Navbar() {
     <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 h-14 flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <span className="font-semibold">10x Flashcards</span>
+          <a href="/" className="font-semibold hover:text-blue-600 transition-colors cursor-pointer">
+            10x Flashcards
+          </a>
         </div>
 
         <div className="flex items-center space-x-2">

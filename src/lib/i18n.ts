@@ -92,6 +92,7 @@ export interface AppCopy {
   addFlashcardError: string;
   unexpectedError: string;
   adding: string;
+  saving: string;
   flashcardAdded: string;
   flashcardUpdated: string;
   flashcardDeleted: string;
@@ -104,12 +105,28 @@ export interface AppCopy {
   frontRequired: string;
   backRequired: string;
   frontBackDifferent: string;
+  integer: string;
+  range: string;
 
   // Sources
   manual: string;
   ai: string;
   aiEdited: string;
   import: string;
+
+  // Settings
+  studySettings: string;
+  interfacePreferences: string;
+  settingsLoadError: string;
+  settingsSaveError: string;
+  loadingSettings: string;
+  settingsSaved: string;
+  dailyGoal: string;
+  dailyGoalDescription: string;
+  dailyGoalError: string;
+  newLimit: string;
+  newLimitDescription: string;
+  newLimitError: string;
 }
 
 export type I18nDictionary = Record<LanguageCode, AppCopy>;
@@ -242,6 +259,7 @@ export const appCopy: I18nDictionary = {
     addFlashcardError: "Failed to add flashcard",
     unexpectedError: "An unexpected error occurred",
     adding: "Adding...",
+    saving: "Saving...",
     flashcardAdded: "Flashcard added successfully",
     flashcardUpdated: "Flashcard updated successfully",
     flashcardDeleted: "Flashcard deleted successfully",
@@ -254,12 +272,28 @@ export const appCopy: I18nDictionary = {
     frontRequired: "Front text is required",
     backRequired: "Back text is required",
     frontBackDifferent: "Front and back must be different",
+    integer: "Must be a whole number",
+    range: "Must be between {min} and {max}",
 
     // Sources
     manual: "Manual",
     ai: "AI",
     aiEdited: "AI (edited)",
     import: "Import",
+
+    // Settings
+    studySettings: "Study Settings",
+    interfacePreferences: "Interface Preferences",
+    settingsLoadError: "Failed to load settings. Please try again.",
+    settingsSaveError: "Failed to save settings. Please try again.",
+    loadingSettings: "Loading settings...",
+    settingsSaved: "Settings saved successfully",
+    dailyGoal: "Daily Goal",
+    dailyGoalDescription: "Number of cards to study per day (1-200)",
+    dailyGoalError: "Daily goal must be between 1 and 200",
+    newLimit: "New Cards Limit",
+    newLimitDescription: "Maximum new cards per day (0-50)",
+    newLimitError: "New cards limit must be between 0 and 50",
   },
   pl: {
     // Landing page
@@ -353,6 +387,7 @@ export const appCopy: I18nDictionary = {
     addFlashcardError: "Nie udało się dodać fiszki",
     unexpectedError: "Wystąpił nieoczekiwany błąd",
     adding: "Dodawanie...",
+    saving: "Zapisywanie...",
     flashcardAdded: "Fiszka została dodana",
     flashcardUpdated: "Fiszka została zaktualizowana",
     flashcardDeleted: "Fiszka została usunięta",
@@ -365,12 +400,28 @@ export const appCopy: I18nDictionary = {
     frontRequired: "Tekst z przodu jest wymagany",
     backRequired: "Tekst z tyłu jest wymagany",
     frontBackDifferent: "Przód i tył muszą być różne",
+    integer: "Musi być liczbą całkowitą",
+    range: "Musi być między {min} a {max}",
 
     // Sources
     manual: "Ręczne",
     ai: "AI",
     aiEdited: "AI (edytowane)",
     import: "Import",
+
+    // Settings
+    studySettings: "Ustawienia nauki",
+    interfacePreferences: "Preferencje interfejsu",
+    settingsLoadError: "Nie udało się załadować ustawień. Spróbuj ponownie.",
+    settingsSaveError: "Nie udało się zapisać ustawień. Spróbuj ponownie.",
+    loadingSettings: "Ładowanie ustawień...",
+    settingsSaved: "Ustawienia zostały zapisane",
+    dailyGoal: "Dzienny cel",
+    dailyGoalDescription: "Liczba fiszek do nauki dziennie (1-200)",
+    dailyGoalError: "Dzienny cel musi być między 1 a 200",
+    newLimit: "Limit nowych fiszek",
+    newLimitDescription: "Maksymalna liczba nowych fiszek dziennie (0-50)",
+    newLimitError: "Limit nowych fiszek musi być między 0 a 50",
   },
 };
 
