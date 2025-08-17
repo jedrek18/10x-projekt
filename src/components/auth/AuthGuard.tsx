@@ -28,6 +28,27 @@ export function AuthGuard({ children }: AuthGuardProps) {
         }
 
         if (session) {
+          // Verify that the user actually exists in the database
+          const {
+            data: { user },
+            error: userError,
+          } = await supabaseClient.auth.getUser();
+
+          if (userError || !user) {
+            console.warn("User not found in database, clearing session");
+            await supabaseClient.auth.signOut({ scope: "global" });
+            setHasSession(false);
+            setIsCheckingSession(false);
+
+            // Store intended path for redirect after login
+            const currentPath = window.location.pathname + window.location.search;
+            localStorage.setItem("auth:intendedPath", currentPath);
+
+            // Redirect to login
+            window.location.assign("/auth/login");
+            return;
+          }
+
           setHasSession(true);
           setIsCheckingSession(false);
         } else {

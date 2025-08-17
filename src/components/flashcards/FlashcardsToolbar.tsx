@@ -4,7 +4,7 @@ import { t, tWithParams } from "../../lib/i18n";
 import type { FlashcardsToolbarProps } from "./types";
 
 export function FlashcardsToolbar({ totalCount, page, pageSize }: FlashcardsToolbarProps) {
-  const { language } = usePreferredLanguage();
+  const { language, isHydrated } = usePreferredLanguage();
   const startIndex = (page - 1) * pageSize + 1;
   const endIndex = Math.min(page * pageSize, totalCount);
 
@@ -13,7 +13,7 @@ export function FlashcardsToolbar({ totalCount, page, pageSize }: FlashcardsTool
       <div className="flex items-center space-x-4">
         <div className="text-sm text-muted-foreground">
           {totalCount === 0 ? (
-            t("noFlashcards", language)
+            t("noFlashcards", isHydrated ? language : "en")
           ) : (
             <>
               {tWithParams(
@@ -23,7 +23,7 @@ export function FlashcardsToolbar({ totalCount, page, pageSize }: FlashcardsTool
                   end: endIndex,
                   total: totalCount,
                 },
-                language
+                isHydrated ? language : "en"
               )}
             </>
           )}
@@ -31,7 +31,7 @@ export function FlashcardsToolbar({ totalCount, page, pageSize }: FlashcardsTool
 
         {totalCount > 0 && (
           <Badge variant="outline" className="text-xs">
-            {t("sorting", language)}: {t("newest", language)}
+            {t("sorting", isHydrated ? language : "en")}: {t("newest", isHydrated ? language : "en")}
           </Badge>
         )}
       </div>
@@ -45,7 +45,7 @@ export function FlashcardsToolbar({ totalCount, page, pageSize }: FlashcardsTool
                 page: page,
                 total: Math.ceil(totalCount / pageSize),
               },
-              language
+              isHydrated ? language : "en"
             )}
           </>
         )}

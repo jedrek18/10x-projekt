@@ -10,7 +10,7 @@ const redirect = Astro.url.searchParams.get("redirect") || "";
 ---
 
 <Layout title="Logowanie">
-  <div class="fixed top-4 right-4 z-[60] flex items-center gap-2">
+  <div class="fixed top-4 right-4 z-[60] flex items-center gap-2 transform-gpu">
     <LanguageSelector client:visible />
   </div>
   <AuthRedirectGuard redirectTo={redirect} client:load>

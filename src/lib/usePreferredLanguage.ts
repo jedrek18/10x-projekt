@@ -1,22 +1,37 @@
 import { useCallback, useEffect, useState } from "react";
-import { DEFAULT_LANGUAGE, LOCAL_STORAGE_KEY, sanitizeLanguage } from "./i18n";
+import { DEFAULT_LANGUAGE, LOCAL_STORAGE_KEY, sanitizeLanguage, detectBrowserLanguage } from "./i18n";
 import type { LanguageCode } from "./i18n";
 
 function isBrowser(): boolean {
   return typeof window !== "undefined" && typeof document !== "undefined";
 }
 
-export function usePreferredLanguage(): { language: LanguageCode; setLanguage: (l: LanguageCode) => void } {
-  const [language, setLanguageState] = useState<LanguageCode>(() => {
-    if (!isBrowser()) return DEFAULT_LANGUAGE;
+export function usePreferredLanguage(): {
+  language: LanguageCode;
+  setLanguage: (l: LanguageCode) => void;
+  isHydrated: boolean;
+} {
+  const [language, setLanguageState] = useState<LanguageCode>(DEFAULT_LANGUAGE);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Initialize language after hydration to avoid SSR mismatch
+  useEffect(() => {
+    if (!isBrowser()) return;
+
     try {
       const stored = window.localStorage.getItem(LOCAL_STORAGE_KEY);
       const valid = sanitizeLanguage(stored);
-      return valid ?? DEFAULT_LANGUAGE;
+      const initialLanguage = valid ?? detectBrowserLanguage();
+
+      if (initialLanguage !== language) {
+        setLanguageState(initialLanguage);
+      }
     } catch {
-      return DEFAULT_LANGUAGE;
+      // ignore storage errors
     }
-  });
+
+    setIsHydrated(true);
+  }, [language]);
 
   const setLanguage = useCallback((next: LanguageCode) => {
     setLanguageState((prev) => {
@@ -66,5 +81,5 @@ export function usePreferredLanguage(): { language: LanguageCode; setLanguage: (
     };
   }, []);
 
-  return { language, setLanguage };
+  return { language, setLanguage, isHydrated };
 }

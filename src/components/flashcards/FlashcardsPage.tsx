@@ -14,7 +14,7 @@ import { t } from "../../lib/i18n";
 import type { FlashcardDTO } from "../../types";
 
 export function FlashcardsPage() {
-  const { language } = usePreferredLanguage();
+  const { language, isHydrated } = usePreferredLanguage();
 
   // Hooki
   const { state, fetchPage, add, edit, removeWithUndo, undoLast, refresh, setPageFromUrl } = useFlashcardsList();
@@ -130,8 +130,8 @@ export function FlashcardsPage() {
       {/* Nagłówek */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold">{t("myFlashcards", language)}</h1>
-          <p className="text-muted-foreground mt-1">{t("manageFlashcards", language)}</p>
+          <h1 className="text-3xl font-bold">{t("myFlashcards", isHydrated ? language : "en")}</h1>
+          <p className="text-muted-foreground mt-1">{t("manageFlashcards", isHydrated ? language : "en")}</p>
         </div>
         <StudyNowCTA queue={queue} isLoading={isStudyLoading} />
       </div>
@@ -140,7 +140,7 @@ export function FlashcardsPage() {
       <div className="mb-6">
         <Button onClick={() => setIsAddModalOpen(true)} className="flex items-center space-x-2">
           <Plus className="h-4 w-4" />
-          <span>{t("addFlashcard", language)}</span>
+          <span>{t("addFlashcard", isHydrated ? language : "en")}</span>
         </Button>
       </div>
 
@@ -154,10 +154,10 @@ export function FlashcardsPage() {
         ) : state.listError ? (
           <div className="text-center py-12">
             <div className="text-destructive">
-              <p className="text-lg font-medium mb-2">{t("loadingError", language)}</p>
+              <p className="text-lg font-medium mb-2">{t("loadingError", isHydrated ? language : "en")}</p>
               <p className="text-sm mb-4">{state.listError}</p>
               <Button onClick={async () => await fetchPage(state.page)} variant="outline">
-                {t("tryAgain", language)}
+                {t("tryAgain", isHydrated ? language : "en")}
               </Button>
             </div>
           </div>

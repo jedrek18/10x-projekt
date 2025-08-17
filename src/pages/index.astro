@@ -12,7 +12,7 @@ const copy = landingCopy[DEFAULT_LANGUAGE];
 
 <Layout>
   <AuthRedirectGuard client:load>
-    <div class="fixed top-4 right-4 z-[60] flex items-center gap-2">
+    <div class="fixed top-4 right-4 z-[60] flex items-center gap-2 transform-gpu">
       <span class="text-sm text-muted-foreground hidden md:inline">{copy.languageLabel}</span>
       <LanguageSelector client:visible />
       <noscript>

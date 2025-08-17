@@ -24,7 +24,7 @@ export function DeleteUndoSnackbar({ entry, onUndo }: DeleteUndoSnackbarProps) {
   if (!entry) return null;
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-80 bg-background border border-border rounded-lg shadow-lg p-4 z-50">
+    <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-80 bg-background border border-border rounded-lg shadow-lg p-4 z-50 transform-gpu">
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <p className="text-sm font-medium">Fiszka usunięta</p>

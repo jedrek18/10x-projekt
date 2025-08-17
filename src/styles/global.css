@@ -122,15 +122,15 @@
 /* Landing hero decorative background */
 @keyframes heroGradientPulse {
   0% {
-    transform: translate3d(0, 0, 0) scale(1);
+    transform: scale(1);
     opacity: 0.6;
   }
   50% {
-    transform: translate3d(2%, -2%, 0) scale(1.05);
+    transform: scale(1.05);
     opacity: 0.8;
   }
   100% {
-    transform: translate3d(-2%, 2%, 0) scale(1.03);
+    transform: scale(1.03);
     opacity: 0.7;
   }
 }
@@ -144,6 +144,7 @@
   filter: blur(40px);
   animation: heroGradientPulse 12s ease-in-out infinite alternate;
   isolation: isolate;
+  will-change: transform, opacity;
 }
 
 @media (prefers-reduced-motion: reduce) {

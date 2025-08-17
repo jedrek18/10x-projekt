@@ -127,6 +127,59 @@ export interface AppCopy {
   newLimit: string;
   newLimitDescription: string;
   newLimitError: string;
+
+  // Account Management
+  accountManagement: string;
+  accountManagementDescription: string;
+  accountInformation: string;
+  accountInformationDescription: string;
+  lastSignIn: string;
+  userId: string;
+  sessionActive: string;
+  changePassword: string;
+  changePasswordDescription: string;
+  currentPassword: string;
+  newPassword: string;
+  confirmNewPassword: string;
+  currentPasswordRequired: string;
+  newPasswordRequired: string;
+  newPasswordMinLength: string;
+  newPasswordDifferent: string;
+  incorrectCurrentPassword: string;
+  passwordChanged: string;
+  passwordChangedDescription: string;
+  changingPassword: string;
+  signOut: string;
+  signOutDescription: string;
+  signOutScope: string;
+  thisDeviceOnly: string;
+  allDevices: string;
+  thisDeviceDescription: string;
+  allDevicesDescription: string;
+  signingOut: string;
+  dangerZone: string;
+  dangerZoneDescription: string;
+  deleteAccount: string;
+  deleteAccountDescription: string;
+  deleteAccountConsequences: string;
+  deleteAccountConsequencesList: string;
+  deleteAccountButton: string;
+  deleteAccountModalTitle: string;
+  deleteAccountModalDescription: string;
+  deleteAccountPassword: string;
+  deleteAccountPasswordPlaceholder: string;
+  deleteAccountConfirmPhrase: string;
+  deleteAccountConfirmPhrasePlaceholder: string;
+  deleteAccountConfirmPhraseDescription: string;
+  deleteAccountCooldown: string;
+  deleteAccountCooldownDescription: string;
+  deleteAccountPasswordRequired: string;
+  deleteAccountConfirmPhraseError: string;
+  deletingAccount: string;
+  accountDeleted: string;
+  accountDeletedDescription: string;
+  checkingSession: string;
+  sessionSecureMessage: string;
 }
 
 export type I18nDictionary = Record<LanguageCode, AppCopy>;
@@ -294,6 +347,64 @@ export const appCopy: I18nDictionary = {
     newLimit: "New Cards Limit",
     newLimitDescription: "Maximum new cards per day (0-50)",
     newLimitError: "New cards limit must be between 0 and 50",
+
+    // Account Management
+    accountManagement: "Account Management",
+    accountManagementDescription: "Manage your account settings and security",
+    accountInformation: "Account Information",
+    accountInformationDescription: "Your current account details and session information",
+    lastSignIn: "Last Sign In",
+    userId: "User ID",
+    sessionActive: "Active Session",
+    changePassword: "Change Password",
+    changePasswordDescription:
+      "Update your password to keep your account secure. You will be signed out from all devices after changing your password.",
+    currentPassword: "Current Password",
+    newPassword: "New Password",
+    confirmNewPassword: "Confirm New Password",
+    currentPasswordRequired: "Current password is required",
+    newPasswordRequired: "New password is required",
+    newPasswordMinLength: "New password must be at least 8 characters",
+    newPasswordDifferent: "New password must be different from current password",
+    incorrectCurrentPassword: "Incorrect current password",
+    passwordChanged: "Password changed",
+    passwordChangedDescription: "Please log in again with your new password.",
+    changingPassword: "Changing Password...",
+    signOut: "Sign Out",
+    signOutDescription:
+      "Sign out of your account. You can choose to sign out from this device only or from all devices.",
+    signOutScope: "Sign Out Scope",
+    thisDeviceOnly: "This device only",
+    allDevices: "All devices",
+    thisDeviceDescription: "Sign out from this device only. You'll remain signed in on other devices.",
+    allDevicesDescription: "Sign out from all devices. You'll need to sign in again on all devices.",
+    signingOut: "Signing Out...",
+    dangerZone: "Danger Zone",
+    dangerZoneDescription: "Irreversible actions that will permanently affect your account",
+    deleteAccount: "Delete Account",
+    deleteAccountDescription: "Permanently delete your account and all associated data. This action cannot be undone.",
+    deleteAccountConsequences:
+      "This action cannot be undone. This will permanently delete your account and remove all your data.",
+    deleteAccountConsequencesList:
+      "All your flashcards will be permanently deleted,Your learning progress will be lost,Your account settings will be removed,You will be signed out from all devices",
+    deleteAccountButton: "Delete My Account",
+    deleteAccountModalTitle: "Delete Account",
+    deleteAccountModalDescription:
+      "This action cannot be undone. This will permanently delete your account and remove all your data.",
+    deleteAccountPassword: "Your Password",
+    deleteAccountPasswordPlaceholder: "Enter your password to confirm",
+    deleteAccountConfirmPhrase: 'Type "delete" to confirm',
+    deleteAccountConfirmPhrasePlaceholder: "delete",
+    deleteAccountConfirmPhraseDescription: 'Type "delete" to confirm you understand this action is irreversible.',
+    deleteAccountCooldown: "Please wait {time} seconds before you can delete your account.",
+    deleteAccountCooldownDescription: "Please wait for the cooldown to finish",
+    deleteAccountPasswordRequired: "Password is required",
+    deleteAccountConfirmPhraseError: "Please type 'delete' to confirm deletion",
+    deletingAccount: "Deleting Account...",
+    accountDeleted: "Account deleted",
+    accountDeletedDescription: "Your account has been permanently deleted.",
+    checkingSession: "Checking session...",
+    sessionSecureMessage: "Your session is active and secure. You can manage your account settings below.",
   },
   pl: {
     // Landing page
@@ -422,6 +533,64 @@ export const appCopy: I18nDictionary = {
     newLimit: "Limit nowych fiszek",
     newLimitDescription: "Maksymalna liczba nowych fiszek dziennie (0-50)",
     newLimitError: "Limit nowych fiszek musi być między 0 a 50",
+
+    // Account Management
+    accountManagement: "Zarządzanie kontem",
+    accountManagementDescription: "Zarządzaj ustawieniami konta i bezpieczeństwem",
+    accountInformation: "Informacje o koncie",
+    accountInformationDescription: "Twoje aktualne dane konta i informacje o sesji",
+    lastSignIn: "Ostatnie logowanie",
+    userId: "ID użytkownika",
+    sessionActive: "Aktywna sesja",
+    changePassword: "Zmień hasło",
+    changePasswordDescription:
+      "Zaktualizuj hasło, aby zachować bezpieczeństwo konta. Zostaniesz wylogowany ze wszystkich urządzeń po zmianie hasła.",
+    currentPassword: "Obecne hasło",
+    newPassword: "Nowe hasło",
+    confirmNewPassword: "Potwierdź nowe hasło",
+    currentPasswordRequired: "Obecne hasło jest wymagane",
+    newPasswordRequired: "Nowe hasło jest wymagane",
+    newPasswordMinLength: "Nowe hasło musi mieć co najmniej 8 znaków",
+    newPasswordDifferent: "Nowe hasło musi być inne od obecnego",
+    incorrectCurrentPassword: "Nieprawidłowe obecne hasło",
+    passwordChanged: "Hasło zostało zmienione",
+    passwordChangedDescription: "Zaloguj się ponownie używając nowego hasła.",
+    changingPassword: "Zmienianie hasła...",
+    signOut: "Wyloguj się",
+    signOutDescription:
+      "Wyloguj się z konta. Możesz wybrać wylogowanie tylko z tego urządzenia lub ze wszystkich urządzeń.",
+    signOutScope: "Zakres wylogowania",
+    thisDeviceOnly: "Tylko to urządzenie",
+    allDevices: "Wszystkie urządzenia",
+    thisDeviceDescription: "Wyloguj się tylko z tego urządzenia. Pozostaniesz zalogowany na innych urządzeniach.",
+    allDevicesDescription:
+      "Wyloguj się ze wszystkich urządzeń. Będziesz musiał zalogować się ponownie na wszystkich urządzeniach.",
+    signingOut: "Wylogowywanie...",
+    dangerZone: "Strefa niebezpieczeństwa",
+    dangerZoneDescription: "Nieodwracalne akcje, które trwale wpłyną na Twoje konto",
+    deleteAccount: "Usuń konto",
+    deleteAccountDescription: "Trwale usuń konto i wszystkie powiązane dane. Tej akcji nie można cofnąć.",
+    deleteAccountConsequences: "Tej akcji nie można cofnąć. To trwale usunie Twoje konto i wszystkie dane.",
+    deleteAccountConsequencesList:
+      "Wszystkie Twoje fiszki zostaną trwale usunięte,Twój postęp w nauce zostanie utracony,Twoje ustawienia konta zostaną usunięte,Zostaniesz wylogowany ze wszystkich urządzeń",
+    deleteAccountButton: "Usuń moje konto",
+    deleteAccountModalTitle: "Usuń konto",
+    deleteAccountModalDescription: "Tej akcji nie można cofnąć. To trwale usunie Twoje konto i wszystkie dane.",
+    deleteAccountPassword: "Twoje hasło",
+    deleteAccountPasswordPlaceholder: "Wprowadź hasło, aby potwierdzić",
+    deleteAccountConfirmPhrase: 'Wpisz "delete", aby potwierdzić',
+    deleteAccountConfirmPhrasePlaceholder: "delete",
+    deleteAccountConfirmPhraseDescription:
+      'Wpisz "delete", aby potwierdzić, że rozumiesz, że ta akcja jest nieodwracalna.',
+    deleteAccountCooldown: "Poczekaj {time} sekund, zanim będziesz mógł usunąć konto.",
+    deleteAccountCooldownDescription: "Poczekaj na zakończenie cooldown",
+    deleteAccountPasswordRequired: "Hasło jest wymagane",
+    deleteAccountConfirmPhraseError: "Wpisz 'delete', aby potwierdzić usunięcie",
+    deletingAccount: "Usuwanie konta...",
+    accountDeleted: "Konto zostało usunięte",
+    accountDeletedDescription: "Twoje konto zostało trwale usunięte.",
+    checkingSession: "Sprawdzanie sesji...",
+    sessionSecureMessage: "Twoja sesja jest aktywna i bezpieczna. Możesz zarządzać ustawieniami konta poniżej.",
   },
 };
 
