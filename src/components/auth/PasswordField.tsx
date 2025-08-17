@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { usePreferredLanguage } from "@/lib/usePreferredLanguage";
+import { t } from "@/lib/i18n";
 
 export interface PasswordFieldProps {
   id: string;
@@ -27,6 +29,7 @@ export function PasswordField({
   required = false,
   className = "",
 }: PasswordFieldProps) {
+  const { language } = usePreferredLanguage();
   const [showPassword, setShowPassword] = useState(false);
 
   const togglePasswordVisibility = () => {
@@ -58,7 +61,7 @@ export function PasswordField({
           type="button"
           onClick={togglePasswordVisibility}
           className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
-          aria-label={showPassword ? "Ukryj hasło" : "Pokaż hasło"}
+          aria-label={showPassword ? t("hidePassword", language) : t("showPassword", language)}
           tabIndex={0}
         >
           {showPassword ? (

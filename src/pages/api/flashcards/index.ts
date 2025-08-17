@@ -53,15 +53,20 @@ export const POST: APIRoute = async ({ request, locals }) => {
       return errorJson("Unsupported Media Type", "unsupported_media_type", 415);
     }
 
-    const json = await request.json().catch(() => null);
-    if (!json || typeof json !== "object") {
+    const requestBody = await request.json().catch(() => null);
+    if (!requestBody || typeof requestBody !== "object") {
       return errorJson("Invalid JSON body", "invalid_json", 400);
     }
 
-    const parsed = createManualSchema.safeParse(json);
+    console.log("[DEBUG] Flashcards API - POST request body:", requestBody);
+
+    const parsed = createManualSchema.safeParse(requestBody);
     if (!parsed.success) {
+      console.log("[DEBUG] Flashcards API - POST validation error:", parsed.error.flatten());
       return validationFailed(parsed.error.flatten());
     }
+
+    console.log("[DEBUG] Flashcards API - POST parsed data:", parsed.data);
 
     const TIMEOUT_MS = 10000;
     const created = (await Promise.race([
@@ -73,10 +78,16 @@ export const POST: APIRoute = async ({ request, locals }) => {
       }),
     ])) as Awaited<ReturnType<typeof createManualFlashcard>>;
 
+    console.log("[DEBUG] Flashcards API - POST success:", created);
     return json(created, 201);
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error("[api/flashcards] POST failed", error);
+    console.error("[api/flashcards] POST error details:", {
+      name: error instanceof Error ? error.name : "Unknown",
+      message: error instanceof Error ? error.message : "Unknown error",
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     if (error instanceof UnauthorizedError) {
       return errorJson("Unauthorized", "unauthorized", 401);
     }

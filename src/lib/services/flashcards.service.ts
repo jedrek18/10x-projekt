@@ -154,11 +154,20 @@ export async function updateFlashcardContent(
 }
 
 export async function softDeleteFlashcard(supabase: TypedSupabase, id: UUID): Promise<void> {
-  // Ensure the card exists and is owned by the user (enforced by RLS)
-  await getFlashcardById(supabase, id);
-  const { error } = await supabase.rpc("delete_flashcard", { card_id: id });
+  // Use RPC function for soft delete which handles permissions and validation
+  const { error } = await supabase.rpc("soft_delete_flashcard_rpc", { card_id: id });
+
   if (error) {
     throw new Error(`Failed to soft-delete: ${error.message}`);
+  }
+}
+
+export async function restoreFlashcard(supabase: TypedSupabase, id: UUID): Promise<void> {
+  // Use RPC function for restore which handles permissions and validation
+  const { error } = await supabase.rpc("restore_flashcard_rpc", { card_id: id });
+
+  if (error) {
+    throw new Error(`Failed to restore: ${error.message}`);
   }
 }
 

@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePreferredLanguage } from "@/lib/usePreferredLanguage";
-import type { LanguageCode } from "@/lib/i18n-landing";
+import type { LanguageCode } from "@/lib/i18n";
 
 export interface LanguageSelectorProps {
   value?: LanguageCode;

@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { PasswordField } from "./PasswordField";
 import { supabaseClient } from "@/db/supabase.client";
+import { usePreferredLanguage } from "@/lib/usePreferredLanguage";
+import { t } from "@/lib/i18n";
 import type { AuthSignUpCommand, AuthSignInCommand } from "@/types";
 import type { SignupFormValues, AuthFormState } from "./types";
 
@@ -10,6 +12,7 @@ interface SignupFormProps {
 }
 
 export function SignupForm({ redirectTo }: SignupFormProps) {
+  const { language } = usePreferredLanguage();
   const [formState, setFormState] = useState<AuthFormState<SignupFormValues>>({
     values: { email: "", password: "", confirmPassword: "" },
     errors: {},
@@ -27,17 +30,17 @@ export function SignupForm({ redirectTo }: SignupFormProps) {
   ): string | undefined => {
     switch (name) {
       case "email":
-        if (!value.trim()) return "Email jest wymagany";
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return "Nieprawidłowy format email";
+        if (!value.trim()) return t("emailRequired", language);
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return t("invalidEmailFormat", language);
         return undefined;
       case "password":
-        if (!value) return "Hasło jest wymagane";
-        if (value.length < 8) return "Hasło musi mieć co najmniej 8 znaków";
+        if (!value) return t("passwordRequired", language);
+        if (value.length < 8) return t("passwordTooShort", language);
         return undefined;
       case "confirmPassword":
-        if (!value) return "Potwierdzenie hasła jest wymagane";
+        if (!value) return t("confirmPasswordRequired", language);
         const currentPassword = allValues?.password || formState.values.password;
-        if (value !== currentPassword) return "Hasła muszą być identyczne";
+        if (value !== currentPassword) return t("passwordsMustMatch", language);
         return undefined;
       default:
         return undefined;
@@ -105,14 +108,14 @@ export function SignupForm({ redirectTo }: SignupFormProps) {
       const { data, error } = await supabaseClient.auth.signUp(signUpCommand);
 
       if (error) {
-        let errorMessage = "Wystąpił błąd podczas rejestracji";
+        let errorMessage = t("registrationError", language);
 
         if (error.message.includes("already_exists") || error.message.includes("already_registered")) {
-          errorMessage = "Konto z tym adresem email już istnieje";
+          errorMessage = t("emailAlreadyExists", language);
         } else if (error.message.includes("weak_password")) {
-          errorMessage = "Hasło jest zbyt słabe";
+          errorMessage = t("weakPassword", language);
         } else if (error.message.includes("invalid_email")) {
-          errorMessage = "Nieprawidłowy adres email";
+          errorMessage = t("invalidEmail", language);
         }
 
         setFormState((prev) => ({
@@ -143,7 +146,7 @@ export function SignupForm({ redirectTo }: SignupFormProps) {
         if (signInError || !signInData.session) {
           setFormState((prev) => ({
             ...prev,
-            errors: { form: "Konto zostało utworzone, ale wystąpił problem z logowaniem. Spróbuj się zalogować." },
+            errors: { form: t("accountCreatedButLoginFailed", language) },
             isSubmitting: false,
           }));
           return;
@@ -201,7 +204,7 @@ export function SignupForm({ redirectTo }: SignupFormProps) {
 
       <div>
         <label htmlFor="signup-email" className="block text-sm font-medium text-gray-700 mb-1">
-          Email
+          {t("email", language)}
         </label>
         <input
           ref={emailInputRef}
@@ -232,7 +235,7 @@ export function SignupForm({ redirectTo }: SignupFormProps) {
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
         error={formState.errors.password}
-        label="Hasło"
+        label={t("password", language)}
         autoComplete="new-password"
         required
       />
@@ -244,7 +247,7 @@ export function SignupForm({ redirectTo }: SignupFormProps) {
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
         error={formState.errors.confirmPassword}
-        label="Powtórz hasło"
+        label={t("confirmPassword", language)}
         autoComplete="new-password"
         required
       />
@@ -260,10 +263,10 @@ export function SignupForm({ redirectTo }: SignupFormProps) {
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               ></path>
             </svg>
-            Tworzenie konta...
+            {t("loading", language)}
           </div>
         ) : (
-          "Załóż konto"
+          t("signup", language)
         )}
       </Button>
     </form>

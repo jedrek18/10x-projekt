@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { PasswordField } from "./PasswordField";
 import { supabaseClient } from "@/db/supabase.client";
+import { usePreferredLanguage } from "@/lib/usePreferredLanguage";
+import { t } from "@/lib/i18n";
 import type { AuthSignInCommand } from "@/types";
 import type { LoginFormValues, AuthFormState } from "./types";
 
@@ -10,6 +12,7 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ redirectTo }: LoginFormProps) {
+  const { language } = usePreferredLanguage();
   const [formState, setFormState] = useState<AuthFormState<LoginFormValues>>({
     values: { email: "", password: "" },
     errors: {},
@@ -23,12 +26,12 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
   const validateField = (name: keyof LoginFormValues, value: string): string | undefined => {
     switch (name) {
       case "email":
-        if (!value.trim()) return "Email jest wymagany";
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return "Nieprawidłowy format email";
+        if (!value.trim()) return t("emailRequired", language);
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return t("invalidEmailFormat", language);
         return undefined;
       case "password":
-        if (!value) return "Hasło jest wymagane";
-        if (value.length < 8) return "Hasło musi mieć co najmniej 8 znaków";
+        if (!value) return t("passwordRequired", language);
+        if (value.length < 8) return t("passwordTooShort", language);
         return undefined;
       default:
         return undefined;
@@ -86,7 +89,7 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
       if (error) {
         setFormState((prev) => ({
           ...prev,
-          errors: { form: "Nieprawidłowy email lub hasło" },
+          errors: { form: t("invalidCredentials", language) },
           isSubmitting: false,
         }));
         return;
@@ -143,7 +146,7 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
 
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-          Email
+          {t("email", language)}
         </label>
         <input
           ref={emailInputRef}
@@ -174,7 +177,7 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
         error={formState.errors.password}
-        label="Hasło"
+        label={t("password", language)}
         autoComplete="current-password"
         required
       />
@@ -190,10 +193,10 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               ></path>
             </svg>
-            Logowanie...
+            {t("loading", language)}
           </div>
         ) : (
-          "Zaloguj się"
+          t("login", language)
         )}
       </Button>
     </form>

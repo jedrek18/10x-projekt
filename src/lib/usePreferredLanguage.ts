@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { DEFAULT_LANGUAGE, LOCAL_STORAGE_KEY, sanitizeLanguage } from "./i18n-landing";
-import type { LanguageCode } from "./i18n-landing";
+import { DEFAULT_LANGUAGE, LOCAL_STORAGE_KEY, sanitizeLanguage } from "./i18n";
+import type { LanguageCode } from "./i18n";
 
 function isBrowser(): boolean {
   return typeof window !== "undefined" && typeof document !== "undefined";
@@ -53,8 +53,17 @@ export function usePreferredLanguage(): { language: LanguageCode; setLanguage: (
       const valid = sanitizeLanguage(e.newValue);
       if (valid) setLanguageState(valid);
     };
+    const onLanguageChange = (e: CustomEvent) => {
+      if (e.detail?.language) {
+        setLanguageState(e.detail.language);
+      }
+    };
     window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
+    window.addEventListener("app:language-changed", onLanguageChange as EventListener);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("app:language-changed", onLanguageChange as EventListener);
+    };
   }, []);
 
   return { language, setLanguage };

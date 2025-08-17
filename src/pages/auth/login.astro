@@ -1,16 +1,20 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import AuthLayout from "../../components/auth/AuthLayout.astro";
+import { AuthLayout } from "../../components/auth/AuthLayout";
 import { LoginForm } from "../../components/auth/LoginForm";
 import { AuthRedirectGuard } from "../../components/auth/AuthRedirectGuard";
+import LanguageSelector from "../../components/Landing/LanguageSelector.tsx";
 
 // Odczytanie parametru redirect z URL
 const redirect = Astro.url.searchParams.get("redirect") || "";
 ---
 
 <Layout title="Logowanie">
+  <div class="fixed top-4 right-4 z-[60] flex items-center gap-2">
+    <LanguageSelector client:visible />
+  </div>
   <AuthRedirectGuard redirectTo={redirect} client:load>
-    <AuthLayout title="Zaloguj się" subtitle="Wprowadź swoje dane, aby kontynuować">
+    <AuthLayout isLogin={true} client:load>
       <LoginForm redirectTo={redirect} client:load />
     </AuthLayout>
   </AuthRedirectGuard>

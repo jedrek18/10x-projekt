@@ -12,13 +12,21 @@ const nonEmptyTrimmed = z
 export const listQuerySchema = z
   .object({
     limit: z
-      .number()
-      .catch((val) => (typeof val === "string" ? Number(val) : val))
+      .union([z.string(), z.number()])
+      .transform((val) => {
+        const num = typeof val === "string" ? Number(val) : val;
+        if (isNaN(num)) throw new Error("Invalid number");
+        return num;
+      })
       .pipe(z.number().int().min(1).max(100))
       .default(25),
     offset: z
-      .number()
-      .catch((val) => (typeof val === "string" ? Number(val) : val))
+      .union([z.string(), z.number()])
+      .transform((val) => {
+        const num = typeof val === "string" ? Number(val) : val;
+        if (isNaN(num)) throw new Error("Invalid number");
+        return num;
+      })
       .pipe(z.number().int().min(0))
       .default(0),
     order: z.enum(["created_at.desc", "created_at.asc"]).default("created_at.desc"),

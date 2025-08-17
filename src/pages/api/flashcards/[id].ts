@@ -7,6 +7,7 @@ import {
   getFlashcardById,
   updateFlashcardContent,
   softDeleteFlashcard,
+  restoreFlashcard,
   ConflictError,
   ValidationError,
   NotFoundError,
@@ -65,15 +66,20 @@ export const PATCH: APIRoute = async ({ params, request, locals }) => {
       return validationFailed(idParsed.error.flatten());
     }
 
-    const json = await request.json().catch(() => null);
-    if (!json || typeof json !== "object") {
+    const requestBody = await request.json().catch(() => null);
+    if (!requestBody || typeof requestBody !== "object") {
       return errorJson("Invalid JSON body", "invalid_json", 400);
     }
 
-    const payloadParsed = updateContentSchema.safeParse(json);
+    console.log("[DEBUG] Flashcards API - PATCH request for id:", idParsed.data.id, "body:", requestBody);
+
+    const payloadParsed = updateContentSchema.safeParse(requestBody);
     if (!payloadParsed.success) {
+      console.log("[DEBUG] Flashcards API - PATCH validation error:", payloadParsed.error.flatten());
       return validationFailed(payloadParsed.error.flatten());
     }
+
+    console.log("[DEBUG] Flashcards API - PATCH parsed data:", payloadParsed.data);
 
     const TIMEOUT_MS = 10000;
     const updated = (await Promise.race([
@@ -85,10 +91,16 @@ export const PATCH: APIRoute = async ({ params, request, locals }) => {
       }),
     ])) as Awaited<ReturnType<typeof updateFlashcardContent>>;
 
+    console.log("[DEBUG] Flashcards API - PATCH success:", updated);
     return json(updated, 200);
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error("[api/flashcards/[id]] PATCH failed", error);
+    console.error("[api/flashcards/[id]] PATCH error details:", {
+      name: error instanceof Error ? error.name : "Unknown",
+      message: error instanceof Error ? error.message : "Unknown error",
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     if (error instanceof UnauthorizedError) {
       return errorJson("Unauthorized", "unauthorized", 401);
     }
@@ -119,6 +131,8 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
       return validationFailed(parsed.error.flatten());
     }
 
+    console.log("[DEBUG] Flashcards API - DELETE request for id:", parsed.data.id);
+
     const TIMEOUT_MS = 10000;
     await Promise.race([
       softDeleteFlashcard(supabase, parsed.data.id),
@@ -129,10 +143,59 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
       }),
     ]);
 
+    console.log("[DEBUG] Flashcards API - DELETE success for id:", parsed.data.id);
     return new Response(null, { status: 204 });
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error("[api/flashcards/[id]] DELETE failed", error);
+    console.error("[api/flashcards/[id]] DELETE error details:", {
+      name: error instanceof Error ? error.name : "Unknown",
+      message: error instanceof Error ? error.message : "Unknown error",
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    if (error instanceof UnauthorizedError) {
+      return errorJson("Unauthorized", "unauthorized", 401);
+    }
+    if (error instanceof NotFoundError) {
+      return errorJson("Not found", "not_found", 404);
+    }
+    if ((error as Error)?.name === "AbortError") {
+      return errorJson("Request timeout", "timeout", 408);
+    }
+    return errorJson("Internal Server Error", "server_error", 500);
+  }
+};
+
+export const PUT: APIRoute = async ({ params, locals }) => {
+  try {
+    const supabase = locals.supabase;
+    const parsed = idParamSchema.safeParse(params);
+    if (!parsed.success) {
+      return validationFailed(parsed.error.flatten());
+    }
+
+    console.log("[DEBUG] Flashcards API - PUT (restore) request for id:", parsed.data.id);
+
+    const TIMEOUT_MS = 10000;
+    await Promise.race([
+      restoreFlashcard(supabase, parsed.data.id),
+      new Promise((_, reject) => {
+        const err = new Error("Request timeout");
+        (err as any).name = "AbortError";
+        setTimeout(() => reject(err), TIMEOUT_MS);
+      }),
+    ]);
+
+    console.log("[DEBUG] Flashcards API - PUT (restore) success for id:", parsed.data.id);
+    return new Response(null, { status: 204 });
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error("[api/flashcards/[id]] PUT (restore) failed", error);
+    console.error("[api/flashcards/[id]] PUT (restore) error details:", {
+      name: error instanceof Error ? error.name : "Unknown",
+      message: error instanceof Error ? error.message : "Unknown error",
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     if (error instanceof UnauthorizedError) {
       return errorJson("Unauthorized", "unauthorized", 401);
     }
