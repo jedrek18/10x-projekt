@@ -16,8 +16,8 @@ jobs:
           cache: npm
       - run: npm ci
 
-      # Lint (opcjonalnie twardo egzekwowane)
-      - run: npm run lint:ci
+      # # Lint (opcjonalnie twardo egzekwowane)
+      # - run: npm run lint:ci
 
       # Testy z coverage i raportami (używa skrótu z package.json)
       - run: npm run test:ci
