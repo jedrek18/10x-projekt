@@ -40,5 +40,3 @@ Endpoints for managing user flashcards. All endpoints require a valid Supabase s
 ## REST Client Examples
 
 Use `.http/flashcards.http` for ready-to-run examples.
-
-

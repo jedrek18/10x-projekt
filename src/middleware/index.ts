@@ -34,7 +34,10 @@ export const onRequest = defineMiddleware((context, next) => {
       if (result.limited) {
         return new Response(JSON.stringify({ error: "Too Many Requests", code: "rate_limited" }), {
           status: 429,
-          headers: { "Content-Type": "application/json", ...(result.retryAfterSeconds ? { "Retry-After": String(result.retryAfterSeconds) } : {}) },
+          headers: {
+            "Content-Type": "application/json",
+            ...(result.retryAfterSeconds ? { "Retry-After": String(result.retryAfterSeconds) } : {}),
+          },
         });
       }
     }

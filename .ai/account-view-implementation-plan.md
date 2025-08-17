@@ -1,14 +1,17 @@
 # Plan implementacji widoku Account
 
 ## 1. Przegląd
+
 Widok Account służy do operacji na koncie użytkownika zalogowanego: zmiana hasła, wylogowanie i trwałe usunięcie konta (z kaskadowym usunięciem danych aplikacji). Wymogi: po zmianie hasła unieważnić wszystkie aktywne sesje; przy usunięciu konta użytkownik musi potwierdzić decyzję i podać hasło; dostęp tylko dla zalogowanych.
 
 ## 2. Routing widoku
+
 - Ścieżka: `/account`
 - Dostęp: chroniony przez AuthGuard (wymagane zalogowanie). Przy braku sesji → redirect do `/auth/login` z zachowaniem intencji powrotu.
 - Layout: `src/layouts/Layout.astro`
 
 ## 3. Struktura komponentów
+
 - `src/pages/account.astro` (kontener strony)
   - `AccountPage` (React, kluczowy komponent logiki)
     - `ChangePasswordForm`
@@ -20,6 +23,7 @@ Widok Account służy do operacji na koncie użytkownika zalogowanego: zmiana ha
 ## 4. Szczegóły komponentów
 
 ### AccountPage
+
 - Opis: Główny komponent widoku. Odpowiada za gate’owanie dostępu, scalenie sekcji (zmiana hasła, wylogowanie, usuwanie konta), obsługę toastów i błędów globalnych.
 - Główne elementy: nagłówek, sekcje formularzy, „Danger zone” z usuwaniem konta.
 - Obsługiwane interakcje:
@@ -30,6 +34,7 @@ Widok Account służy do operacji na koncie użytkownika zalogowanego: zmiana ha
 - Propsy: brak (otrzymuje kontekst via hooki) lub opcjonalnie `onRequireLogin?: () => void`.
 
 ### ChangePasswordForm
+
 - Opis: Formularz zmiany hasła. Wymaga podania bieżącego hasła, nowego hasła oraz potwierdzenia nowego hasła. Po sukcesie wymusza unieważnienie wszystkich sesji i wylogowanie użytkownika.
 - Główne elementy:
   - Pola: `current_password` (password), `new_password` (password), `confirm_password` (password)
@@ -50,6 +55,7 @@ Widok Account służy do operacji na koncie użytkownika zalogowanego: zmiana ha
   - `onError?: (error: Error) => void`
 
 ### SignOutButton
+
 - Opis: Przycisk wylogowania bieżącej sesji (lub wszystkich sesji – opcja).
 - Główne elementy: `Button` z akcją.
 - Obsługiwane interakcje:
@@ -60,6 +66,7 @@ Widok Account służy do operacji na koncie użytkownika zalogowanego: zmiana ha
   - `onSignedOut?: () => void`
 
 ### DeleteAccountSection
+
 - Opis: Sekcja „Danger zone” z informacją o konsekwencjach i przyciskiem otwierającym modal potwierdzenia usunięcia konta.
 - Główne elementy: `Card`/`Alert`, `Button` (open modal)
 - Obsługiwane interakcje: otwarcie modala.
@@ -67,6 +74,7 @@ Widok Account służy do operacji na koncie użytkownika zalogowanego: zmiana ha
 - Propsy: `onDeleted?: () => void`
 
 ### DeleteAccountModal
+
 - Opis: Modal potwierdzenia usunięcia konta. Wprowadza silne zabezpieczenia: wymagane hasło, fraza „USUŃ”, cooldown 30 s przed aktywacją przycisku.
 - Główne elementy:
   - Pole `password` (password)
@@ -90,6 +98,7 @@ Widok Account służy do operacji na koncie użytkownika zalogowanego: zmiana ha
   - `onDeleted?: () => void`
 
 ### SessionInfoCard (opcjonalnie)
+
 - Opis: Prezentuje podstawowe dane profilu/sesji (email, data utworzenia, informacja o wielosesyjności). Nie jest wymagane w MVP, ale pomaga UX.
 - Dane: z `supabase.auth.getUser()` i/lub `GET /api/me`.
 - Propsy: brak.
@@ -97,11 +106,13 @@ Widok Account służy do operacji na koncie użytkownika zalogowanego: zmiana ha
 ## 5. Typy
 
 ### Reużywalne DTO (z `src/types.ts`)
+
 - `AuthChangePasswordCommand`: `{ current_password: string; new_password: string }`
 - `AuthDeleteAccountCommand`: `{}` (alias `EmptyObject`)
 - `ProfileDTO`: do ewentualnego wyświetlenia informacji na karcie sesji
 
 ### Nowe ViewModel-e (FE-only)
+
 ```ts
 // Dla ChangePasswordForm
 export interface ChangePasswordFormModel {
@@ -137,6 +148,7 @@ export interface AccountViewState {
 ```
 
 ## 6. Zarządzanie stanem
+
 - Lokalny stan per komponent (React state) + niestandardowe hooki:
   - `useCooldown(seconds: number)`: zarządza odliczaniem (zwraca `remaining`, `start()`, `reset()`, `isActive`). Używany w `DeleteAccountModal`.
   - `useAuthGuard()`: sprawdza bieżącą sesję przez `supabase.auth.getSession()`; w razie braku sesji → redirect i przechowanie intencji.
@@ -146,6 +158,7 @@ export interface AccountViewState {
 ## 7. Integracja API
 
 ### Supabase Auth (klient)
+
 - Zmiana hasła:
   1. `const { data: { user } } = await supabase.auth.getUser()` → potrzebny email.
   2. Reautoryzacja: `await supabase.auth.signInWithPassword({ email: user.email!, password: current_password })`.
@@ -155,6 +168,7 @@ export interface AccountViewState {
 - Wylogowanie: `await supabase.auth.signOut()` lub `signOut({ scope: 'global' })` (zgodnie z UI).
 
 ### REST (Edge Function) – kasowanie konta
+
 - Endpoint: `DELETE /api/auth/account`
 - Nagłówki: `Authorization: Bearer <JWT>` (uzyskany od Supabase)
 - Body: `{}`
@@ -162,6 +176,7 @@ export interface AccountViewState {
 - Po sukcesie: `supabase.auth.signOut({ scope: 'global' })` → redirect do `/`
 
 ## 8. Interakcje użytkownika
+
 - Zmiana hasła:
   - Użytkownik wypełnia formularz → Submit → walidacje FE → reautoryzacja (błąd → komunikat) → aktualizacja hasła → global sign-out → redirect do logowania + toast „Hasło zmienione. Zaloguj się ponownie”.
 - Wylogowanie:
@@ -170,6 +185,7 @@ export interface AccountViewState {
   - Otwórz modal → timer 30 s → wprowadź hasło i frazę „USUŃ” → Submit → reauth → DELETE `/api/auth/account` → signOut global → redirect do landing + toast „Konto usunięte”.
 
 ## 9. Warunki i walidacja
+
 - Guard dostępu: sesja wymagana do wyświetlenia `/account`.
 - ChangePasswordForm:
   - `current_password`: required
@@ -183,6 +199,7 @@ export interface AccountViewState {
   - Obsługa błędów 401 (reauth), 4xx/5xx z `/api/auth/account`
 
 ## 10. Obsługa błędów
+
 - 401 / brak sesji: natychmiastowy redirect do loginu, zachowanie intencji powrotu.
 - Reautoryzacja nieudana: komunikat przy polu hasła („Nieprawidłowe hasło”).
 - Błędy sieci (timeout/offline): banner globalny + możliwość ponowienia.
@@ -191,6 +208,7 @@ export interface AccountViewState {
 - Dostępność: wszystkie komunikaty w aria-live, modale z focus trap; klawisze `Esc` zamyka modal.
 
 ## 11. Kroki implementacji
+
 1. Routing i gate’owanie:
    - Utwórz `src/pages/account.astro` z mountem React (`AccountPage`) i osadź w `Layout.astro`.
    - Zaimplementuj `useAuthGuard()` lub wykorzystaj istniejący mechanizm (redirect gdy brak sesji).
@@ -216,11 +234,13 @@ export interface AccountViewState {
    - Można emitować eventy: `events.save`/`events.generation` nie dotyczą Account; pomiń lub dodaj minimalne logi UI.
 
 ## Dodatkowe mapowanie na PRD i User Stories
+
 - US-011/US-012: Dostęp i sesje – widok chroniony, sesje 7 dni (zarządzane przez Supabase), operacje Auth.
 - US-013: Zmiana hasła i usunięcie konta – formularz zmiany hasła z reautoryzacją i globalnym wylogowaniem; modal usuwania konta z potwierdzeniem i cooldownem.
 - US-018: Wylogowanie – przycisk wyloguj; po zmianie hasła wylogowanie ze wszystkich urządzeń.
 
 ## Drzewo komponentów (wysokopoziomowe)
+
 ```
 AccountPage
 ├── SessionInfoCard (opcjonalnie)
@@ -229,5 +249,3 @@ AccountPage
 └── DeleteAccountSection
     └── DeleteAccountModal
 ```
-
-

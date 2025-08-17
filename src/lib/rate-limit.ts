@@ -33,5 +33,3 @@ export function rateLimitPatchUserSettings(
   }
   return { limited: false };
 }
-
-

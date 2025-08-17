@@ -1,14 +1,17 @@
 ## Plan implementacji widoku Generate
 
 ## 1. Przegląd
+
 Widok Generate umożliwia zalogowanemu użytkownikowi wklejenie tekstu źródłowego (1000–10000 znaków), ustawienie liczby proponowanych fiszek (10–50, domyślnie 30) i uruchomienie generacji propozycji przez AI. Widok zapewnia walidację długości wejścia, licznik znaków, skrót klawiaturowy (Ctrl+Enter), wskaźnik postępu (strumieniowanie SSE) oraz bezpieczny fallback do odpowiedzi non-SSE (REST) po 5 s braku zdarzeń. Start nowej generacji czyści istniejącą sesję propozycji (OneActiveSessionGuard). Po zakończeniu generacji następuje przeniesienie do widoku Proposals.
 
 ## 2. Routing widoku
+
 - **Ścieżka:** `/generate`
 - **Dostęp:** tylko zalogowani (AuthGuard/RequireSession). Gość → redirect do `/auth/login` z powrotem po sukcesie.
 - **SSR:** `export const prerender = false;` dla strony Astro.
 
 ## 3. Struktura komponentów
+
 ```
 GeneratePage (Astro)
 └─ RequireSession (React wrapper)
@@ -23,7 +26,9 @@ GeneratePage (Astro)
 ```
 
 ## 4. Szczegóły komponentów
+
 ### GeneratePage (Astro)
+
 - **Opis:** Strona routingu `/generate`. Łączy layout, `RequireSession` i wyspę React `GenerateView`.
 - **Elementy:** kontener layoutu, `<GenerateView client:load />`.
 - **Zdarzenia:** brak (delegacja do React).
@@ -32,6 +37,7 @@ GeneratePage (Astro)
 - **Propsy:** brak.
 
 ### RequireSession (React)
+
 - **Opis:** Ochrona widoku. Sprawdza sesję z `supabase.client.ts`. Przy braku sesji: redirect do `/auth/login` z zachowaniem intencji powrotu.
 - **Elementy:** wrapper renderujący dzieci lub komunikat ładowania.
 - **Zdarzenia:** obsługa 401 → redirect.
@@ -40,6 +46,7 @@ GeneratePage (Astro)
 - **Propsy:** `children: ReactNode`.
 
 ### GenerateView (React, kontener logiki)
+
 - **Opis:** Główny komponent formularza i procesu generacji. Zarządza stanem, walidacją, SSE/REST, lokalnym przechowywaniem ustawień suwaka i kontrolą pojedynczej aktywnej sesji propozycji.
 - **Elementy:** `TextAreaWithCounter`, `SliderProposalsCount`, `ControlsBar`, `GenerationStatus`, `OneActiveSessionGuard`.
 - **Zdarzenia:**
@@ -55,6 +62,7 @@ GeneratePage (Astro)
 - **Propsy:** brak (strona samowystarczalna).
 
 ### TextAreaWithCounter
+
 - **Opis:** Pole tekstowe z licznikiem znaków (graphem), wskazujące brakujące/przekroczone znaki i stany błędu.
 - **Elementy:** `<textarea>`, licznik, komunikaty walidacji (aria-live polite), opcjonalny hint i skrót `Ctrl+Enter`.
 - **Zdarzenia:** `onChange`, `onKeyDown(Ctrl+Enter)` → delegacja do rodzica.
@@ -63,6 +71,7 @@ GeneratePage (Astro)
 - **Propsy:** `{ value: string; count: number; min: number; max: number; onChange: (v: string) => void; onSubmitShortcut: () => void; error?: string | null; }`.
 
 ### SliderProposalsCount
+
 - **Opis:** Suwak wyboru liczby propozycji (10–50, domyślnie 30). Wartość pamiętana lokalnie.
 - **Elementy:** komponent slider z etykietą i aktualną wartością.
 - **Zdarzenia:** `onChange(value)`.
@@ -71,6 +80,7 @@ GeneratePage (Astro)
 - **Propsy:** `{ value: number; min: number; max: number; onChange: (v: number) => void; }`.
 
 ### ControlsBar
+
 - **Opis:** Pasek akcji. Renderuje `GenerateButton` i `CancelButton` zależnie od stanu.
 - **Elementy:** dwa przyciski, miejsce na pomoc/skrót.
 - **Zdarzenia:** klik `Generate`/`Cancel`.
@@ -79,6 +89,7 @@ GeneratePage (Astro)
 - **Propsy:** `{ canGenerate: boolean; isGenerating: boolean; onGenerate: () => void; onCancel: () => void; }`.
 
 ### GenerateButton / CancelButton
+
 - **Opis:** Przyciski sterujące procesem. `Generate` inicjuje SSE/REST. `Cancel` abortuje trwającą generację.
 - **Elementy:** przyciski `Button` z `aria-busy`/`disabled`.
 - **Zdarzenia:** kliknięcia.
@@ -87,6 +98,7 @@ GeneratePage (Astro)
 - **Propsy:** `{ disabled?: boolean; loading?: boolean; onClick: () => void; }`.
 
 ### GenerationStatus
+
 - **Opis:** Sekcja statusu generacji: skeletony od startu, licznik napływu propozycji (`progress.count`), wskaźnik trybu SSE/REST, komunikaty o fallbacku po 5 s.
 - **Elementy:** skeleton list, licznik, tag trybu („Streaming”/„Batch”), bannery informacyjne.
 - **Zdarzenia:** brak (prezentacja danych stanu).
@@ -95,6 +107,7 @@ GeneratePage (Astro)
 - **Propsy:** `{ isGenerating: boolean; progress: GenerationProgress | null; }`.
 
 ### OneActiveSessionGuard (Modal)
+
 - **Opis:** Potwierdzenie rozpoczęcia nowej generacji, która wyczyści lokalny cache propozycji z poprzedniej sesji (TTL 24 h).
 - **Elementy:** modal z opisem, przyciski `Kontynuuj` / `Anuluj`.
 - **Zdarzenia:** `onConfirm()` → czyści cache i startuje generację; `onCancel()` → zamyka modal.
@@ -103,6 +116,7 @@ GeneratePage (Astro)
 - **Propsy:** `{ open: boolean; onConfirm: () => void; onCancel: () => void; }`.
 
 ## 5. Typy
+
 - **Istniejące (z `src/types.ts`):**
   - `AiGenerateCommand` `{ source_text: string; max_proposals: number; }`
   - `AiGenerationProposalDTO` `{ front: string; back: string; }`
@@ -143,6 +157,7 @@ GeneratePage (Astro)
     - `proposalsSessionKey = "proposals:session"` (TTL 24h; utrzymywane przez widok Proposals)
 
 ## 6. Zarządzanie stanem
+
 - **useState w `GenerateView`:**
   - `sourceText`, `maxProposals` (inicjalizacja z LocalStorage, domyślnie 30)
   - `counter` (aktualizowany przy zmianie tekstu via `grapheme`-safe licznik)
@@ -156,6 +171,7 @@ GeneratePage (Astro)
     - Zwraca `abort()`.
 
 ## 7. Integracja API
+
 - **Endpoint:** `POST /api/ai/generate`
 - **Żądanie:** `AiGenerateCommand`
   - `source_text`: 1000–10000
@@ -173,6 +189,7 @@ GeneratePage (Astro)
 - **Nawigacja:** Po sukcesie przekazujemy kontekst (np. `requestId`) przez `sessionStorage` lub query param (preferowane: `sessionStorage.setItem("proposals:lastRequestId", id)`).
 
 ## 8. Interakcje użytkownika
+
 - **Wklejenie/edycja tekstu:** licznik i walidacja w czasie rzeczywistym; komunikaty aria-live.
 - **Ustawienie suwaka:** pamiętane lokalnie; walidacja zakresu.
 - **Ctrl+Enter / klik Generate:**
@@ -182,12 +199,14 @@ GeneratePage (Astro)
 - **Offline:** `Generate` disabled (tooltip „Brak połączenia”).
 
 ## 9. Warunki i walidacja
+
 - **sourceText:** min 1000, max 10000 graphem; blokada przycisku i wyraźny komunikat z różnicą (X znaków). Zgodne z walidacją serwera (422 przy naruszeniu).
 - **maxProposals:** 10–50; slider technicznie nie przekroczy zakresu. Zgodne z API.
 - **Auth:** wymagana sesja (401 → redirect przez guard).
 - **SSE timeout:** brak eventów 5 s → fallback REST (baner informacyjny „Strumieniowanie niedostępne, przełączono na tryb batch”).
 
 ## 10. Obsługa błędów
+
 - **422 validation_failed:** Pokaż błędy inline, podświetl pola; nie wysyłaj ponownie, dopóki FE walidacja nie przejdzie.
 - **401 unauthorized:** Guard przekierowuje do logowania z powrotem do `/generate`; zachowaj `sourceText` i `maxProposals` w stanie/LocalStorage.
 - **408 request_timeout / 503 upstream_unavailable:** Pokaż baner z możliwością ponowienia; zachowaj wprowadzone dane.
@@ -196,6 +215,7 @@ GeneratePage (Astro)
 - **SSE przerwane:** Spróbuj jednokrotnie REST; jeśli błąd, pokaż toast i pozostaw użytkownika w widoku z możliwością ponowienia.
 
 ## 11. Kroki implementacji
+
 1. Dodaj stronę `src/pages/generate.astro` z `prerender = false` i mountem React `GenerateView` oraz wrapperem `RequireSession`.
 2. Utwórz komponent `GenerateView` w `src/components/generate/GenerateView.tsx` z lokalnym stanem, skrótami klawiaturowymi i walidacją.
 3. Zaimplementuj `TextAreaWithCounter` i `SliderProposalsCount` w `src/components/generate/` korzystając z `shadcn/ui` i Tailwind.
@@ -211,5 +231,3 @@ GeneratePage (Astro)
 13. Stany brzegowe: offline, 401, 422, 429, 408/503 — dodaj bannery/toasty i blokady przycisków.
 14. Testy ręczne i jednostkowe (parsowanie SSE, walidacja inputu, fallback po 5 s, abort działa, `Ctrl+Enter`).
 15. Telemetria: brak jawnego wywołania FE (serwer rejestruje na zakończenie). Opcjonalnie debug logi w dev.
-
-

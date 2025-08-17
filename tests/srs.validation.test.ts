@@ -28,5 +28,3 @@ describe("SRS validation", () => {
     expect(() => reviewSchema.parse({ card_id: "not-uuid", rating: 1 })).toThrow();
   });
 });
-
-

@@ -44,5 +44,3 @@ curl -X PATCH -H "Authorization: Bearer <token>" -H "Content-Type: application/j
   -d '{"goal_override": 30}' \
   "/api/progress/2025-08-13"
 ```
-
-

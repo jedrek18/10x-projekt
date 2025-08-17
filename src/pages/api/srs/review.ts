@@ -39,7 +39,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error("[api/srs/review] POST failed", error);
-    try { await logError(locals?.supabase, { endpoint: "/api/srs/review", error }); } catch {}
+    try {
+      await logError(locals?.supabase, { endpoint: "/api/srs/review", error });
+    } catch {}
     if (error instanceof UnauthorizedError) {
       return errorJson("Unauthorized", "unauthorized", 401);
     }
@@ -55,5 +57,3 @@ export const POST: APIRoute = async ({ request, locals }) => {
     return errorJson("Internal Server Error", "server_error", 500);
   }
 };
-
-

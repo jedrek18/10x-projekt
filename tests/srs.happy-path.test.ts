@@ -19,28 +19,52 @@ function createMockSupabaseSrs(options: {
   };
 
   const auth = {
-    async getUser() { return { data: { user: { id: options.userId } }, error: null } as any; },
+    async getUser() {
+      return { data: { user: { id: options.userId } }, error: null } as any;
+    },
   } as const;
 
   function makeThenable(result: any) {
-    return { then(onFulfilled: any) { return Promise.resolve(result).then(onFulfilled); } } as any;
+    return {
+      then(onFulfilled: any) {
+        return Promise.resolve(result).then(onFulfilled);
+      },
+    } as any;
   }
 
   function from(table: string) {
     const chain: any = {
-      select() { return chain; },
-      eq() { return chain; },
-      is() { return chain; },
-      not() { return chain; },
-      lte() { return chain; },
-      order() { return chain; },
-      limit() { return chain; },
-      in() { return chain; },
+      select() {
+        return chain;
+      },
+      eq() {
+        return chain;
+      },
+      is() {
+        return chain;
+      },
+      not() {
+        return chain;
+      },
+      lte() {
+        return chain;
+      },
+      order() {
+        return chain;
+      },
+      limit() {
+        return chain;
+      },
+      in() {
+        return chain;
+      },
       update(values?: any) {
-        chain._updateValues = values; return chain;
+        chain._updateValues = values;
+        return chain;
       },
       upsert(values?: any) {
-        chain._upsertValues = values; return chain;
+        chain._upsertValues = values;
+        return chain;
       },
       async maybeSingle() {
         if (table === "user_settings") return { data: state.settings, error: null } as any;
@@ -48,11 +72,15 @@ function createMockSupabaseSrs(options: {
         if (table === "flashcards") return { data: state.dueCards[0] ?? null, error: null } as any;
         return { data: null, error: null } as any;
       },
-      async single() { return chain.maybeSingle(); },
+      async single() {
+        return chain.maybeSingle();
+      },
       then(onFulfilled: any) {
         if (table === "flashcards") {
           // for SELECT lists
-          return Promise.resolve({ data: chain._selectNew ? state.newCards : state.dueCards, error: null }).then(onFulfilled);
+          return Promise.resolve({ data: chain._selectNew ? state.newCards : state.dueCards, error: null }).then(
+            onFulfilled
+          );
         }
         if (table === "user_daily_progress") {
           // for list selects not used here
@@ -111,13 +139,21 @@ function createMockSupabaseSrs(options: {
   return { auth, from } as any;
 }
 
-async function readJson(res: Response): Promise<any> { return await res.json(); }
+async function readJson(res: Response): Promise<any> {
+  return await res.json();
+}
 
 describe("/api/srs endpoints happy paths", () => {
   it("GET /api/srs/queue returns computed queue and meta", async () => {
     const due = [{ id: "c1", front: "Q1", state: "review", due_at: new Date(Date.now() - 1000).toISOString() }];
     const news = [{ id: "n1", front: "N1", state: "new" }];
-    const supabase = createMockSupabaseSrs({ userId: "u1", settings: { daily_goal: 10, new_limit: 5 }, progress: { goal_override: null, reviews_done: 2, new_introduced: 1 }, dueCards: due as any, newCards: news as any });
+    const supabase = createMockSupabaseSrs({
+      userId: "u1",
+      settings: { daily_goal: 10, new_limit: 5 },
+      progress: { goal_override: null, reviews_done: 2, new_introduced: 1 },
+      dueCards: due as any,
+      newCards: news as any,
+    });
     const url = new URL("http://localhost/api/srs/queue");
     const res = await SrsQueueGET({ url, locals: { supabase } } as any);
     expect(res.status).toBe(200);
@@ -128,9 +164,21 @@ describe("/api/srs endpoints happy paths", () => {
   });
 
   it("POST /api/srs/promote-new promotes candidates within allowance", async () => {
-    const supabase = createMockSupabaseSrs({ userId: "u1", settings: { new_limit: 5 }, progress: { new_introduced: 1, goal_override: null, reviews_done: 0 }, newCards: [{ id: "n1", front: "N1", state: "new" }, { id: "n2", front: "N2", state: "new" }] as any });
+    const supabase = createMockSupabaseSrs({
+      userId: "u1",
+      settings: { new_limit: 5 },
+      progress: { new_introduced: 1, goal_override: null, reviews_done: 0 },
+      newCards: [
+        { id: "n1", front: "N1", state: "new" },
+        { id: "n2", front: "N2", state: "new" },
+      ] as any,
+    });
     const url = new URL("http://localhost/api/srs/promote-new");
-    const req = new Request(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) });
+    const req = new Request(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
     const res = await SrsPromotePOST({ request: req, locals: { supabase } } as any);
     expect(res.status).toBe(200);
     const body = await readJson(res);
@@ -140,10 +188,28 @@ describe("/api/srs endpoints happy paths", () => {
 
   it("POST /api/srs/review updates SRS fields and increments reviews_done", async () => {
     const cardId = "00000000-0000-0000-0000-000000000001";
-    const dueCard = { id: cardId, state: "review", due_at: null, interval_days: 1, ease_factor: 2.5, reps: 1, lapses: 0, last_reviewed_at: null, last_rating: null };
-    const supabase = createMockSupabaseSrs({ userId: "u1", progress: { reviews_done: 0, goal_override: null, new_introduced: 0 }, dueCards: [dueCard as any] });
+    const dueCard = {
+      id: cardId,
+      state: "review",
+      due_at: null,
+      interval_days: 1,
+      ease_factor: 2.5,
+      reps: 1,
+      lapses: 0,
+      last_reviewed_at: null,
+      last_rating: null,
+    };
+    const supabase = createMockSupabaseSrs({
+      userId: "u1",
+      progress: { reviews_done: 0, goal_override: null, new_introduced: 0 },
+      dueCards: [dueCard as any],
+    });
     const url = new URL("http://localhost/api/srs/review");
-    const req = new Request(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ card_id: cardId, rating: 2 }) });
+    const req = new Request(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ card_id: cardId, rating: 2 }),
+    });
     const res = await SrsReviewPOST({ request: req, locals: { supabase } } as any);
     expect(res.status).toBe(200);
     const body = await readJson(res);
@@ -151,5 +217,3 @@ describe("/api/srs endpoints happy paths", () => {
     expect(body.reps).toBeGreaterThan(1);
   });
 });
-
-

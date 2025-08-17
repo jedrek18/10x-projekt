@@ -8,8 +8,12 @@ function makeContext(url: string, method: string, ip: string) {
     request: new Request(url, { method, headers }),
     cookies: {
       get: (name: string) => (cookies.has(name) ? { value: cookies.get(name)! } : undefined),
-      set: (name: string, value: string) => { cookies.set(name, value); },
-      delete: (name: string) => { cookies.delete(name); },
+      set: (name: string, value: string) => {
+        cookies.set(name, value);
+      },
+      delete: (name: string) => {
+        cookies.delete(name);
+      },
     },
     clientAddress: ip,
     locals: {} as any,
@@ -28,5 +32,3 @@ describe("rateLimitPatchUserSettings", () => {
     expect(blocked.limited).toBe(true);
   });
 });
-
-

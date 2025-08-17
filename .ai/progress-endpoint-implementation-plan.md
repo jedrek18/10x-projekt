@@ -1,6 +1,7 @@
 ## API Endpoint Implementation Plan: User Daily Progress
 
 ### 1. Przegląd punktu końcowego
+
 - **Cel**: Udostępnić dzienny postęp użytkownika (UTC) dla pojedynczej daty lub zakresu dat oraz umożliwić aktualizację pola `goal_override` dla konkretnego dnia.
 - **Endpoints**:
   - GET `/api/progress` – odczyt listy rekordów postępu.
@@ -9,6 +10,7 @@
 - **Stack**: Astro 5 (API routes), TypeScript 5, Supabase (PostgREST), Zod (walidacja), RLS.
 
 ### 2. Szczegóły żądania
+
 - **Metody i URL**
   - GET `/api/progress?date=YYYY-MM-DD` lub `/api/progress?start=YYYY-MM-DD&end=YYYY-MM-DD`
   - PATCH `/api/progress/{date}` (np. `/api/progress/2025-08-13`)
@@ -23,6 +25,7 @@
 - **Nagłówki**: `Content-Type: application/json` dla PATCH; autoryzacja przez sesję Supabase (middleware dostarcza `locals.user`).
 
 ### 3. Wykorzystywane typy
+
 - **DTO i Command** (lokalizacja: `src/types.ts`):
 
 ```ts
@@ -53,27 +56,28 @@ export type ErrorResponseDTO = {
 - **Schematy walidacji** (Zod; lokalizacja: `src/lib/validation/progress.schemas.ts`):
 
 ```ts
-import { z } from 'zod';
+import { z } from "zod";
 
 export const dateSchema = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/)
-  .refine((s) => !Number.isNaN(Date.parse(s + 'T00:00:00.000Z')), 'invalid_date');
+  .refine((s) => !Number.isNaN(Date.parse(s + "T00:00:00.000Z")), "invalid_date");
 
 export const getQuerySchema = z
   .union([
     z.object({ date: dateSchema }),
-    z
-      .object({ start: dateSchema, end: dateSchema })
-      .refine((v) => v.start <= v.end, { message: 'start_gt_end' })
+    z.object({ start: dateSchema, end: dateSchema }).refine((v) => v.start <= v.end, { message: "start_gt_end" }),
   ])
-  .refine((v) => {
-    if ('date' in v) return true;
-    const start = new Date(v.start + 'T00:00:00.000Z');
-    const end = new Date(v.end + 'T00:00:00.000Z');
-    const days = Math.floor((end.getTime() - start.getTime()) / 86_400_000) + 1;
-    return days <= 366;
-  }, { message: 'range_too_large' });
+  .refine(
+    (v) => {
+      if ("date" in v) return true;
+      const start = new Date(v.start + "T00:00:00.000Z");
+      const end = new Date(v.end + "T00:00:00.000Z");
+      const days = Math.floor((end.getTime() - start.getTime()) / 86_400_000) + 1;
+      return days <= 366;
+    },
+    { message: "range_too_large" }
+  );
 
 export const patchBodySchema = z.object({
   goal_override: z.number().int().min(0).nullable(),
@@ -81,6 +85,7 @@ export const patchBodySchema = z.object({
 ```
 
 ### 4. Szczegóły odpowiedzi
+
 - **GET 200**: `GetProgressResponseDTO`
 
 ```json
@@ -109,6 +114,7 @@ export const patchBodySchema = z.object({
   - 500: błąd serwera
 
 ### 5. Przepływ danych
+
 - **GET `/api/progress`**
   1. Middleware zapewnia `locals.supabase` i `locals.user` (sesja wymagana).
   2. Walidacja query (Zod): dopuszczalny tylko jeden wariant (pojedyncza data lub zakres), `start <= end`, limit 366 dni.
@@ -125,12 +131,14 @@ export const patchBodySchema = z.object({
   4. Zwrócenie zaktualizowanego rekordu z 200.
 
 ### 6. Względy bezpieczeństwa
+
 - **Autoryzacja i RLS**: brak przyjmowania `user_id` z klienta; używamy `locals.user`. RLS self-only na `user_daily_progress` (kwerendy i upserty tylko własnych rekordów).
 - **Walidacja wejścia**: format dat `YYYY-MM-DD`, poprawność kalendarzowa, `start <= end`, limit zakresu, `goal_override` jako `int >= 0 | null`.
 - **Ochrona przed nadużyciami**: limit zakresu (np. do 366 dni) ogranicza rozmiar odpowiedzi i koszty.
 - **Prywatność**: brak danych innych użytkowników; rozważ `Cache-Control: private, max-age=0` dla odpowiedzi.
 
 ### 7. Obsługa błędów
+
 - **Mapowanie błędów**:
   - 400: niepoprawne query (format daty/range, oba warianty naraz, brak wymaganych parametrów, zbyt duży zakres).
   - 401: brak sesji użytkownika.
@@ -140,12 +148,14 @@ export const patchBodySchema = z.object({
 - **Logowanie błędów**: opcjonalny serwis `src/lib/services/error-logger.ts` zapisujący do tabeli `app_errors` (jeżeli istnieje), z łagodną degradacją do `console.error`.
 
 ### 8. Rozważania dotyczące wydajności
+
 - PK `(user_id, date_utc)` pokrywa zapytania po równości i zakresie. Dodatkowe indeksy nie są wymagane.
 - Limit zakresu chroni przed dużymi odpowiedziami i długimi skanami.
 - Jedno zapytanie na żądanie; brak N+1.
 - Ewentualna projekcja kolumn do minimalnie potrzebnych w przyszłości.
 
 ### 9. Kroki implementacji
+
 1. **Typy i schematy**
    - Dodaj do `src/types.ts`: `DailyProgressItemDTO`, `GetProgressResponseDTO`, `UpdateGoalOverrideCommand`, `ErrorResponseDTO`.
    - Utwórz `src/lib/validation/progress.schemas.ts` z `dateSchema`, `getQuerySchema`, `patchBodySchema` (Zod).
@@ -187,10 +197,9 @@ curl -X PATCH -H "Authorization: Bearer <token>" -H "Content-Type: application/j
   -d '{"goal_override":30}' \
   "/api/progress/2025-08-13"
 ```
+
 8. **Weryfikacja bezpieczeństwa**
    - Potwierdź RLS self-only na `user_daily_progress` w Supabase.
    - Zweryfikuj, że `user_id` jest zawsze pobierany z sesji (`locals.user`).
 9. **Wdrożenie i smoke testy**
    - Deploy, następnie szybkie testy: GET dla zakresu i PATCH z `null` i liczbą; weryfikacja aktualizacji `updated_at` przez trigger.
-
-

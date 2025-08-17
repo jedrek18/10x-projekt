@@ -2,7 +2,12 @@ export const prerender = false;
 
 import type { APIRoute } from "astro";
 import { listQuerySchema, createManualSchema } from "../../../lib/validation/flashcards";
-import { createManualFlashcard, listFlashcards, ConflictError, ValidationError } from "../../../lib/services/flashcards.service";
+import {
+  createManualFlashcard,
+  listFlashcards,
+  ConflictError,
+  ValidationError,
+} from "../../../lib/services/flashcards.service";
 import { UnauthorizedError } from "../../../lib/services/ai.service";
 import { json, errorJson, validationFailed } from "../../../lib/http";
 
@@ -16,14 +21,14 @@ export const GET: APIRoute = async ({ request, locals, url }) => {
     }
 
     const TIMEOUT_MS = 10000;
-    const result = await Promise.race([
+    const result = (await Promise.race([
       listFlashcards(supabase, parsed.data),
       new Promise((_, reject) => {
         const err = new Error("Request timeout");
         (err as any).name = "AbortError";
         setTimeout(() => reject(err), TIMEOUT_MS);
       }),
-    ]) as Awaited<ReturnType<typeof listFlashcards>>;
+    ])) as Awaited<ReturnType<typeof listFlashcards>>;
 
     const headers = new Headers({ "X-Total-Count": String(result.count) });
     return json(result.items, { status: 200, headers });
@@ -59,14 +64,14 @@ export const POST: APIRoute = async ({ request, locals }) => {
     }
 
     const TIMEOUT_MS = 10000;
-    const created = await Promise.race([
+    const created = (await Promise.race([
       createManualFlashcard(supabase, parsed.data),
       new Promise((_, reject) => {
         const err = new Error("Request timeout");
         (err as any).name = "AbortError";
         setTimeout(() => reject(err), TIMEOUT_MS);
       }),
-    ]) as Awaited<ReturnType<typeof createManualFlashcard>>;
+    ])) as Awaited<ReturnType<typeof createManualFlashcard>>;
 
     return json(created, 201);
   } catch (error) {
@@ -87,5 +92,3 @@ export const POST: APIRoute = async ({ request, locals }) => {
     return errorJson("Internal Server Error", "server_error", 500);
   }
 };
-
-

@@ -1,18 +1,22 @@
 # Plan implementacji widoku Admin
 
 ## 1. Przegląd
+
 Widok Admin służy do wglądu w metryki KPI oraz logi audytowe systemu. Dostępny wyłącznie dla administratorów (`profiles.is_admin = true`). Ma umożliwić:
+
 - szybkie przejrzenie łącznych metryk: generated_total, saved_manual_total, saved_ai_total, saved_ai_edited_total oraz pochodną „Akceptowalność AI”;
 - przegląd logów audytowych z filtrami (action, user_id, card_id) i paginacją 25/stronę;
 - czytelną obsługę błędów (401/403) i stanów ładowania;
 - dostępność z klawiaturą i responsywny układ.
 
 ## 2. Routing widoku
+
 - Ścieżka główna: `/admin`
 - Opcjonalne sub-ścieżki (na przyszłość): `/admin/kpi`, `/admin/audit-logs` (w MVP pojedynczy widok z dwiema sekcjami)
 - Implementacja w Astro: plik strony `src/pages/admin/index.astro` montujący komponent React `AdminPage`.
 
 ## 3. Struktura komponentów
+
 ```
 AdminPage (layout sekcji + guard)
 └─ AdminGuard (kontrola dostępu; 401/403)
@@ -26,7 +30,9 @@ AdminPage (layout sekcji + guard)
 ```
 
 ## 4. Szczegóły komponentów
+
 ### AdminPage
+
 - **Opis**: Kontener widoku. Odpowiada za układ, nagłówek, osadzenie `AdminGuard` i sekcji KPI/Logów.
 - **Główne elementy**: nagłówek „Admin”, dwie karty sekcji (KPI i Audit Logs), wrapper siatki.
 - **Interakcje**: brak bezpośrednich (delegowane do dzieci).
@@ -35,6 +41,7 @@ AdminPage (layout sekcji + guard)
 - **Propsy**: brak (dane ładowane przez dzieci/hooki w ramach sekcji).
 
 ### AdminGuard
+
 - **Opis**: Sprawdza czy użytkownik ma uprawnienia admina. W przypadku braku uprawnień pokazuje komunikat i ewentualny link powrotu.
 - **Główne elementy**: kontener stanu (loading, error 401/403), slot na dzieci po pozytywnym sprawdzeniu.
 - **Interakcje**: n/d.
@@ -43,6 +50,7 @@ AdminPage (layout sekcji + guard)
 - **Propsy**: `{ children: ReactNode }`.
 
 ### KpiTotalsCards
+
 - **Opis**: Zestaw 4 kafelków z wartościami KPI i opcjonalny wskaźnik „Akceptowalność AI”.
 - **Główne elementy**: `Card` (shadcn/ui) x4 z nagłówkiem i wartością; badge/wskaźnik pochodny.
 - **Interakcje**: odśwież przycisk (opcjonalnie) lub automatyczne odpytywanie on-mount.
@@ -51,6 +59,7 @@ AdminPage (layout sekcji + guard)
 - **Propsy**: `{ data: KpiTotalsViewModel | null, loading: boolean, error?: UIError }` lub wariant z wewnętrznym fetchowaniem przez hook.
 
 ### AuditLogSection
+
 - **Opis**: Sekcja łącząca filtry, tabelę i paginację.
 - **Główne elementy**: wrapper, nagłówek, `AuditLogFilters`, `AuditLogTable`, `Pagination`.
 - **Interakcje**: reaguje na zmianę filtrów i stronicowania; trzyma spójny stan zapytań i fetchuje dane.
@@ -59,16 +68,18 @@ AdminPage (layout sekcji + guard)
 - **Propsy**: wariant sterowany (przekazywanie hooków) lub samodzielny (zalecany samodzielny, z wewnętrznymi hookami).
 
 ### AuditLogFilters
+
 - **Opis**: Formularz filtrów: `action` (select), `user_id` (input), `card_id` (input). Zmiany debounced.
 - **Główne elementy**: `Select`, `Input`, `Button` „Wyczyść”, ikonka reset.
 - **Interakcje**: onChange (debounced 300–500 ms), onReset.
-- **Walidacja**: 
+- **Walidacja**:
   - `action` ∈ dozwolone akcje (lista znana w UI, np. delete, save_batch, review, itp. — można pobrać z logów lub utrzymać stałą listę);
   - `user_id`, `card_id` muszą być `UUID` (regex), inaczej disable apply lub pokaż komunikat i nie wysyłaj zapytania.
 - **Typy**: `AuditLogFiltersVM`.
 - **Propsy**: `{ value: AuditLogFiltersVM, onChange: (next: AuditLogFiltersVM) => void, loading: boolean }`.
 
 ### AuditLogTable
+
 - **Opis**: Tabela wyników; kolumny: `created_at`, `action`, `acted_by`, `card_id`, `target_user_id`, `details` (skrót JSON).
 - **Główne elementy**: `Table` (shadcn/ui) + `Code`/`Badge` dla ID i skrótu JSON; copy-to-clipboard na ID.
 - **Interakcje**: klik w ID → kopiuje do schowka; sortowanie (opcjonalnie w MVP brak — sort serwerowy domyślnie `created_at DESC`).
@@ -77,6 +88,7 @@ AdminPage (layout sekcji + guard)
 - **Propsy**: `{ rows: AuditLogRowVM[], loading: boolean, error?: UIError }`.
 
 ### Pagination
+
 - **Opis**: Paginacja 25/stronę, przyciski „Poprzednia/Następna”, wskaźnik zakresu, opcjonalnie numery stron ≤7.
 - **Główne elementy**: `Button`/`IconButton`, label z „X–Y z Z”.
 - **Interakcje**: `onPrev`, `onNext`, `onPage(n)`.
@@ -85,6 +97,7 @@ AdminPage (layout sekcji + guard)
 - **Propsy**: `{ state: PaginationState, onChange: (next: PaginationState) => void }`.
 
 ## 5. Typy
+
 - **DTO z backendu** (z `src/types.ts`):
   - `AdminKpiTotalsDTO` — pola: `generated_total: number`, `saved_manual_total: number`, `saved_ai_total: number`, `saved_ai_edited_total: number`.
   - `AdminAuditLogDTO` — rekord logu audytu (pełny kształt wg DB; m.in. `id`, `acted_by`, `action`, `card_id`, `target_user_id`, `details`, `created_at`).
@@ -100,6 +113,7 @@ AdminPage (layout sekcji + guard)
 `
 
 ## 6. Zarządzanie stanem
+
 - **Lokalny stan w `AdminContent`/`AuditLogSection`:**
   - `filters: AuditLogFiltersVM` (kontrolowane przez `AuditLogFilters` z debounce 300–500 ms)
   - `pagination: PaginationState` (limit=25 stałe; offset 0; total z nagłówka `X-Total-Count` lub fallback `items.length`)
@@ -114,6 +128,7 @@ AdminPage (layout sekcji + guard)
   - `useDebouncedValue<T>(value, delay)` do sterowania filtrami.
 
 ## 7. Integracja API
+
 - **KPI:** `GET /api/admin/kpi-totals`
   - Response 200: `AdminKpiTotalsDTO` → mapowanie do `KpiTotalsViewModel` + wyliczenie `acceptance_ratio`.
   - Errors: `401`, `403`, `500` → odpowiednie bannery/alerty.
@@ -126,6 +141,7 @@ AdminPage (layout sekcji + guard)
 - **Guard:** `GET /api/me` dla `ProfileDTO` (sprawdzenie `is_admin`).
 
 ## 8. Interakcje użytkownika
+
 - **Wejście na `/admin`** → `AdminGuard` sprawdza uprawnienia:
   - Gdy `loading` → skeleton/loader;
   - Gdy `403/401` → komunikat „Brak uprawnień”/„Zaloguj się”.
@@ -139,6 +155,7 @@ AdminPage (layout sekcji + guard)
 - **Paginacja**: przyciski poprzednia/następna zmieniają `offset` o `limit`; disabled na brzegach; zakres „X–Y z Z”.
 
 ## 9. Warunki i walidacja
+
 - **Dostęp Admin**: `is_admin === true` wymagane — weryfikacja przed pobraniami.
 - **Filtry**:
   - `action`: dozwolona wartość z listy; domyślnie brak (nie filtruj).
@@ -147,6 +164,7 @@ AdminPage (layout sekcji + guard)
 - **Paginacja**: `limit=25` stałe; `offset ≥ 0` i `offset < total`.
 
 ## 10. Obsługa błędów
+
 - **401 unauthorized**: banner z CTA „Zaloguj”; nie renderuj treści admina.
 - **403 forbidden**: komunikat „Brak uprawnień admina” + link powrotny.
 - **422 validation_failed** (filtry): pokaż inline pod polem, nie wysyłaj błędnych parametrów.
@@ -155,6 +173,7 @@ AdminPage (layout sekcji + guard)
 - **Brak danych**: pusty stan z podpowiedzią (zmień filtry/zakres).
 
 ## 11. Kroki implementacji
+
 1. Routing i szablon strony:
    - Utwórz `src/pages/admin/index.astro` z montażem `AdminPage` (React) i `export const prerender = false;`.
 2. Guard dostępu:
@@ -179,6 +198,5 @@ AdminPage (layout sekcji + guard)
 9. Testy e2e/integracyjne (opcjonalnie w tym repo):
    - Scenariusze: 403 dla nie-admina; poprawne renderowanie KPI; filtry i paginacja działają; brak ratio przy `generated_total=0`.
 10. Refaktory/wykończenie:
-   - Eksport komponentów w `src/components/admin/` (utwórz katalog); upewnij się, że `prettier/eslint` przechodzą; dodać krótką dokumentację README w katalogu.
 
-
+- Eksport komponentów w `src/components/admin/` (utwórz katalog); upewnij się, że `prettier/eslint` przechodzą; dodać krótką dokumentację README w katalogu.

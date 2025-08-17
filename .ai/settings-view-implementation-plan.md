@@ -1,17 +1,21 @@
 # Plan implementacji widoku Settings
 
 ## 1. Przegląd
+
 Widok Settings służy do zarządzania ustawieniami użytkownika wpływającymi na naukę oraz dostępność UI:
+
 - **Ustawienia nauki:** `daily_goal` (1–200), `new_limit` (0–50).
 - **Preferencje UI:** wybór języka interfejsu (PL/EN), przełącznik wysokiego kontrastu.
-Widok jest dostępny wyłącznie dla zalogowanych użytkowników i komunikuje się z `/api/user-settings` (GET/PATCH).
+  Widok jest dostępny wyłącznie dla zalogowanych użytkowników i komunikuje się z `/api/user-settings` (GET/PATCH).
 
 ## 2. Routing widoku
+
 - **Ścieżka:** `/settings`
 - **Dostęp:** chroniony przez `AuthGuard/RequireSession` (gość → redirect do logowania z zachowaniem intencji powrotu)
 - **Plik strony:** `src/pages/settings.astro` (ładuje kontener React `UserSettingsView`)
 
 ## 3. Struktura komponentów
+
 ```
 SettingsPage (Astro)
 └─ UserSettingsView (React)
@@ -26,7 +30,9 @@ SettingsPage (Astro)
 ```
 
 ## 4. Szczegóły komponentów
+
 ### SettingsPage (Astro)
+
 - **Opis:** Strona osadzająca layout (`src/layouts/Layout.astro`) i punkt montowania React.
 - **Główne elementy:** nagłówek, opis sekcji, `<UserSettingsView />`.
 - **Obsługiwane interakcje:** brak (delegacja do React).
@@ -35,6 +41,7 @@ SettingsPage (Astro)
 - **Propsy:** n/d.
 
 ### UserSettingsView (kontener)
+
 - **Opis:** Zarządza cyklem życia: pobranie ustawień, stany `loading/saving/error`, zapis oraz preferencje UI.
 - **Główne elementy:** sekcja formularza, sekcja preferencji UI, alerty/banery, przyciski.
 - **Obsługiwane interakcje:**
@@ -47,6 +54,7 @@ SettingsPage (Astro)
 - **Propsy:** n/d.
 
 ### UserSettingsForm
+
 - **Opis:** Formularz z kontrolkami liczbowymi i walidacją lokalną.
 - **Główne elementy:**
   - `NumberField` dla `daily_goal` (min=1, max=200, step=1)
@@ -64,6 +72,7 @@ SettingsPage (Astro)
   - `busy?: boolean`
 
 ### NumberField (re-używalny)
+
 - **Opis:** Pole liczbowe z etykietą, opisem, walidacją i komunikatem błędu.
 - **Główne elementy:** `<label>`, `<input type="number">`, `<p id=...>` (opis/błąd).
 - **Obsługiwane interakcje:** `onChange`, `onBlur`, Enter.
@@ -79,6 +88,7 @@ SettingsPage (Astro)
   - `inputId?: string`
 
 ### SaveButton
+
 - **Opis:** Przycisk zapisu ze stanami `disabled` i `loading`.
 - **Główne elementy:** `Button` z `src/components/ui/button.tsx`.
 - **Obsługiwane interakcje:** klik, Enter (submit).
@@ -87,6 +97,7 @@ SettingsPage (Astro)
 - **Propsy:** `disabled?: boolean`, `loading?: boolean`, `onClick: () => void`.
 
 ### I18nSelector
+
 - **Opis:** Przełącznik języka UI (PL/EN); zapis w `localStorage` i aktualizacja kontekstu.
 - **Główne elementy:** `select` lub przyciski.
 - **Obsługiwane interakcje:** `onChange`.
@@ -95,6 +106,7 @@ SettingsPage (Astro)
 - **Propsy:** `value: UiLanguage`, `onChange: (lang: UiLanguage) => void`.
 
 ### HighContrastToggle
+
 - **Opis:** Przełącznik trybu wysokiego kontrastu; ustawia np. `data-high-contrast` na `<html>` i zapisuje w `localStorage`.
 - **Główne elementy:** switch/checkbox z etykietą.
 - **Obsługiwane interakcje:** `onChange(enabled)`.
@@ -103,6 +115,7 @@ SettingsPage (Astro)
 - **Propsy:** `enabled: boolean`, `onChange: (enabled: boolean) => void`.
 
 ### InlineAlert / Toast
+
 - **Opis:** Komunikaty o stanie (sukces/błąd); aria-live.
 - **Główne elementy:** wrapper z `role="alert"`.
 - **Obsługiwane interakcje:** auto-hide dla sukcesu; dismiss na klik.
@@ -111,6 +124,7 @@ SettingsPage (Astro)
 - **Propsy:** `kind`, `message`, `onClose?`.
 
 ## 5. Typy
+
 - Z istniejących (`src/types.ts`):
   - `UserSettingsDTO` — `{ user_id: UUID, daily_goal: number, new_limit: number, created_at: ISODateTimeString, updated_at: ISODateTimeString }`.
   - `UserSettingsUpdateCommand = Partial<{ daily_goal: number; new_limit: number }>`.
@@ -133,6 +147,7 @@ SettingsPage (Astro)
   - `UiLanguage = "pl" | "en"`.
 
 ## 6. Zarządzanie stanem
+
 - `UserSettingsView` utrzymuje `SettingsViewModel` w `useState`:
   - `settings` ładowane `useEffect` na mount (GET), błąd → alert.
   - `formState` synchronizowane z `settings` po udanym GET.
@@ -148,6 +163,7 @@ SettingsPage (Astro)
     - `highContrast, setHighContrast`
 
 ## 7. Integracja API
+
 - **Endpointy:** `GET /api/user-settings`, `PATCH /api/user-settings`.
 - **Żądania i odpowiedzi:**
   - GET → `200: UserSettingsDTO`; `401` (redirect do loginu); `408` (timeout) → komunikat i retry.
@@ -160,6 +176,7 @@ SettingsPage (Astro)
 - **Konwencja błędów:** `{ error, code, details? }`.
 
 ## 8. Interakcje użytkownika
+
 - Zmiana `daily_goal` / `new_limit` → walidacja natychmiastowa, oznaczenie `dirty`.
 - Zapis (klik/Enter) → PATCH; sukces: toast „Zapisano”, `dirty = false`.
 - Zmiana języka → zapis w preferencjach, aktualizacja UI.
@@ -167,6 +184,7 @@ SettingsPage (Astro)
 - Błędy → komunikaty inline, focus na pierwszym błędnym polu.
 
 ## 9. Warunki i walidacja
+
 - **FE:**
   - `daily_goal`: int 1–200; wymagane tylko gdy zmieniane.
   - `new_limit`: int 0–50; wymagane tylko gdy zmieniane.
@@ -175,6 +193,7 @@ SettingsPage (Astro)
 - **A11y:** `label`/`id`, `aria-describedby`, aria-live dla statusów.
 
 ## 10. Obsługa błędów
+
 - `401 unauthorized` → redirect do `/auth/login` z powrotem do `/settings` po sukcesie.
 - `422 validation_failed` → błędy per pole + alert nad formularzem.
 - `429 rate_limited` → baner z treścią i blokadą Save do czasu `Retry-After`.
@@ -183,6 +202,7 @@ SettingsPage (Astro)
 - Offline: banner, Save disabled z tooltipem; lokalne utrzymanie formularza.
 
 ## 11. Kroki implementacji
+
 1. Dodaj stronę `src/pages/settings.astro` i osadź `UserSettingsView` (React) w `Layout.astro`.
 2. Utwórz katalog `src/components/settings/` i komponenty: `UserSettingsView.tsx`, `UserSettingsForm.tsx`, `NumberField.tsx`, `I18nSelector.tsx`, `HighContrastToggle.tsx`, opcj. `InlineAlert.tsx`.
 3. Dodaj hooki: `useUserSettings.ts` (GET/PATCH z obsługą kodów 401/422/429/408) oraz `useUiPreferences.ts` (localStorage + efekt na `<html>`).

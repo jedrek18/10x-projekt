@@ -3,7 +3,7 @@ import { dateSchema, getQuerySchema, patchBodySchema } from "../src/lib/validati
 
 describe("Progress validation", () => {
   it("validates date format and calendar correctness", () => {
-    expect(() => dateSchema.parse("2025-02-29")) .toThrow();
+    expect(() => dateSchema.parse("2025-02-29")).toThrow();
     expect(dateSchema.parse("2025-08-13")).toBe("2025-08-13");
   });
 
@@ -24,5 +24,3 @@ describe("Progress validation", () => {
     expect(() => patchBodySchema.parse({})).toThrow();
   });
 });
-
-

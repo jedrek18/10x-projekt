@@ -59,5 +59,3 @@ export function usePreferredLanguage(): { language: LanguageCode; setLanguage: (
 
   return { language, setLanguage };
 }
-
-

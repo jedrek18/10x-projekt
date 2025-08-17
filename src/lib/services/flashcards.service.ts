@@ -40,8 +40,7 @@ async function canonicalizeText(supabase: TypedSupabase, text: string): Promise<
 export async function listFlashcards(
   supabase: TypedSupabase,
   params: { limit: number; offset: number; order: "created_at.desc" | "created_at.asc" }
-): Promise<{ items: FlashcardDTO[]; count: number }>
-{
+): Promise<{ items: FlashcardDTO[]; count: number }> {
   await assertAuthenticated(supabase);
   const ascending = params.order === "created_at.asc";
   const rangeStart = params.offset;
@@ -64,8 +63,7 @@ export async function listFlashcards(
 export async function createManualFlashcard(
   supabase: TypedSupabase,
   command: FlashcardCreateManualCommand
-): Promise<FlashcardDTO>
-{
+): Promise<FlashcardDTO> {
   const { userId } = await assertAuthenticated(supabase);
   const frontCanon = await canonicalizeText(supabase, command.front);
   const backCanon = await canonicalizeText(supabase, command.back);
@@ -80,11 +78,7 @@ export async function createManualFlashcard(
     source: "manual" as const,
   } as const;
 
-  const { data, error } = await supabase
-    .from("flashcards")
-    .insert(insertPayload)
-    .select("*")
-    .single();
+  const { data, error } = await supabase.from("flashcards").insert(insertPayload).select("*").single();
 
   if (error) {
     // Unique violation -> conflict (e.g., duplicate content_hash)
@@ -101,17 +95,9 @@ export async function createManualFlashcard(
   return data as FlashcardDTO;
 }
 
-export async function getFlashcardById(
-  supabase: TypedSupabase,
-  id: UUID
-): Promise<FlashcardDTO>
-{
+export async function getFlashcardById(supabase: TypedSupabase, id: UUID): Promise<FlashcardDTO> {
   await assertAuthenticated(supabase);
-  const { data, error } = await supabase
-    .from("flashcards")
-    .select("*")
-    .eq("id", id)
-    .single();
+  const { data, error } = await supabase.from("flashcards").select("*").eq("id", id).single();
   if (error) {
     throw new NotFoundError("Flashcard not found");
   }
@@ -122,8 +108,7 @@ export async function updateFlashcardContent(
   supabase: TypedSupabase,
   id: UUID,
   command: FlashcardUpdateContentCommand
-): Promise<FlashcardDTO>
-{
+): Promise<FlashcardDTO> {
   const current = await getFlashcardById(supabase, id);
   if (current.deleted_at) {
     throw new SoftDeletedConflictError("Cannot edit a soft-deleted card");
@@ -168,11 +153,7 @@ export async function updateFlashcardContent(
   return data as FlashcardDTO;
 }
 
-export async function softDeleteFlashcard(
-  supabase: TypedSupabase,
-  id: UUID
-): Promise<void>
-{
+export async function softDeleteFlashcard(supabase: TypedSupabase, id: UUID): Promise<void> {
   // Ensure the card exists and is owned by the user (enforced by RLS)
   await getFlashcardById(supabase, id);
   const { error } = await supabase.rpc("delete_flashcard", { card_id: id });
@@ -194,8 +175,7 @@ export async function batchSaveFlashcards(
   supabase: TypedSupabase,
   request: FlashcardBatchSaveRequest,
   idempotencyKey?: string
-): Promise<FlashcardBatchSaveResponse>
-{
+): Promise<FlashcardBatchSaveResponse> {
   const { userId } = await assertAuthenticated(supabase);
 
   const requestId: UUID = (idempotencyKey as UUID) ?? generateUuidV4();
@@ -260,7 +240,7 @@ export async function batchSaveFlashcards(
     }
 
     const inserted = (data ?? []) as { id: UUID; source: string; front?: string; back?: string }[];
-    saved = inserted.map((row) => ({ id: row.id as UUID, source: (row.source as any) }));
+    saved = inserted.map((row) => ({ id: row.id as UUID, source: row.source as any }));
 
     // Build set of canonical keys that ended up in DB from this request,
     // so we can identify which uniqueItems were not inserted (duplicates in DB).
@@ -296,5 +276,3 @@ export async function batchSaveFlashcards(
 
   return response;
 }
-
-

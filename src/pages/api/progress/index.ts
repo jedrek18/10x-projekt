@@ -33,7 +33,9 @@ export const GET: APIRoute = async ({ url, locals, request }) => {
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error("[api/progress] GET failed", error);
-    try { await logError(locals?.supabase, { endpoint: "/api/progress", error }); } catch {}
+    try {
+      await logError(locals?.supabase, { endpoint: "/api/progress", error });
+    } catch {}
     if (error instanceof UnauthorizedError) {
       return errorJson("Unauthorized", "unauthorized", 401);
     }
@@ -43,5 +45,3 @@ export const GET: APIRoute = async ({ url, locals, request }) => {
     return errorJson("Internal Server Error", "server_error", 500);
   }
 };
-
-

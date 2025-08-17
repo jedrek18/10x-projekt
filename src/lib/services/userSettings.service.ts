@@ -24,11 +24,7 @@ export async function ensureUserSettingsExists(supabase: TypedSupabase): Promise
     }
   }
 
-  const { data, error } = await supabase
-    .from("user_settings")
-    .select("*")
-    .eq("user_id", userId)
-    .single();
+  const { data, error } = await supabase.from("user_settings").select("*").eq("user_id", userId).single();
   if (error || !data) {
     throw new NotFoundError("user_settings row not found");
   }
@@ -37,11 +33,7 @@ export async function ensureUserSettingsExists(supabase: TypedSupabase): Promise
 
 export async function getUserSettings(supabase: TypedSupabase): Promise<UserSettingsDTO> {
   const { userId } = await assertAuthenticated(supabase);
-  const { data, error } = await supabase
-    .from("user_settings")
-    .select("*")
-    .eq("user_id", userId)
-    .single();
+  const { data, error } = await supabase.from("user_settings").select("*").eq("user_id", userId).single();
   if (error || !data) {
     throw new NotFoundError("user_settings row not found");
   }
@@ -54,10 +46,7 @@ export async function updateUserSettings(
 ): Promise<UserSettingsDTO> {
   const { userId } = await assertAuthenticated(supabase);
 
-  const { error: updateError } = await supabase
-    .from("user_settings")
-    .update(command)
-    .eq("user_id", userId);
+  const { error: updateError } = await supabase.from("user_settings").update(command).eq("user_id", userId);
   if (updateError) {
     // 23514 check constraint violations → treat as validation errors at route layer
     const err = new Error(updateError.message);
@@ -68,5 +57,3 @@ export async function updateUserSettings(
   // Return the latest view
   return getUserSettings(supabase);
 }
-
-

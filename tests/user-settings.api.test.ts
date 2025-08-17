@@ -19,5 +19,3 @@ describe("/api/user-settings validation", () => {
     expect(() => userSettingsPatchSchema.parse({ new_limit: 51 })).toThrow();
   });
 });
-
-

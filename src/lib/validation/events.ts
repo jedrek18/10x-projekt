@@ -15,9 +15,8 @@ const jsonValueSchema: z.ZodType<unknown> = z.lazy(() =>
 export const eventCreateSchema = z.object({
   event_name: z.enum(["generation", "save"]),
   request_id: z.string().uuid(),
-  properties: jsonValueSchema
-    .optional()
-    .refine((val) => {
+  properties: jsonValueSchema.optional().refine(
+    (val) => {
       if (val == null) return true;
       try {
         const json = JSON.stringify(val);
@@ -26,9 +25,9 @@ export const eventCreateSchema = z.object({
       } catch {
         return false;
       }
-    }, { message: "properties is too large or not serializable" }),
+    },
+    { message: "properties is too large or not serializable" }
+  ),
 });
 
 export type EventCreateValidated = z.infer<typeof eventCreateSchema>;
-
-

@@ -58,5 +58,3 @@ export const PATCH: APIRoute = async ({ request, locals }) => {
     return errorJson("Internal Server Error", "server_error", 500);
   }
 };
-
-

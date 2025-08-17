@@ -26,14 +26,14 @@ export const GET: APIRoute = async ({ params, locals }) => {
     }
 
     const TIMEOUT_MS = 10000;
-    const card = await Promise.race([
+    const card = (await Promise.race([
       getFlashcardById(supabase, parsed.data.id),
       new Promise((_, reject) => {
         const err = new Error("Request timeout");
         (err as any).name = "AbortError";
         setTimeout(() => reject(err), TIMEOUT_MS);
       }),
-    ]) as Awaited<ReturnType<typeof getFlashcardById>>;
+    ])) as Awaited<ReturnType<typeof getFlashcardById>>;
 
     return json(card, 200);
   } catch (error) {
@@ -76,14 +76,14 @@ export const PATCH: APIRoute = async ({ params, request, locals }) => {
     }
 
     const TIMEOUT_MS = 10000;
-    const updated = await Promise.race([
+    const updated = (await Promise.race([
       updateFlashcardContent(supabase, idParsed.data.id, payloadParsed.data),
       new Promise((_, reject) => {
         const err = new Error("Request timeout");
         (err as any).name = "AbortError";
         setTimeout(() => reject(err), TIMEOUT_MS);
       }),
-    ]) as Awaited<ReturnType<typeof updateFlashcardContent>>;
+    ])) as Awaited<ReturnType<typeof updateFlashcardContent>>;
 
     return json(updated, 200);
   } catch (error) {
@@ -145,5 +145,3 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
     return errorJson("Internal Server Error", "server_error", 500);
   }
 };
-
-

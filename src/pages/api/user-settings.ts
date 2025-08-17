@@ -12,19 +12,21 @@ export const GET: APIRoute = async ({ locals }) => {
     const supabase = locals.supabase;
     // Ensure a row exists for this user, then return it.
     const TIMEOUT_MS = 10000;
-    const settings = await Promise.race([
+    const settings = (await Promise.race([
       ensureUserSettingsExists(supabase),
       new Promise((_, reject) => {
         const err = new Error("Request timeout");
         (err as any).name = "AbortError";
         setTimeout(() => reject(err), TIMEOUT_MS);
       }),
-    ]) as Awaited<ReturnType<typeof ensureUserSettingsExists>>;
+    ])) as Awaited<ReturnType<typeof ensureUserSettingsExists>>;
     return json(settings, { status: 200, headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error("[api/user-settings] GET failed", error);
-    try { await logError(locals?.supabase, { endpoint: "/api/user-settings", error }); } catch {}
+    try {
+      await logError(locals?.supabase, { endpoint: "/api/user-settings", error });
+    } catch {}
     if (error instanceof UnauthorizedError) {
       return errorJson("Unauthorized", "unauthorized", 401);
     }
@@ -55,19 +57,21 @@ export const PATCH: APIRoute = async ({ request, locals }) => {
     }
 
     const TIMEOUT_MS = 10000;
-    const updated = await Promise.race([
+    const updated = (await Promise.race([
       updateUserSettings(supabase, parsed.data),
       new Promise((_, reject) => {
         const err = new Error("Request timeout");
         (err as any).name = "AbortError";
         setTimeout(() => reject(err), TIMEOUT_MS);
       }),
-    ]) as Awaited<ReturnType<typeof updateUserSettings>>;
+    ])) as Awaited<ReturnType<typeof updateUserSettings>>;
     return json(updated, { status: 200, headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error("[api/user-settings] PATCH failed", error);
-    try { await logError(locals?.supabase, { endpoint: "/api/user-settings", error }); } catch {}
+    try {
+      await logError(locals?.supabase, { endpoint: "/api/user-settings", error });
+    } catch {}
     if (error instanceof UnauthorizedError) {
       return errorJson("Unauthorized", "unauthorized", 401);
     }
@@ -81,5 +85,3 @@ export const PATCH: APIRoute = async ({ request, locals }) => {
     return errorJson("Internal Server Error", "server_error", 500);
   }
 };
-
-

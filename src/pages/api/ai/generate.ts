@@ -51,7 +51,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
                 controller.enqueue(encoder.encode(`: ping\n\n`));
               } catch {}
             }, 15000);
-            for await (const event of generateProposalsStream(supabase, parsed.data, { signal: abortController.signal })) {
+            for await (const event of generateProposalsStream(supabase, parsed.data, {
+              signal: abortController.signal,
+            })) {
               const payload = JSON.stringify({ type: event.type, data: event.data });
               controller.enqueue(encoder.encode(`data: ${payload}\n\n`));
               if (event.type === "done") {
@@ -92,14 +94,14 @@ export const POST: APIRoute = async ({ request, locals }) => {
     }
 
     // Non-SSE: enforce timeout via Promise.race and return 408 on timeout
-    const result = await Promise.race([
+    const result = (await Promise.race([
       generateProposals(supabase, parsed.data, { signal: request.signal }),
       new Promise((_, reject) => {
         const err = new Error("Request timeout");
         (err as any).name = "AbortError";
         setTimeout(() => reject(err), TIMEOUT_MS);
       }),
-    ]) as Awaited<ReturnType<typeof generateProposals>>;
+    ])) as Awaited<ReturnType<typeof generateProposals>>;
 
     await logEventGeneration(supabase, userId, {
       event_name: "generation",
@@ -120,5 +122,3 @@ export const POST: APIRoute = async ({ request, locals }) => {
     return errorJson("Internal Server Error", "server_error", 500);
   }
 };
-
-

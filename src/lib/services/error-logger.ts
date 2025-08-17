@@ -29,5 +29,3 @@ export async function logError(supabase: SupabaseClient | undefined, payload: Er
     console.error("[error-logger] failed to log error", e, payload);
   }
 }
-
-

@@ -26,14 +26,14 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     const idempotencyKey = request.headers.get("idempotency-key") || undefined;
     const TIMEOUT_MS = 15000;
-    const result = await Promise.race([
+    const result = (await Promise.race([
       batchSaveFlashcards(supabase, parsed.data, idempotencyKey),
       new Promise((_, reject) => {
         const err = new Error("Request timeout");
         (err as any).name = "AbortError";
         setTimeout(() => reject(err), TIMEOUT_MS);
       }),
-    ]) as Awaited<ReturnType<typeof batchSaveFlashcards>>;
+    ])) as Awaited<ReturnType<typeof batchSaveFlashcards>>;
 
     return json(result, 201);
   } catch (error) {
@@ -51,5 +51,3 @@ export const POST: APIRoute = async ({ request, locals }) => {
     return errorJson("Internal Server Error", "server_error", 500);
   }
 };
-
-

@@ -39,10 +39,7 @@ function nowIso(): string {
   return new Date().toISOString();
 }
 
-export async function buildQueue(
-  supabase: TypedSupabase,
-  goalHint?: number
-): Promise<SrsQueueResponse> {
+export async function buildQueue(supabase: TypedSupabase, goalHint?: number): Promise<SrsQueueResponse> {
   const { userId } = await assertAuthenticated(supabase);
 
   // Fetch settings
@@ -120,10 +117,7 @@ export async function buildQueue(
   };
 }
 
-export async function promoteNew(
-  supabase: TypedSupabase,
-  cmd: SrsPromoteNewCommand
-): Promise<SrsPromoteNewResponse> {
+export async function promoteNew(supabase: TypedSupabase, cmd: SrsPromoteNewCommand): Promise<SrsPromoteNewResponse> {
   const { userId } = await assertAuthenticated(supabase);
 
   const today = getTodayUtcDateString();
@@ -216,10 +210,7 @@ export async function promoteNew(
   return { promoted: ids.map((id) => ({ id, source: "ai" })) as any, remaining_allowance: remaining };
 }
 
-export async function reviewCard(
-  supabase: TypedSupabase,
-  cmd: SrsReviewCommand
-): Promise<SrsReviewResultDTO> {
+export async function reviewCard(supabase: TypedSupabase, cmd: SrsReviewCommand): Promise<SrsReviewResultDTO> {
   const { userId } = await assertAuthenticated(supabase);
 
   if (cmd.rating < 0 || cmd.rating > 3) {
@@ -306,10 +297,12 @@ export async function reviewCard(
       .update({ reviews_done: reviewsDone })
       .eq("user_id", userId)
       .eq("date_utc", today)
-      .eq("reviews_done", (prog?.reviews_done ?? 0));
+      .eq("reviews_done", prog?.reviews_done ?? 0);
     if (updErr) {
       // fallback: upsert (best effort)
-      await supabase.from("user_daily_progress").upsert({ user_id: userId, date_utc: today, reviews_done: reviewsDone } as any);
+      await supabase
+        .from("user_daily_progress")
+        .upsert({ user_id: userId, date_utc: today, reviews_done: reviewsDone } as any);
     }
   }
 
@@ -336,5 +329,3 @@ export async function reviewCard(
     last_rating: cmd.rating,
   };
 }
-
-

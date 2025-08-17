@@ -40,5 +40,3 @@ export function LanguageSelector(props: LanguageSelectorProps) {
 }
 
 export default LanguageSelector;
-
-

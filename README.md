@@ -12,14 +12,14 @@
 
 ## Table of contents
 
-* [Project name](#ai-flashcards-mvp)
-* [Project description](#project-description)
-* [Tech stack](#tech-stack)
-* [Getting started locally](#getting-started-locally)
-* [Available scripts](#available-scripts)
-* [Project scope](#project-scope)
-* [Project status](#project-status)
-* [License](#license)
+- [Project name](#ai-flashcards-mvp)
+- [Project description](#project-description)
+- [Tech stack](#tech-stack)
+- [Getting started locally](#getting-started-locally)
+- [Available scripts](#available-scripts)
+- [Project scope](#project-scope)
+- [Project status](#project-status)
+- [License](#license)
 
 ---
 
@@ -29,24 +29,24 @@
 
 **Core capabilities**
 
-* **AI card generation from pasted text** (recommended input: **1,000–10,000 characters**).
+- **AI card generation from pasted text** (recommended input: **1,000–10,000 characters**).
   The UI enforces limits and clearly shows counters when the text is too short or too long.
-* **Card format quality by design**:
+- **Card format quality by design**:
   front ≤ **200** chars, back ≤ **500** chars, **one concept per card**, text-only.
-* **Review & curate before saving**:
+- **Review & curate before saving**:
   request **10–50** proposals via a slider; proposals stream in with skeleton loading; actions unlock after the batch completes; you can **accept / edit / delete** each proposal.
-* **Local caching for safety**:
+- **Local caching for safety**:
   proposals, decisions, and slider settings are cached in **LocalStorage** (**TTL 24h**) and auto-restored; only **accepted** cards are persisted to the backend.
-* **“My Flashcards”**:
+- **“My Flashcards”**:
   server-paginated list (**25/page**, newest → oldest) with edit/delete; manual add modal with the same limits.
-* **Learning powered by Open Spaced Repetition**:
+- **Learning powered by Open Spaced Repetition**:
   backend maintains due/ease/interval/reps/lapses; daily queue shows **all due first**, then up to **10 new**; daily target **20**. Anki-style grading updates the schedule on the backend. Short network issues won’t lose progress: grades are queued locally and retried.
-* **Accounts & sessions**:
+- **Accounts & sessions**:
   email + password; sessions last **7 days**; multi-session allowed; password change revokes all sessions. Auth required for saving cards and learning.
-* **Internationalization & accessibility**:
+- **Internationalization & accessibility**:
   UI available in **EN** and **PL**; card language follows source language (no forced translation). Keyboard navigation, visible focus, and ARIA states for loading/errors.
-* **Telemetry & KPIs**:
-  generation batches recorded; saves labeled **manual / ai / ai\_edited**. Global KPIs (no time window):
+- **Telemetry & KPIs**:
+  generation batches recorded; saves labeled **manual / ai / ai_edited**. Global KPIs (no time window):
   – AI acceptance ≥ **75%** of generated proposals
   – AI share ≥ **75%** of saved cards
 
@@ -54,11 +54,11 @@
 
 ## Tech stack
 
-* **Frontend:** Astro 5, React 19, TypeScript 5, Tailwind CSS 4, shadcn/ui
-* **Backend:** Supabase (PostgreSQL + Auth)
-* **AI:** OpenRouter.ai (access to multiple model providers with budget limits)
-* **CI/CD & Hosting:** GitHub Actions, Cloudflare Pages
-* **Tooling:** ESLint 9, Prettier, prettier-plugin-astro, Husky + lint-staged, lucide-react, class-variance-authority, tailwind-merge
+- **Frontend:** Astro 5, React 19, TypeScript 5, Tailwind CSS 4, shadcn/ui
+- **Backend:** Supabase (PostgreSQL + Auth)
+- **AI:** OpenRouter.ai (access to multiple model providers with budget limits)
+- **CI/CD & Hosting:** GitHub Actions, Cloudflare Pages
+- **Tooling:** ESLint 9, Prettier, prettier-plugin-astro, Husky + lint-staged, lucide-react, class-variance-authority, tailwind-merge
 
 ---
 
@@ -66,9 +66,9 @@
 
 ### Prerequisites
 
-* **Node.js 22.14.0** (repo includes `.nvmrc`)
-* A **Supabase** project (URL + anon key)
-* An **OpenRouter** API key
+- **Node.js 22.14.0** (repo includes `.nvmrc`)
+- A **Supabase** project (URL + anon key)
+- An **OpenRouter** API key
 
 ### 1) Clone & install
 
@@ -105,7 +105,7 @@ OPENROUTER_MODEL="<e.g. openai/gpt-4o-mini or anthropic/claude-3-haiku>"
 npm run dev
 ```
 
-* Astro dev server starts and prints the local URL (by default `http://localhost:4321`).
+- Astro dev server starts and prints the local URL (by default `http://localhost:4321`).
 
 ### 4) Build & preview
 
@@ -129,13 +129,13 @@ npm run format
 
 From `package.json`:
 
-* **`npm run dev`** – start the Astro dev server.
-* **`npm run build`** – production build.
-* **`npm run preview`** – preview the production build locally.
-* **`npm run astro`** – run Astro CLI directly.
-* **`npm run lint`** – run ESLint across the project.
-* **`npm run lint:fix`** – ESLint with automatic fixes.
-* **`npm run format`** – Prettier format (incl. Astro via `prettier-plugin-astro`).
+- **`npm run dev`** – start the Astro dev server.
+- **`npm run build`** – production build.
+- **`npm run preview`** – preview the production build locally.
+- **`npm run astro`** – run Astro CLI directly.
+- **`npm run lint`** – run ESLint across the project.
+- **`npm run lint:fix`** – ESLint with automatic fixes.
+- **`npm run format`** – Prettier format (incl. Astro via `prettier-plugin-astro`).
 
 ---
 
@@ -186,23 +186,23 @@ Edge cases to verify:
 
 ### In scope (MVP)
 
-* AI generation from pasted text (**1,000–10,000** chars), proposals cap **10–50**, streaming with skeletons.
-* Card constraints: front ≤ **200**, back ≤ **500**, single concept, text-only; validation on FE/BE/DB.
-* Proposal review actions: accept / edit / delete; bulk actions (save accepted, save all, reject all, select all).
-* Local durability: proposals/decisions/slider cached for **24h**, auto-restored; cleared after save or TTL.
-* “My Flashcards”: server pagination **25/page**, newest first; edit/delete; manual add modal.
-* Learning flow: due-first then up to **10 new**; daily target **20**; Anki-style grading; backend SRS state; offline-safe grade queue & retry.
-* Auth: email+password; 7-day sessions; multi-session; password change revokes sessions; logout.
-* Telemetry: generation batch size; save labels **manual / ai / ai\_edited**.
-* Accessibility & i18n: keyboard navigation, visible focus/ARIA; UI in **EN/PL**.
+- AI generation from pasted text (**1,000–10,000** chars), proposals cap **10–50**, streaming with skeletons.
+- Card constraints: front ≤ **200**, back ≤ **500**, single concept, text-only; validation on FE/BE/DB.
+- Proposal review actions: accept / edit / delete; bulk actions (save accepted, save all, reject all, select all).
+- Local durability: proposals/decisions/slider cached for **24h**, auto-restored; cleared after save or TTL.
+- “My Flashcards”: server pagination **25/page**, newest first; edit/delete; manual add modal.
+- Learning flow: due-first then up to **10 new**; daily target **20**; Anki-style grading; backend SRS state; offline-safe grade queue & retry.
+- Auth: email+password; 7-day sessions; multi-session; password change revokes sessions; logout.
+- Telemetry: generation batch size; save labels **manual / ai / ai_edited**.
+- Accessibility & i18n: keyboard navigation, visible focus/ARIA; UI in **EN/PL**.
 
 ### Out of scope (MVP)
 
-* Custom SRS algorithm (uses **Open Spaced Repetition** library).
-* File import (PDF/DOCX/etc.), sharing/invitations, external edu integrations.
-* Native mobile apps (web only).
-* Email verification and “forgot password”.
-* Automatic deduplication of proposals.
+- Custom SRS algorithm (uses **Open Spaced Repetition** library).
+- File import (PDF/DOCX/etc.), sharing/invitations, external edu integrations.
+- Native mobile apps (web only).
+- Email verification and “forgot password”.
+- Automatic deduplication of proposals.
 
 ---
 
@@ -210,11 +210,11 @@ Edge cases to verify:
 
 **Stage:** MVP (in progress / pre-alpha)
 
-* **Known risks:** proposal quality & consistency affect KPIs; inference cost/latency; no password reset may increase support load; potential duplicate fronts in proposals.
-* **CI/CD & hosting:** target **GitHub Actions** pipelines and **Cloudflare Pages** deployment.
-* **KPIs:**
+- **Known risks:** proposal quality & consistency affect KPIs; inference cost/latency; no password reset may increase support load; potential duplicate fronts in proposals.
+- **CI/CD & hosting:** target **GitHub Actions** pipelines and **Cloudflare Pages** deployment.
+- **KPIs:**
   – AI acceptance (accepted + accepted after edit) ≥ **75%** of generated proposals
-  – AI share of saved cards (ai + ai\_edited) ≥ **75%**
+  – AI share of saved cards (ai + ai_edited) ≥ **75%**
 
 ---
 

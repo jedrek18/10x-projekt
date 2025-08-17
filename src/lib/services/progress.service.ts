@@ -7,8 +7,7 @@ export type TypedSupabase = SupabaseClient;
 export async function fetchDailyProgress(
   supabase: TypedSupabase,
   params: { date?: string; start?: string; end?: string }
-): Promise<GetProgressResponseDTO>
-{
+): Promise<GetProgressResponseDTO> {
   const { userId } = await assertAuthenticated(supabase);
   let query = supabase
     .from("user_daily_progress")
@@ -33,15 +32,11 @@ export async function upsertGoalOverride(
   supabase: TypedSupabase,
   dateUtc: string,
   goalOverride: number | null
-): Promise<UserDailyProgressDTO>
-{
+): Promise<UserDailyProgressDTO> {
   const { userId } = await assertAuthenticated(supabase);
   const { data, error } = await supabase
     .from("user_daily_progress")
-    .upsert(
-      { user_id: userId, date_utc: dateUtc, goal_override: goalOverride },
-      { onConflict: "user_id,date_utc" }
-    )
+    .upsert({ user_id: userId, date_utc: dateUtc, goal_override: goalOverride }, { onConflict: "user_id,date_utc" })
     .select("*")
     .single();
 
@@ -56,5 +51,3 @@ export async function upsertGoalOverride(
   }
   return data as UserDailyProgressDTO;
 }
-
-

@@ -4,7 +4,12 @@ import { describe, it, expect, beforeAll } from "vitest";
 // They do not spin up a full server; instead, they validate schemas and basic service behavior
 // where possible. For full integration, run the app and use the REST Client examples.
 
-import { createManualSchema, listQuerySchema, updateContentSchema, batchSaveSchema } from "../src/lib/validation/flashcards";
+import {
+  createManualSchema,
+  listQuerySchema,
+  updateContentSchema,
+  batchSaveSchema,
+} from "../src/lib/validation/flashcards";
 
 describe("Flashcards validation", () => {
   it("validates list query defaults and bounds", () => {
@@ -38,8 +43,8 @@ describe("Flashcards validation", () => {
     const ok = batchSaveSchema.parse({ items: [{ front: "Q", back: "A", source: "ai" }] });
     expect(ok.items.length).toBe(1);
     expect(() => batchSaveSchema.parse({ items: [] })).toThrow();
-    expect(() => batchSaveSchema.parse({ items: Array.from({ length: 101 }, () => ({ front: "Q", back: "A", source: "ai" })) })).toThrow();
+    expect(() =>
+      batchSaveSchema.parse({ items: Array.from({ length: 101 }, () => ({ front: "Q", back: "A", source: "ai" })) })
+    ).toThrow();
   });
 });
-
-

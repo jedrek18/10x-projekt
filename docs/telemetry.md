@@ -3,6 +3,7 @@
 ## Przegląd
 
 Dobrowolne zapisywanie zdarzeń użytkownika do tabeli `event_log` z RLS. Obecnie obsługiwane zdarzenia:
+
 - `generation` — zakończenie generowania propozycji kart (AI)
 - `save` — zapis propozycji kart
 
@@ -10,6 +11,7 @@ Dobrowolne zapisywanie zdarzeń użytkownika do tabeli `event_log` z RLS. Obecni
 
 - POST `/api/events`
 - Body:
+
 ```
 {
   "event_name": "generation" | "save",
@@ -17,6 +19,7 @@ Dobrowolne zapisywanie zdarzeń użytkownika do tabeli `event_log` z RLS. Obecni
   "properties": { "...": "optional JSON, do 8KB" }
 }
 ```
+
 - Odpowiedzi:
   - 202 Accepted: `{ "status": "accepted" }`
   - 401 Unauthorized: `{ "error": "Unauthorized", "code": "unauthorized" }`

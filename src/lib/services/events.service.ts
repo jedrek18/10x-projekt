@@ -20,5 +20,3 @@ export async function createEvent(supabase: TypedSupabase, cmd: EventCreateComma
     throw new Error(`Failed to create event: ${error.message}`);
   }
 }
-
-

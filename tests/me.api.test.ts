@@ -12,5 +12,3 @@ describe("/api/me validation", () => {
     expect(() => profileUpdateCommandSchema.parse({ any: "value" })).toThrow();
   });
 });
-
-

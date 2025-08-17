@@ -64,5 +64,3 @@ export const landingCopy: I18nDictionary = {
     policy: "Prywatność i regulamin",
   },
 };
-
-

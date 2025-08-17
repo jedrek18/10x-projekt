@@ -13,5 +13,3 @@ describe("/api/progress contract", () => {
     expect(() => patchBodySchema.parse({ goal_override: null })).not.toThrow();
   });
 });
-
-

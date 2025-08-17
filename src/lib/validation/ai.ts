@@ -16,5 +16,3 @@ export const generateSchema = z.object({
 });
 
 export type GenerateCommand = z.infer<typeof generateSchema>;
-
-

@@ -9,8 +9,8 @@
 
 - GET `/api/admin/audit-logs`
 - GET `/api/admin/kpi-totals`
- - POST `/api/events` (telemetria)
-  
+- POST `/api/events` (telemetria)
+
 ### Podgląd AI Generate
 
 - POST `/api/ai/generate` (non‑SSE i SSE)
@@ -96,5 +96,3 @@ curl -i \
 
 Możesz użyć gotowych requestów: `.http/admin-api.http`.
 Dodaliśmy też przykłady dla zdarzeń: `.http/events.http`.
-
-

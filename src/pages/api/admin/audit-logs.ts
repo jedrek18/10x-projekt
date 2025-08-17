@@ -31,5 +31,3 @@ export const GET: APIRoute = async ({ url, locals }) => {
     return errorJson("Internal Server Error", "server_error", 500);
   }
 };
-
-

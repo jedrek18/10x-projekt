@@ -1,9 +1,11 @@
 # Plan implementacji widoku Proposals (Przegląd propozycji)
 
 ## 1. Przegląd
+
 Widok Proposals prezentuje listę propozycji fiszek wygenerowanych przez AI, umożliwia akcje per pozycja (akceptuj, edytuj, usuń), akcje hurtowe (zapisz zaakceptowane, zapisz wszystkie, odrzuć wszystkie, zaznacz/odznacz wszystkie), walidację limitów znaków i zapis batchowy zaakceptowanych pozycji do backendu z idempotencją. Stan sesji propozycji jest przechowywany w LocalStorage z TTL 24 h i przywracany po odświeżeniu. Widok jest dostępny wyłącznie dla zalogowanych.
 
 ## 2. Routing widoku
+
 - Ścieżka: `/proposals`
 - Ochrona: `AuthGuard` (tylko zalogowani; przy 401/bez sesji — redirect do `/auth/login` z powrotem do intencji).
 - Wejścia na widok:
@@ -11,6 +13,7 @@ Widok Proposals prezentuje listę propozycji fiszek wygenerowanych przez AI, umo
   - Po odświeżeniu strony — przywrócenie sesji z LocalStorage, o ile TTL nie wygasł.
 
 ## 3. Struktura komponentów
+
 - `ProposalsPage`
   - `LocalCacheBadge`
   - `DuplicatesBanner`
@@ -38,6 +41,7 @@ graph TD;
 ## 4. Szczegóły komponentów
 
 ### ProposalsPage
+
 - Opis: Kontener widoku. Ładuje/przywraca stan sesji, orkiestruje akcje, integruje API zapisu, zarządza idempotencyjnością i redirectami po sukcesie.
 - Główne elementy: nagłówek, `LocalCacheBadge`, `DuplicatesBanner`, `BulkActionsBar`, `ProposalList`, `SaveResultModal`.
 - Obsługiwane interakcje:
@@ -52,6 +56,7 @@ graph TD;
 - Propsy: brak (widok routowany). Zależności z hooków: `useProposalsSession`, `useIdempotencyKey`, `useKeyboardShortcuts`.
 
 ### LocalCacheBadge
+
 - Opis: Informuje o przywróceniu stanu z cache oraz o pozostałym TTL.
 - Główne elementy: chip/badge z czasem do wygaśnięcia; przycisk „Wyczyść”.
 - Zdarzenia: klik „Wyczyść cache” → `session.clear()` i odświeżenie widoku.
@@ -60,6 +65,7 @@ graph TD;
 - Propsy: `{ ttlInfo?: TTLInfo; onClear: () => void }`.
 
 ### DuplicatesBanner
+
 - Opis: Prezentuje wynik `skipped` po zapisie (np. duplikaty) z możliwością rozwinięcia listy.
 - Elementy: alert/banner, licznik `skipped.length`, lista frontów z `reason` po rozwinięciu.
 - Zdarzenia: zamknięcie/ukrycie.
@@ -68,6 +74,7 @@ graph TD;
 - Propsy: `{ skipped: FlashcardBatchSaveSkippedItem[] }`.
 
 ### BulkActionsBar
+
 - Opis: Pasek akcji hurtowych i statusu selekcji.
 - Elementy: `Checkbox` „Zaznacz wszystkie”, przyciski: `Zapisz zaakceptowane`, `Zapisz wszystkie`, `Odrzuć wszystkie` (danger), licznik zaznaczonych/zaakceptowanych/odebranych.
 - Zdarzenia:
@@ -83,6 +90,7 @@ graph TD;
 - Propsy: `{ counts, disabledFlags, onSaveAccepted, onSaveAll, onRejectAll, onToggleSelectAll }`.
 
 ### ProposalList
+
 - Opis: Lista kart propozycji z progressive reveal (skeletony → elementy) i blokadą akcji do `done`.
 - Elementy: placeholder skeletony, wiersze `ProposalCard`. Paginy brak (batch ≤50).
 - Zdarzenia: przekazuje w dół zdarzenia akcji per-karta, obsługuje klawiaturę/fokus.
@@ -91,6 +99,7 @@ graph TD;
 - Propsy: `{ items, done, onItemChange, onDeleteItem }`.
 
 ### ProposalCard
+
 - Opis: Pojedyncza propozycja z polami front/back, licznikami znaków, akcjami Accept/Edit/Delete, checkbox selekcji.
 - Elementy: `Textarea` front/back (readonly do czasu wejścia w tryb edycji), liczniki, przyciski: Accept, Edit, Delete; `Checkbox` zaznaczenia.
 - Zdarzenia: `onAccept`, `onEditStart`, `onEditSave`, `onEditCancel`, `onDelete`, `onToggleSelect`.
@@ -102,6 +111,7 @@ graph TD;
 - Propsy: `{ item: ProposalVM, disabled: boolean, onChange: (updated) => void, onDelete: () => void }`.
 
 ### ProposalEditor (modal/inline)
+
 - Opis: Edytor treści propozycji (inline lub w `Dialog`). Na zapis — auto-accept i `source=ai_edited`.
 - Elementy: `Dialog`/sekcja inline, `Textarea` front/back z licznikami, przyciski Zapisz/Anuluj.
 - Zdarzenia: `onSave(updated)`, `onCancel()`.
@@ -110,6 +120,7 @@ graph TD;
 - Propsy: `{ item, isOpen, onSave, onCancel }`.
 
 ### SaveResultModal
+
 - Opis: Modal sukcesu po batch-save z CTA „Idź do nauki”.
 - Elementy: liczby `saved/skipped`, lista skrótowa `skipped`, przyciski `Zamknij`, `Idź do nauki`.
 - Zdarzenia: `onClose`, `onGoToStudy()` → nawigacja do `/study`.
@@ -118,6 +129,7 @@ graph TD;
 - Propsy: `{ result?: FlashcardBatchSaveResponse, onGoToStudy }`.
 
 ### KeyboardShortcutsLayer
+
 - Opis: Warstwa nasłuchująca skrótów klawiatury (Enter = Accept; `e` = Edit; `Del` = Delete; modyfikatory dla akcji hurtowych; `Ctrl+A` = zaznacz wszystkie).
 - Elementy: niewizualne; opcjonalnie legenda w tooltipie/bannnerze.
 - Zdarzenia: wywołuje przekazane callbacki.
@@ -126,6 +138,7 @@ graph TD;
 - Propsy: `{ handlers, enabled }`.
 
 ## 5. Typy
+
 - Wykorzystanie istniejących z `src/types.ts`:
   - `FlashcardBatchSaveRequest`, `FlashcardBatchSaveResponse`, `FlashcardBatchSaveItem`, `FlashcardBatchSaveSkippedItem`, `UUID`.
 
@@ -140,6 +153,7 @@ graph TD;
 Walidacja długości: `frontCount ≤ 200`, `backCount ≤ 500` (grapheme-safe liczenie po stronie FE).
 
 ## 6. Zarządzanie stanem
+
 - Lokalny stan w `ProposalsPage` (React 19): `useReducer` dla `ProposalsSessionVM` + `useState` dla `SaveState`.
 - Custom hooki:
   - `useProposalsSession()`
@@ -154,6 +168,7 @@ Walidacja długości: `frontCount ≤ 200`, `backCount ≤ 500` (grapheme-safe l
 - Offline detection: globalny `NetworkBanner` + `navigator.onLine`/`online|offline` events.
 
 ## 7. Integracja API
+
 - Endpoint: `POST /api/flashcards:batch-save`
 - Nagłówki: `Content-Type: application/json`, `Idempotency-Key: <UUID>`.
 - Typ żądania: `FlashcardBatchSaveRequest` (`{ items: Array<{ front, back, source: 'ai'|'ai_edited' }> }`).
@@ -169,6 +184,7 @@ Walidacja długości: `frontCount ≤ 200`, `backCount ≤ 500` (grapheme-safe l
 - Klient HTTP: `src/lib/http.ts` (jeśli dostępny) lub `fetch` z obsługą JSON i mapowaniem błędów.
 
 ## 8. Interakcje użytkownika
+
 - Per karta:
   - Accept: oznacza kartę jako zaakceptowaną (status `accepted`), jeśli walidacja ok.
   - Edit: otwiera `ProposalEditor`; na „Zapisz” aktualizuje treść, oznacza `status='edited'` oraz `sourceCandidate='ai_edited'` i auto-accept.
@@ -186,6 +202,7 @@ Walidacja długości: `frontCount ≤ 200`, `backCount ≤ 500` (grapheme-safe l
 - Skróty klawiatury: `Enter=Accept`, `e=Edit`, `Del=Delete`, `Ctrl+A=Zaznacz wszystkie`, modyfikatory (np. `Shift+Enter` = Accept zaznaczone).
 
 ## 9. Warunki i walidacja
+
 - Limity treści: `front ≤ 200`, `back ≤ 500` (zgodnie z PRD i API). Walidacja przy edycji, przed Accept i przed zapisem.
 - Akcje zablokowane do `session.done === true` (koniec batcha generacji).
 - Offline → zapisy zablokowane; tooltip/baner informacyjny.
@@ -193,6 +210,7 @@ Walidacja długości: `frontCount ≤ 200`, `backCount ≤ 500` (grapheme-safe l
 - Idempotencja: jeden `Idempotency-Key` na sesję; ponowne wysłanie zwraca identyczny wynik.
 
 ## 10. Obsługa błędów
+
 - 401 unauthorized: zachowaj stan; pokaż modal/logowanie; po zalogowaniu ponów zapis.
 - 422 validation_failed: podświetl pola i komunikaty; blokuj zapis dopóki błędy nie znikną.
 - 409 conflict (duplikaty): renderuj `DuplicatesBanner` z listą `skipped`; sukces częściowy.
@@ -201,6 +219,7 @@ Walidacja długości: `frontCount ≤ 200`, `backCount ≤ 500` (grapheme-safe l
 - TTL wygasł: banner informacyjny; zaproponuj powrót do `/generate`.
 
 ## 11. Kroki implementacji
+
 1. Routing: dodaj chronioną trasę `/proposals` (Astro + React), użyj `AuthGuard`.
 2. Struktura katalogów: `src/components/proposals/` (Page, List, Card, Editor, Bars/Badges, Modals, hooks).
 3. Typy FE: dodaj definicje `ProposalVM`, `ProposalsSessionVM`, `ValidationErrors` w module widoku.
@@ -214,5 +233,3 @@ Walidacja długości: `frontCount ≤ 200`, `backCount ≤ 500` (grapheme-safe l
 11. Telemetria (server-side): upewnij się, że FE nie duplikuje eventów (brak dodatkowego `POST /api/events` w tym widoku, chyba że wymagane oddzielnie przez produkt).
 12. QA manualne: walidacje treści, akcje hurtowe, 401→login→retry, 409 duplikaty (skipped), idempotencja (ponowny zapis), TTL cache, offline.
 13. Testy e2e/smoke: przypadki podstawowe (zapis zaakceptowanych, zapis wszystkich, odrzucenie wszystkich, edycja → `ai_edited`).
-
-

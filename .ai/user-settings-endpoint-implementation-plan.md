@@ -1,11 +1,13 @@
 ## API Endpoint Implementation Plan: User Settings (`/api/user-settings`)
 
 ### 1. Przegląd punktu końcowego
+
 - **Cel**: Odczyt i aktualizacja ustawień użytkownika powiązanych z kontem (cele dzienne i limit nowych fiszek).
 - **Zasób DB**: `user_settings` (RLS: dostęp tylko do własnego wiersza, trigger `set_updated_at`).
 - **Stack**: Astro 5 (API Routes), TypeScript 5, Supabase (PostgREST przez `@supabase/supabase-js`), Zod do walidacji, middleware przekazujące `supabase` w `context.locals`.
 
 ### 2. Szczegóły żądania
+
 - **Metody HTTP**:
   - GET `/api/user-settings` — zwraca bieżące ustawienia zalogowanego użytkownika.
   - PATCH `/api/user-settings` — aktualizuje ustawienia zalogowanego użytkownika.
@@ -14,15 +16,18 @@
   - **Wymagane**: brak w ścieżce i query; wymagana autentykacja użytkownika.
   - **Opcjonalne** (tylko dla PATCH, w body): `daily_goal`, `new_limit`.
 - **Request Body (PATCH)**:
+
 ```json
-{"daily_goal": 30, "new_limit": 10}
+{ "daily_goal": 30, "new_limit": 10 }
 ```
+
 - **Walidacja wejścia** (PATCH):
   - `daily_goal`: liczba całkowita w zakresie 1–200.
   - `new_limit`: liczba całkowita w zakresie 0–50.
   - Dozwolone przesłanie tylko podzbioru pól (min. jedno pole wymagane w body).
 
 ### 3. Wykorzystywane typy (DTO/Command)
+
 - Istniejące w `src/types.ts`:
   - `UserSettingsDTO = Tables<"user_settings">`
   - `UserSettingsUpdateCommand = Partial<Pick<Tables<"user_settings">, "daily_goal" | "new_limit">>`
@@ -30,10 +35,13 @@
   - `AuthenticatedUser = { id: string }`
 
 ### 4. Szczegóły odpowiedzi
+
 - **GET 200**:
+
 ```json
-{"user_id":"uuid","daily_goal":20,"new_limit":10,"created_at":"...","updated_at":"..."}
+{ "user_id": "uuid", "daily_goal": 20, "new_limit": 10, "created_at": "...", "updated_at": "..." }
 ```
+
 - **PATCH 200**: identyczna struktura jak GET (zaktualizowane wartości).
 - **Kody statusu**:
   - 200 — sukces (GET/PATCH)
@@ -43,6 +51,7 @@
   - 500 — błąd serwera (nieoczekiwany)
 
 ### 5. Przepływ danych
+
 1. Klient wywołuje endpoint z nagłówkiem `Authorization: Bearer <access_token>` lub z odpowiednimi cookie Supabase (jeśli używane).
 2. Middleware `src/middleware/index.ts` umieszcza `supabase` w `context.locals`.
 3. Handler API (Astro):
@@ -56,6 +65,7 @@
 4. Supabase wymusza RLS (self-only). Trigger `set_updated_at` aktualizuje `updated_at` podczas `update`.
 
 ### 6. Względy bezpieczeństwa
+
 - **Autentykacja**: Wymagana. Sprawdzamy access token; odrzucamy żądania bez ważnego tokena (401).
 - **Autoryzacja (RLS)**: Polityki RLS muszą ograniczać `select`/`update` do wiersza z `user_id = auth.uid()`.
 - **Walidacja**: Zod po stronie API; dodatkowo ograniczenia DB poprzez `CHECK` na kolumnach.
@@ -64,6 +74,7 @@
 - **Powierzchnia ataku**: Brak wrażliwych danych w body/odpowiedzi poza `user_id`; nie logować tokenów ani pełnych payloadów w produkcji.
 
 ### 7. Obsługa błędów
+
 - **401**: Brak tokena / token nieprawidłowy / `auth.getUser` zwróci błąd lub `user` puste.
 - **400**: Body PATCH nie przechodzi walidacji Zod, brak żadnego z pól (`daily_goal`/`new_limit`).
 - **404**: (Rzadkie) Brak rekordu w `user_settings` po próbie auto-utworzenia — zwrócić 404.
@@ -71,11 +82,13 @@
 - **Logowanie błędów**: Jeśli istnieje tabela audytu/zdarzeń, można zapisać wpis o nieudanej operacji (bez wrażliwych danych). W przeciwnym razie log do `console.error` + integracja APM (np. Sentry) w przyszłości.
 
 ### 8. Rozważania dotyczące wydajności
+
 - Zapytania proste po kluczu (`user_id`), indeksowane przez PK → O(1).
 - Unikać podwójnych round-tripów w PATCH (użyć `select().single()` z `update()` poprzez `returning`); jeśli SDK/REST nie zwraca pełnego widoku, wykonać jedno `select` po udanym `update`.
 - Mały payload — brak potrzeby stronicowania/cachowania. Dopuszczalne krótkie cache dla GET po stronie klienta.
 
 ### 9. Kroki implementacji
+
 1. Dodaj serwis `src/lib/services/userSettings.service.ts` z funkcjami:
    - `getUserSettings(supabase: SupabaseClient<Database>, userId: string): Promise<UserSettingsDTO>`
    - `ensureUserSettingsExists(supabase: SupabaseClient<Database>, userId: string): Promise<UserSettingsDTO>` (insert default on conflict + select)
@@ -90,14 +103,18 @@
      - **Opcja A (rekomendowana)**: Zmień middleware, aby budował request-scoped klienta z cookie/Authorization i umieszczał go w `context.locals.supabase` (z odpowiednimi nagłówkami). Wtedy endpoint nie musi nic klonować.
      - **Opcja B**: W endpointzie stwórz klienta z nagłówkiem `Authorization` na podstawie tokena i tylko tego klienta używaj do zapytań do tabel (patrz szkic niżej).
 3. Dodaj walidację z Zod w endpointzie PATCH:
+
 ```ts
-const PatchSchema = z.object({
-  daily_goal: z.number().int().min(1).max(200).optional(),
-  new_limit: z.number().int().min(0).max(50).optional(),
-}).refine(v => v.daily_goal !== undefined || v.new_limit !== undefined, {
-  message: "At least one of daily_goal or new_limit must be provided",
-});
+const PatchSchema = z
+  .object({
+    daily_goal: z.number().int().min(1).max(200).optional(),
+    new_limit: z.number().int().min(0).max(50).optional(),
+  })
+  .refine((v) => v.daily_goal !== undefined || v.new_limit !== undefined, {
+    message: "At least one of daily_goal or new_limit must be provided",
+  });
 ```
+
 4. Zaimplementuj mapowanie błędów na kody statusu: 400 (walidacja), 401 (auth), 404 (brak rekordu), 500 (pozostałe). Zwracaj JSON z kluczem `error` i `message`.
 5. Upewnij się, że w DB istnieją: tabela `user_settings`, RLS self-only oraz trigger `set_updated_at` (zgodnie z migracjami). Jeśli trzeba, dodaj odpowiednią migrację Supabase.
 6. Testy manualne (cURL/HTTPie/Postman):
@@ -108,7 +125,9 @@ const PatchSchema = z.object({
 7. (Opcjonalnie) Dodać prosty rate limiting w middleware dla ścieżki `/api/user-settings`.
 
 ### 10. Szkice implementacyjne (referencyjne)
+
 - Plik: `src/lib/services/userSettings.service.ts`
+
 ```ts
 import type { Database } from "../../db/database.types";
 import type { UserSettingsDTO, UserSettingsUpdateCommand } from "../../types";
@@ -122,21 +141,13 @@ export async function ensureUserSettingsExists(supabase: SupabaseClient, userId:
     .onConflict("user_id")
     .ignore();
 
-  const { data, error } = await supabase
-    .from("user_settings")
-    .select("*")
-    .eq("user_id", userId)
-    .single();
+  const { data, error } = await supabase.from("user_settings").select("*").eq("user_id", userId).single();
   if (error || !data) throw error ?? new Error("user_settings row not found");
   return data as UserSettingsDTO;
 }
 
 export async function getUserSettings(supabase: SupabaseClient, userId: string): Promise<UserSettingsDTO> {
-  const { data, error } = await supabase
-    .from("user_settings")
-    .select("*")
-    .eq("user_id", userId)
-    .single();
+  const { data, error } = await supabase.from("user_settings").select("*").eq("user_id", userId).single();
   if (error || !data) throw error ?? new Error("user_settings row not found");
   return data as UserSettingsDTO;
 }
@@ -144,12 +155,9 @@ export async function getUserSettings(supabase: SupabaseClient, userId: string):
 export async function updateUserSettings(
   supabase: SupabaseClient,
   userId: string,
-  command: UserSettingsUpdateCommand,
+  command: UserSettingsUpdateCommand
 ): Promise<UserSettingsDTO> {
-  const { error: updateError } = await supabase
-    .from("user_settings")
-    .update(command)
-    .eq("user_id", userId);
+  const { error: updateError } = await supabase.from("user_settings").update(command).eq("user_id", userId);
   if (updateError) throw updateError;
 
   return getUserSettings(supabase, userId);
@@ -157,6 +165,7 @@ export async function updateUserSettings(
 ```
 
 - Plik: `src/pages/api/user-settings.ts`
+
 ```ts
 import type { APIContext } from "astro";
 import { z } from "zod";
@@ -182,18 +191,23 @@ function withAuth(token: string): SupabaseClient {
   return createClient(url, key, { global: { headers: { Authorization: `Bearer ${token}` } } }) as SupabaseClient;
 }
 
-const PatchSchema = z.object({
-  daily_goal: z.number().int().min(1).max(200).optional(),
-  new_limit: z.number().int().min(0).max(50).optional(),
-}).refine(v => v.daily_goal !== undefined || v.new_limit !== undefined, {
-  message: "At least one of daily_goal or new_limit must be provided",
-});
+const PatchSchema = z
+  .object({
+    daily_goal: z.number().int().min(1).max(200).optional(),
+    new_limit: z.number().int().min(0).max(50).optional(),
+  })
+  .refine((v) => v.daily_goal !== undefined || v.new_limit !== undefined, {
+    message: "At least one of daily_goal or new_limit must be provided",
+  });
 
 export async function GET(context: APIContext) {
   const supabase = context.locals.supabase as SupabaseClient;
   const token = getAccessToken(context);
   if (!token) return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401 });
-  const { data: { user }, error } = await supabase.auth.getUser(token);
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser(token);
   if (error || !user) return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401 });
 
   try {
@@ -209,7 +223,10 @@ export async function PATCH(context: APIContext) {
   const supabase = context.locals.supabase as SupabaseClient;
   const token = getAccessToken(context);
   if (!token) return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401 });
-  const { data: { user }, error } = await supabase.auth.getUser(token);
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser(token);
   if (error || !user) return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401 });
 
   let payload: unknown;
@@ -232,5 +249,3 @@ export async function PATCH(context: APIContext) {
   }
 }
 ```
-
-

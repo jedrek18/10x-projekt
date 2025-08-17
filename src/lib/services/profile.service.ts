@@ -29,5 +29,3 @@ export async function updateCurrentProfile(
   // MVP: No editable fields; simply return current profile after auth.
   return getCurrentProfile(supabase);
 }
-
-

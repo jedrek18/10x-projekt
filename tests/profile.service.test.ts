@@ -49,5 +49,3 @@ describe("profile.service", () => {
     expect(result).toEqual(row);
   });
 });
-
-

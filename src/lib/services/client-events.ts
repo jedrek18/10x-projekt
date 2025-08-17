@@ -16,5 +16,3 @@ export async function logClientEvent(event: EventCreateCommand): Promise<void> {
     // Intentionally ignore client-side errors; telemetry is best-effort.
   }
 }
-
-

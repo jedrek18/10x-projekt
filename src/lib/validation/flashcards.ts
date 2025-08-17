@@ -62,5 +62,3 @@ export type ListQuery = z.infer<typeof listQuerySchema>;
 export type CreateManualValidated = z.infer<typeof createManualSchema>;
 export type UpdateContentValidated = z.infer<typeof updateContentSchema>;
 export type BatchSaveValidated = z.infer<typeof batchSaveSchema>;
-
-

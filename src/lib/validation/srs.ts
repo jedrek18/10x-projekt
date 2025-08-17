@@ -22,5 +22,3 @@ export const reviewSchema = z.object({
 export type QueueQueryValidated = z.infer<typeof queueQuerySchema>;
 export type PromoteNewValidated = z.infer<typeof promoteNewSchema>;
 export type ReviewValidated = z.infer<typeof reviewSchema>;
-
-

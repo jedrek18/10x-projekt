@@ -138,7 +138,8 @@
 .landing-hero__bg {
   position: absolute;
   inset: 0;
-  background: radial-gradient(40% 40% at 30% 20%, var(--color-primary) / 0.08, transparent 60%),
+  background:
+    radial-gradient(40% 40% at 30% 20%, var(--color-primary) / 0.08, transparent 60%),
     radial-gradient(35% 35% at 70% 60%, var(--color-ring) / 0.08, transparent 60%);
   filter: blur(40px);
   animation: heroGradientPulse 12s ease-in-out infinite alternate;
@@ -152,6 +153,12 @@
 }
 
 /* Language content toggling */
-[data-lang="pl"] { display: none; }
-html[lang="pl"] [data-lang="en"] { display: none; }
-html[lang="pl"] [data-lang="pl"] { display: inline; }
+[data-lang="pl"] {
+  display: none;
+}
+html[lang="pl"] [data-lang="en"] {
+  display: none;
+}
+html[lang="pl"] [data-lang="pl"] {
+  display: inline;
+}

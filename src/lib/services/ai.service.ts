@@ -117,5 +117,3 @@ export async function logEventGeneration(
     console.error("Failed to log event", error);
   }
 }
-
-

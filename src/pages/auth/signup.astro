@@ -1,0 +1,17 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import AuthLayout from "../../components/auth/AuthLayout.astro";
+import { SignupForm } from "../../components/auth/SignupForm";
+import { AuthRedirectGuard } from "../../components/auth/AuthRedirectGuard";
+
+// Odczytanie parametru redirect z URL
+const redirect = Astro.url.searchParams.get("redirect") || "";
+---
+
+<Layout title="Rejestracja">
+  <AuthRedirectGuard redirectTo={redirect} client:load>
+    <AuthLayout title="Załóż konto" subtitle="Utwórz nowe konto, aby rozpocząć naukę">
+      <SignupForm redirectTo={redirect} client:load />
+    </AuthLayout>
+  </AuthRedirectGuard>
+</Layout>

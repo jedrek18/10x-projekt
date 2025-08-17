@@ -1,9 +1,11 @@
 # Plan implementacji widoku Autoryzacja (Logowanie/Rejestracja)
 
 ## 1. Przegląd
+
 Widok Autoryzacja dostarcza formularze logowania i rejestracji oparte o Supabase Auth. Celem jest szybkie i bezpieczne uzyskanie 7‑dniowej sesji użytkownika oraz przekierowanie do poprzednio żądanej akcji lub domyślnie do `Moje fiszki`.
 
 Zgodność z PRD/US:
+
 - Rejestracja i logowanie email+hasło (US-011; FR-015).
 - Sesja 7 dni, wielosesyjność (US-012; FR-016).
 - Po sukcesie redirect do poprzedniej intencji lub `Moje fiszki` (US-024).
@@ -12,12 +14,14 @@ Zgodność z PRD/US:
 - Brak weryfikacji email/resetu hasła w MVP (PRD ograniczenia).
 
 ## 2. Routing widoku
+
 - `GET /auth/login` – Logowanie
 - `GET /auth/signup` – Rejestracja
 - Obsługa parametru `?redirect=/ścieżka/docelowa` dla powrotu do intencji po zalogowaniu.
 - Jeśli użytkownik jest już zalogowany, automatyczny redirect do `redirect` lub `/flashcards`.
 
 ## 3. Struktura komponentów
+
 - `src/pages/auth/login.astro`
   - mountuje `<LoginForm />` (React)
 - `src/pages/auth/signup.astro`
@@ -30,13 +34,16 @@ Zgodność z PRD/US:
 - `src/components/common/FormError.tsx`, `FormField.tsx` (opcjonalnie) – prezentacja błędów/pól
 
 Hierarchia (drzewo):
+
 - `AuthLayout`
   - `LoginForm` lub `SignupForm`
     - `PasswordField`
     - `FormError`
 
 ## 4. Szczegóły komponentów
+
 ### AuthLayout
+
 - Opis: Minimalny layout strony auth z tytułem, opisem i slotem na formularz. Zapewnia spójną ramę, responsywność i dostępność (focus management).
 - Główne elementy: nagłówek, kontener formularza, link do przełączenia widoku (login ⇄ signup), miejsce na komunikat przychodzący z `redirect` (np. „Zaloguj się, aby kontynuować”).
 - Obsługiwane interakcje: brak (prezentacyjny).
@@ -45,6 +52,7 @@ Hierarchia (drzewo):
 - Propsy: `{ title: string; subtitle?: string; children: ReactNode; messageFromRedirect?: string }`.
 
 ### LoginForm
+
 - Opis: Formularz logowania email+hasło z integracją `supabaseClient.auth.signInWithPassword`.
 - Główne elementy: `form`, pola `email`, `password`, checkbox „Pokaż hasło”, przycisk `Zaloguj`, link do rejestracji.
 - Obsługiwane interakcje:
@@ -60,6 +68,7 @@ Hierarchia (drzewo):
 - Propsy: `{ redirectTo?: string }` (ustawiane z query param `redirect`).
 
 ### SignupForm
+
 - Opis: Formularz rejestracji email+hasło (x2) z integracją `supabaseClient.auth.signUp`.
 - Główne elementy: `form`, pola `email`, `password`, `confirmPassword`, checkbox „Pokaż hasło”, przycisk `Załóż konto`, link do logowania.
 - Obsługiwane interakcje:
@@ -75,6 +84,7 @@ Hierarchia (drzewo):
 - Propsy: `{ redirectTo?: string }`.
 
 ### PasswordField
+
 - Opis: Pole hasła z możliwością pokazania/ukrycia, wspólne dla obu formularzy; wbudowane a11y (etykiety, `aria-describedby` na błędy).
 - Główne elementy: `input[type=password|text]`, przycisk „Pokaż/Ukryj”.
 - Obsługiwane interakcje: `onToggleVisibility`, `onChange`.
@@ -83,6 +93,7 @@ Hierarchia (drzewo):
 - Propsy: jak wyżej.
 
 ### AuthRedirectGuard
+
 - Opis: Komponent efektowy; wykrywa aktywną sesję i przekierowuje z `/auth/*` na `redirectTo || /flashcards`.
 - Główne elementy: `useEffect` z odczytem sesji Supabase.
 - Obsługiwane interakcje: redirect po wykryciu sesji.
@@ -91,6 +102,7 @@ Hierarchia (drzewo):
 - Propsy: `{ redirectTo?: string; children?: ReactNode }` (renderuje `children` tylko gdy brak sesji).
 
 ## 5. Typy
+
 - Z istniejących:
   - `AuthSignInCommand`: `{ email: string; password: string }`
   - `AuthSignUpCommand`: `{ email: string; password: string }`
@@ -101,6 +113,7 @@ Hierarchia (drzewo):
   - `type AuthFormState<T> = { values: T; errors: FieldErrors<T>; isSubmitting: boolean; redirectTo?: string }`
 
 ## 6. Zarządzanie stanem
+
 - Lokalny stan komponentów React (hooki `useState`, `useEffect`).
 - Dedykowany hook `useAuthForm<T>()` (opcjonalnie) abstrahujący wspólne zachowania (zmiana pól, submit, błędy, blokady).
 - Źródło `redirectTo`:
@@ -109,6 +122,7 @@ Hierarchia (drzewo):
 - Po sukcesie logowania/rejestracji: czyszczenie `auth:intendedPath` i `window.location.assign(redirectTo || '/flashcards')`.
 
 ## 7. Integracja API
+
 - Biblioteka: `@supabase/supabase-js` (klient istnieje: `src/db/supabase.client.ts` → `supabaseClient`).
 - Logowanie:
   - Wywołanie: `supabaseClient.auth.signInWithPassword({ email, password })`.
@@ -120,6 +134,7 @@ Hierarchia (drzewo):
 - SSR: `src/middleware/index.ts` już tworzy klienta serwerowego i zarządza cookies; FE używa klienta przeglądarkowego (persist session domyślnie). Sesje trwają 7 dni wg konfiguracji Supabase.
 
 ## 8. Interakcje użytkownika
+
 - Wypełnij pola i naciśnij `Zaloguj` / `Załóż konto`.
 - Naciśnięcie Enter wysyła formularz.
 - Błędy walidacji pokazują się inline; `aria-live` dla komunikatów globalnych.
@@ -129,6 +144,7 @@ Hierarchia (drzewo):
 - Po już aktywnej sesji na `/auth/*` – natychmiastowy redirect do `redirect || /flashcards` (US-024).
 
 ## 9. Warunki i walidacja
+
 - Email: wymagany; regex: prosty RFC5322-lite lub `HTML5 type=email` + dodatkowy check niepusty.
 - Hasło: wymagane; min. 8 znaków (PRD: „walidacja podstawowa”).
 - Rejestracja: `confirmPassword === password`.
@@ -137,6 +153,7 @@ Hierarchia (drzewo):
 - Gating (US-024): brak sesji ⇒ `AuthGuard` zapisuje intencję (`auth:intendedPath`) i redirectuje na `/auth/login?redirect=...`.
 
 ## 10. Obsługa błędów
+
 - Błędy sieci: toast/banner „Problem z połączeniem. Spróbuj ponownie.”; możliwość ponowienia.
 - Złe dane logowania: komunikat globalny „Nieprawidłowy email lub hasło”.
 - Próba wejścia na stronę chronioną: na loginie wyświetl subtelny komunikat wynikający z `redirect` (np. „Zaloguj się, aby kontynuować akcję”).
@@ -145,6 +162,7 @@ Hierarchia (drzewo):
 - US-018: Po zmianie hasła (z widoku `Account`) wszystkie sesje wygaszane – po wykryciu 401 na stronach chronionych wymuś login (z zachowaniem intencji), nie dotyczy bezpośrednio tego widoku, ale informację pokaż przy kolejnym logowaniu.
 
 ## 11. Kroki implementacji
+
 1. Routing:
    - Utwórz `src/pages/auth/login.astro` i `src/pages/auth/signup.astro` z mountem React (`client:only="react"`).
    - Odczytuj `redirect` z query i przekazuj do odpowiedniego formularza.
@@ -170,6 +188,7 @@ Hierarchia (drzewo):
 9. i18n (PL/EN):
    - Przygotuj prosty słownik dla etykiet i komunikatów (budując pod przyszłe rozszerzenia), bazując na `navigator.language` lub ustawieniach użytkownika (po zalogowaniu).
 10. Testy manualne scenariuszy:
-   - Logowanie poprawne/niepoprawne; rejestracja; redirect z intencją; redirect przy już zalogowanym; zachowanie Enter; komunikaty błędów; dostępność.
-   - Gating US-024: wejście na `/study` bez sesji → redirect do `/auth/login?redirect=/study` → login → powrót na `/study`.
-   - US-018 (poza widokiem, scenariusz ścieżki): po zmianie hasła na innym urządzeniu – w aktywnej sesji próba wejścia na stronę chronioną skutkuje 401 i redirectem do `/auth/login` z zachowaniem intencji.
+
+- Logowanie poprawne/niepoprawne; rejestracja; redirect z intencją; redirect przy już zalogowanym; zachowanie Enter; komunikaty błędów; dostępność.
+- Gating US-024: wejście na `/study` bez sesji → redirect do `/auth/login?redirect=/study` → login → powrót na `/study`.
+- US-018 (poza widokiem, scenariusz ścieżki): po zmianie hasła na innym urządzeniu – w aktywnej sesji próba wejścia na stronę chronioną skutkuje 401 i redirectem do `/auth/login` z zachowaniem intencji.
