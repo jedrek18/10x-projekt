@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { TextAreaWithCounter } from "./TextAreaWithCounter";
 import { SliderProposalsCount } from "./SliderProposalsCount";
 import { ControlsBar } from "./ControlsBar";
@@ -11,12 +11,15 @@ import { useLocalStorage } from "@/lib/hooks/useLocalStorage";
 import { useAiGeneration } from "@/lib/hooks/useAiGeneration";
 import { usePreferredLanguage } from "@/lib/usePreferredLanguage";
 import { t, tWithParams } from "@/lib/i18n";
+import { Button } from "@/components/ui/button";
+import { ProposalsView } from "../proposals/ProposalsView";
 import type { AiGenerateCommand, AiGenerationProposalDTO, UUID } from "@/types";
 
 // Local storage keys
 const LOCAL_STORAGE_KEYS = {
+  sourceTextKey: "generate:source_text",
   proposalsMaxKey: "generate:max_proposals",
-  proposalsSessionKey: "proposals:session",
+  proposalsSessionKey: "proposals.session.v1",
 } as const;
 
 // Text counter state
@@ -75,17 +78,37 @@ export interface GenerateViewModel {
  */
 export function GenerateView() {
   // Form state
-  const [sourceText, setSourceText] = useState("");
+  const [sourceText, setSourceText] = useLocalStorage(LOCAL_STORAGE_KEYS.sourceTextKey, "");
   const [maxProposals, setMaxProposals] = useLocalStorage(LOCAL_STORAGE_KEYS.proposalsMaxKey, 30);
+
+  // Ensure sourceText is loaded from localStorage on mount (only once)
+  useEffect(() => {
+    const stored = localStorage.getItem(LOCAL_STORAGE_KEYS.sourceTextKey);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (parsed && parsed !== sourceText) {
+          setSourceText(parsed);
+        }
+      } catch (error) {
+        console.warn("Failed to parse stored sourceText:", error);
+      }
+    }
+  }, []); // Empty dependency array - run only once on mount
 
   // Generation state
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState<GenerationProgress | null>(null);
   const [requestId, setRequestId] = useState<UUID | undefined>(undefined);
   const [error, setError] = useState<{ code: string; message: string } | null>(null);
+  const [generatedProposals, setGeneratedProposals] = useState<AiGenerationProposalDTO[]>([]);
 
   // Modal state
   const [showSessionGuard, setShowSessionGuard] = useState(false);
+  const [showProposals, setShowProposals] = useLocalStorage("generate:show_proposals", false);
+  const [isRestoringFromCache, setIsRestoringFromCache] = useState(false);
+  const [hasGenerated, setHasGenerated] = useState(false);
+  const isInitialLoadRef = useRef(true);
 
   // Network state
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -96,6 +119,42 @@ export function GenerateView() {
   // Custom hooks
   const graphemeCount = useGraphemeCounter(sourceText);
   const { start: startGeneration, abort: abortGeneration } = useAiGeneration();
+
+  // Check if we should show proposals on mount (if there's a valid session)
+  useEffect(() => {
+    // Don't restore if we've already generated in this session
+    if (hasGenerated) {
+      return;
+    }
+
+    const sessionData = localStorage.getItem(LOCAL_STORAGE_KEYS.proposalsSessionKey);
+    if (sessionData) {
+      try {
+        const session = JSON.parse(sessionData);
+        const now = new Date().getTime();
+        const expiresAt = new Date(session.ttlExpiresAt).getTime();
+
+        // Check if session is still valid
+        if (now < expiresAt && session.items && session.items.length > 0) {
+          // Show proposals view - ProposalsView will handle loading the session
+          setShowProposals(true);
+          setRequestId(session.requestId);
+          // Reset hasGenerated when restoring from cache
+          setHasGenerated(false);
+        } else {
+          // Clear expired session
+          localStorage.removeItem(LOCAL_STORAGE_KEYS.proposalsSessionKey);
+          setShowProposals(false);
+        }
+      } catch (error) {
+        console.warn("Failed to restore proposals session:", error);
+        setShowProposals(false);
+      }
+    }
+
+    // Mark initial load as complete
+    isInitialLoadRef.current = false;
+  }, [setShowProposals, hasGenerated, setHasGenerated]);
 
   // Calculate text counter state
   const calculateTextCounter = useCallback(
@@ -158,16 +217,28 @@ export function GenerateView() {
   const formState = validateForm(sourceText, maxProposals);
 
   // Handle text change
-  const handleTextChange = useCallback((text: string) => {
-    setSourceText(text);
-    setError(null); // Clear errors when user starts typing
-  }, []);
+  const handleTextChange = useCallback(
+    (text: string) => {
+      setSourceText(text);
+      // Also save directly to localStorage as backup
+      try {
+        localStorage.setItem(LOCAL_STORAGE_KEYS.sourceTextKey, JSON.stringify(text));
+      } catch (error) {
+        console.warn("Failed to save to localStorage directly:", error);
+      }
+      setError(null); // Clear errors when user starts typing
+    },
+    [setSourceText, setError]
+  );
 
   // Handle proposals count change
-  const handleProposalsChange = useCallback((count: number) => {
-    setMaxProposals(count);
-    setError(null);
-  }, []);
+  const handleProposalsChange = useCallback(
+    (count: number) => {
+      setMaxProposals(count);
+      setError(null);
+    },
+    [setMaxProposals, setError]
+  );
 
   // Check for active session
   const checkActiveSession = useCallback(() => {
@@ -190,6 +261,10 @@ export function GenerateView() {
   const handleStartGeneration = useCallback(() => {
     if (!formState.isValid) return;
 
+    // Reset cache restoration flag when starting new generation
+    setIsRestoringFromCache(false);
+    setHasGenerated(true);
+
     setIsGenerating(true);
     setProgress({
       mode: "sse",
@@ -204,8 +279,12 @@ export function GenerateView() {
       max_proposals: maxProposals,
     };
 
+    // Clear previous proposals
+    setGeneratedProposals([]);
+
     startGeneration(command, {
       onProposal: (proposal) => {
+        setGeneratedProposals((prev) => [...prev, proposal]);
         setProgress((prev) =>
           prev
             ? {
@@ -240,16 +319,30 @@ export function GenerateView() {
         // Save requestId to sessionStorage for proposals page
         sessionStorage.setItem("proposals:lastRequestId", requestId);
 
-        // Navigate to proposals page
-        window.location.href = "/proposals";
+        // Show proposals view instead of navigating
+        setShowProposals(true);
       },
       onError: (message) => {
         setError({ code: "generation_failed", message });
         setIsGenerating(false);
         setProgress(null);
+        setGeneratedProposals([]);
       },
     });
-  }, [formState.isValid, sourceText, maxProposals, startGeneration]);
+  }, [
+    formState.isValid,
+    sourceText,
+    maxProposals,
+    startGeneration,
+    setIsRestoringFromCache,
+    setHasGenerated,
+    setIsGenerating,
+    setProgress,
+    setError,
+    setGeneratedProposals,
+    setRequestId,
+    setShowProposals,
+  ]);
 
   // Handle generate button click
   const handleGenerate = useCallback(() => {
@@ -269,12 +362,12 @@ export function GenerateView() {
     localStorage.removeItem(LOCAL_STORAGE_KEYS.proposalsSessionKey);
     setShowSessionGuard(false);
     handleStartGeneration();
-  }, [handleStartGeneration]);
+  }, [handleStartGeneration, setShowSessionGuard]);
 
   // Handle session guard cancel
   const handleSessionGuardCancel = useCallback(() => {
     setShowSessionGuard(false);
-  }, []);
+  }, [setShowSessionGuard]);
 
   // Handle cancel generation
   const handleCancel = useCallback(() => {
@@ -283,7 +376,7 @@ export function GenerateView() {
     setProgress(null);
     setRequestId(undefined);
     setError(null);
-  }, [abortGeneration]);
+  }, [abortGeneration, setIsGenerating, setProgress, setRequestId, setError]);
 
   // Handle keyboard shortcuts
   const handleKeyDown = useCallback(
@@ -299,13 +392,27 @@ export function GenerateView() {
   // Handle error dismiss
   const handleErrorDismiss = useCallback(() => {
     setError(null);
-  }, []);
+  }, [setError]);
 
   // Handle retry
   const handleRetry = useCallback(() => {
     setError(null);
     handleStartGeneration();
-  }, [handleStartGeneration]);
+  }, [handleStartGeneration, setError]);
+
+  // Handle clear cache
+  const handleClearCache = useCallback(() => {
+    localStorage.removeItem(LOCAL_STORAGE_KEYS.sourceTextKey);
+    localStorage.removeItem(LOCAL_STORAGE_KEYS.proposalsSessionKey);
+    localStorage.removeItem("generate:show_proposals");
+    setSourceText("");
+    setShowProposals(false);
+    setGeneratedProposals([]);
+    setRequestId(undefined);
+    setIsRestoringFromCache(false);
+    setHasGenerated(false);
+    isInitialLoadRef.current = false;
+  }, [setSourceText, setShowProposals, setGeneratedProposals, setRequestId, setIsRestoringFromCache, setHasGenerated]);
 
   return (
     <div className="space-y-6" onKeyDown={handleKeyDown} aria-busy={isGenerating} aria-live="polite">
@@ -318,6 +425,8 @@ export function GenerateView() {
         language={language}
         isHydrated={isHydrated}
       />
+
+      {/* Generate interface - always visible */}
       <div className="text-center">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">{t("generateTitle", isHydrated ? language : "en")}</h1>
         <p className="text-gray-600 max-w-2xl mx-auto">{t("generateSubtitle", isHydrated ? language : "en")}</p>
@@ -345,14 +454,21 @@ export function GenerateView() {
           isHydrated={isHydrated}
         />
 
-        <ControlsBar
-          canGenerate={formState.isValid && !isGenerating && isOnline}
-          isGenerating={isGenerating}
-          onGenerate={handleGenerate}
-          onCancel={handleCancel}
-          language={language}
-          isHydrated={isHydrated}
-        />
+        <div className="flex items-center justify-between">
+          <ControlsBar
+            canGenerate={formState.isValid && !isGenerating && isOnline}
+            isGenerating={isGenerating}
+            onGenerate={handleGenerate}
+            onCancel={handleCancel}
+            language={language}
+            isHydrated={isHydrated}
+          />
+          {(sourceText || showProposals) && (
+            <Button variant="outline" size="sm" onClick={handleClearCache} className="ml-4">
+              {t("clearCacheButton", isHydrated ? language : "en")}
+            </Button>
+          )}
+        </div>
 
         <GenerationStatus isGenerating={isGenerating} progress={progress} />
       </div>
@@ -362,6 +478,35 @@ export function GenerateView() {
         onConfirm={handleSessionGuardConfirm}
         onCancel={handleSessionGuardCancel}
       />
+
+      {/* Proposals view */}
+      {showProposals && (
+        <div className="mt-8 border-t pt-8">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              {t("reviewProposalsTitle", isHydrated ? language : "en")}
+            </h2>
+            <p className="text-gray-600">{t("reviewProposalsSubtitle", isHydrated ? language : "en")}</p>
+          </div>
+          <ProposalsView
+            generatedProposals={generatedProposals}
+            requestId={requestId}
+            maxProposals={maxProposals}
+            isRestoringFromCache={isRestoringFromCache}
+            language={language}
+            isHydrated={isHydrated}
+            onGoToStudy={() => {
+              setShowProposals(false);
+              // Navigate to study page
+              window.location.href = "/flashcards";
+            }}
+            onSaveSuccess={() => {
+              // Clear cache after successful save
+              handleClearCache();
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }

@@ -237,6 +237,14 @@ export interface Database {
         Args: { t: string };
         Returns: string;
       };
+      soft_delete_flashcard_rpc: {
+        Args: { card_id: string };
+        Returns: void;
+      };
+      restore_flashcard_rpc: {
+        Args: { card_id: string };
+        Returns: void;
+      };
     };
     Enums: Record<never, never>;
     CompositeTypes: Record<never, never>;

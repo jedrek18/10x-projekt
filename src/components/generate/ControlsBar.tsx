@@ -42,7 +42,7 @@ export function ControlsBar({
         {isGenerating ? (
           <span>{t("generatingButton", isHydrated ? language : "en")}...</span>
         ) : (
-          <span>{t("useShortcut", isHydrated ? language : "en")}</span>
+          <span className="ml-2">{t("useShortcut", isHydrated ? language : "en")}</span>
         )}
       </div>
     </div>

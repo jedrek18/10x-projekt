@@ -12,6 +12,7 @@ import { useFlashcardsList, useUndoManager, useStudyCtaState } from "../../lib/h
 import { usePreferredLanguage } from "../../lib/usePreferredLanguage";
 import { t } from "../../lib/i18n";
 import type { FlashcardDTO } from "../../types";
+import type { FlashcardListItemVM } from "./types";
 
 export function FlashcardsPage() {
   const { language, isHydrated } = usePreferredLanguage();
@@ -39,6 +40,26 @@ export function FlashcardsPage() {
       fetchPage(page);
     }
   }, []); // Puste zależności - tylko przy mount
+
+  // Synchronizacja URL z aktualną stroną
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentPageParam = urlParams.get("page");
+    const currentPage = currentPageParam ? parseInt(currentPageParam, 10) : 1;
+
+    if (currentPage !== state.page) {
+      const url = new URL(window.location.href);
+      url.searchParams.set("page", state.page.toString());
+      window.history.pushState({}, "", url.toString());
+    }
+  }, [state.page]);
+
+  // Automatyczne ładowanie nowej strony po zmianie numeru strony
+  useEffect(() => {
+    if (state.page > 0) {
+      fetchPage(state.page);
+    }
+  }, [state.page, fetchPage]);
 
   // Reakcja na zmianę języka
   useEffect(() => {
@@ -85,7 +106,7 @@ export function FlashcardsPage() {
 
   // Obsługa usuwania fiszki
   const handleDelete = useCallback(
-    async (card: FlashcardDTO) => {
+    async (card: FlashcardListItemVM) => {
       removeWithUndo(card);
       enqueueUndo(card.id);
     },
@@ -106,24 +127,19 @@ export function FlashcardsPage() {
 
     const timeout = setTimeout(async () => {
       try {
-        const response = await fetch(`/api/flashcards/${undoEntry.id}`, {
-          method: "DELETE",
-        });
-
-        if (response.ok) {
-          await refreshStudyCta();
-        } else {
-          // Przywróć element do listy w przypadku błędu
-          await refresh();
-        }
+        // Fiszka już została usunięta w removeWithUndo, więc tylko odświeżamy stan
+        await refreshStudyCta();
+        // Odśwież listę aby pokazać aktualny stan po usunięciu
+        // Używamy aktualnej wartości strony ze stanu
+        await fetchPage(state.page);
       } catch (error) {
-        console.error("Failed to delete flashcard:", error);
-        await refresh();
+        console.error("Failed to refresh after undo timeout:", error);
+        await fetchPage(state.page);
       }
     }, 5000);
 
     return () => clearTimeout(timeout);
-  }, [undoEntry, refreshStudyCta, refresh]);
+  }, [undoEntry, refreshStudyCta, fetchPage, state.page]);
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-6xl">

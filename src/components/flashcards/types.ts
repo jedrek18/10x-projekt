@@ -67,7 +67,7 @@ export interface FlashcardsToolbarProps {
 export interface FlashcardTableProps {
   items: FlashcardListItemVM[];
   onEdit: (card: FlashcardDTO) => void;
-  onDelete: (card: FlashcardDTO) => void;
+  onDelete: (card: FlashcardListItemVM) => void;
 }
 
 export interface FlashcardRowItemProps {

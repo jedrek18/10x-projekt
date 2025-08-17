@@ -1,8 +1,12 @@
 import { Button } from "../ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { usePreferredLanguage } from "../../lib/usePreferredLanguage";
+import { t } from "../../lib/i18n";
 import type { PaginationProps } from "./types";
 
 export function Pagination({ page, totalPages, onPageChange }: PaginationProps) {
+  const { language, isHydrated } = usePreferredLanguage();
+
   if (totalPages <= 1) return null;
 
   const getVisiblePages = () => {
@@ -51,7 +55,7 @@ export function Pagination({ page, totalPages, onPageChange }: PaginationProps) 
     <div className="flex items-center justify-center space-x-2">
       <Button variant="outline" size="sm" onClick={() => handlePageClick(page - 1)} disabled={page <= 1}>
         <ChevronLeft className="h-4 w-4" />
-        Poprzednia
+        {t("previous", isHydrated ? language : "en")}
       </Button>
 
       <div className="flex items-center space-x-1">
@@ -74,7 +78,7 @@ export function Pagination({ page, totalPages, onPageChange }: PaginationProps) 
       </div>
 
       <Button variant="outline" size="sm" onClick={() => handlePageClick(page + 1)} disabled={page >= totalPages}>
-        Następna
+        {t("next", isHydrated ? language : "en")}
         <ChevronRight className="h-4 w-4" />
       </Button>
     </div>

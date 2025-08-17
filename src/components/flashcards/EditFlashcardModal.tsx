@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
 import { Label } from "../ui/label";
@@ -140,6 +140,7 @@ export function EditFlashcardModal({ card, open, onOpenChange, onSuccess }: Edit
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Edytuj fiszkę</DialogTitle>
+          <DialogDescription>Edytuj treść fiszki, aby zmienić pytanie lub odpowiedź.</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">

@@ -14,12 +14,12 @@ export const POST: APIRoute = async ({ request, locals }) => {
       return errorJson("Unsupported Media Type", "unsupported_media_type", 415);
     }
 
-    const json = await request.json().catch(() => null);
-    if (!json || typeof json !== "object") {
+    const requestData = await request.json().catch(() => null);
+    if (!requestData || typeof requestData !== "object") {
       return errorJson("Invalid JSON body", "invalid_json", 400);
     }
 
-    const parsed = batchSaveSchema.safeParse(json);
+    const parsed = batchSaveSchema.safeParse(requestData);
     if (!parsed.success) {
       return validationFailed(parsed.error.flatten());
     }

@@ -46,6 +46,7 @@ export interface AppCopy {
   myFlashcards: string;
   manageFlashcards: string;
   addFlashcard: string;
+  addFlashcardDescription: string;
   editFlashcard: string;
   deleteFlashcard: string;
   noFlashcards: string;
@@ -158,6 +159,65 @@ export interface AppCopy {
   networkOfflineDescription: string;
   retry: string;
   dismiss: string;
+
+  // Review Proposals
+  reviewProposalsTitle: string;
+  reviewProposalsSubtitle: string;
+  noProposalsSession: string;
+  noProposalsSessionDescription: string;
+  selectAll: string;
+  selectedOf: string;
+  accepted: string;
+  deleted: string;
+  saveAccepted: string;
+  saveAll: string;
+  rejectAll: string;
+  rejectAllTitle: string;
+  rejectAllDescription: string;
+  rejectAllConfirm: string;
+  noItemsToSave: string;
+  noItemsToSaveDescription: string;
+  allProposalsDeleted: string;
+  allProposalsDeletedDescription: string;
+  saveSuccessful: string;
+  saveFailed: string;
+  networkError: string;
+  networkErrorDescription: string;
+  allProposalsRejected: string;
+  allProposalsRejectedDescription: string;
+  errorRejectingProposals: string;
+  errorRejectingProposalsDescription: string;
+  characters: string;
+  acceptedStatus: string;
+  editedStatus: string;
+  deletedStatus: string;
+  pendingStatus: string;
+  editProposal: string;
+  deleteProposal: string;
+  saveEdits: string;
+  cancelEdits: string;
+  saveCompleted: string;
+  saveCompletedDescription: string;
+  flashcardSaved: string;
+  flashcardsSaved: string;
+  flashcardSkipped: string;
+  flashcardsSkipped: string;
+  skippedDescription: string;
+  skippedReason: string;
+  andMore: string;
+  goToStudy: string;
+  flashcardsReadyForStudy: string;
+  noFlashcardsSaved: string;
+  skippedItemsCanBeReviewed: string;
+  cacheRestored: string;
+  sessionExpiresIn: string;
+  clearCache: string;
+  duplicatesBannerTitle: string;
+  duplicatesBannerDescription: string;
+  clearCacheButton: string;
+  flashcardWas: string;
+  flashcardsWere: string;
+  skipped: string;
 
   // Settings
   studySettings: string;
@@ -311,6 +371,7 @@ export const appCopy: I18nDictionary = {
     myFlashcards: "My Flashcards",
     manageFlashcards: "Manage your flashcards and add new ones",
     addFlashcard: "Add Flashcard",
+    addFlashcardDescription: "Create a new flashcard manually. Enter the front and back content.",
     editFlashcard: "Edit Flashcard",
     deleteFlashcard: "Delete Flashcard",
     noFlashcards: "No flashcards",
@@ -426,6 +487,67 @@ export const appCopy: I18nDictionary = {
     networkOfflineDescription: "Some features may be unavailable.",
     retry: "Try again",
     dismiss: "Close",
+
+    // Review Proposals
+    reviewProposalsTitle: "Review Proposals",
+    reviewProposalsSubtitle: "Review and save your generated flashcards",
+    noProposalsSession: "No proposals session",
+    noProposalsSessionDescription: "Generate some flashcards to get started",
+    selectAll: "Select all",
+    selectedOf: "{selected} of {total} selected",
+    accepted: "accepted",
+    deleted: "deleted",
+    saveAccepted: "Save accepted ({count})",
+    saveAll: "Save all",
+    rejectAll: "Reject all",
+    rejectAllTitle: "Reject All Proposals",
+    rejectAllDescription:
+      "Are you sure you want to reject all proposals? This action cannot be undone and will clear all generated flashcards from the session.",
+    rejectAllConfirm: "Reject All",
+    noItemsToSave: "No items to save",
+    noItemsToSaveDescription: "Please accept some proposals before saving.",
+    allProposalsDeleted: "All proposals deleted",
+    allProposalsDeletedDescription: "All proposals have been deleted.",
+    saveSuccessful: "Save successful",
+    saveFailed: "Save failed",
+    networkError: "Network error",
+    networkErrorDescription: "Please check your connection and try again.",
+    allProposalsRejected: "All proposals rejected",
+    allProposalsRejectedDescription: "All proposals have been rejected and cleared from the session.",
+    errorRejectingProposals: "Error",
+    errorRejectingProposalsDescription: "Failed to reject all proposals. Please try again.",
+    characters: "characters",
+    acceptedStatus: "Accepted",
+    editedStatus: "Edited",
+    deletedStatus: "Deleted",
+    pendingStatus: "Pending",
+    editProposal: "Edit proposal",
+    deleteProposal: "Delete proposal",
+    saveEdits: "Save edits",
+    cancelEdits: "Cancel edits",
+    saveCompleted: "Save completed",
+    saveCompletedDescription: "Review the results of saving your flashcards and proceed to study.",
+    flashcardSaved: "flashcard saved",
+    flashcardsSaved: "flashcards saved",
+    flashcardSkipped: "flashcard skipped",
+    flashcardsSkipped: "flashcards skipped",
+    skippedDescription: "These flashcards were not saved because they already exist or have validation errors.",
+    skippedReason: "Reason: {reason}",
+    andMore: "...and {count} more flashcards",
+    goToStudy: "Go to study",
+    flashcardsReadyForStudy: "Your flashcards are now ready for study!",
+    noFlashcardsSaved: "No flashcards were saved.",
+    skippedItemsCanBeReviewed: "Skipped items can be reviewed and edited if needed.",
+    cacheRestored: "Cache restored",
+    sessionExpiresIn: "Session expires in {time}",
+    clearCache: "Clear cache",
+    duplicatesBannerTitle: "{count} {count, plural, one {flashcard was} other {flashcards were}} skipped",
+    duplicatesBannerDescription:
+      "These flashcards were not saved because they already exist or have validation errors.",
+    clearCacheButton: "Clear Cache",
+    flashcardWas: "flashcard was",
+    flashcardsWere: "flashcards were",
+    skipped: "skipped",
 
     // Settings
     studySettings: "Study Settings",
@@ -545,6 +667,7 @@ export const appCopy: I18nDictionary = {
     myFlashcards: "Moje fiszki",
     manageFlashcards: "Zarządzaj swoimi fiszkami i dodawaj nowe",
     addFlashcard: "Dodaj fiszkę",
+    addFlashcardDescription: "Utwórz nową fiszkę ręcznie. Wprowadź treść z przodu i z tyłu.",
     editFlashcard: "Edytuj fiszkę",
     deleteFlashcard: "Usuń fiszkę",
     noFlashcards: "Brak fiszek",
@@ -660,6 +783,66 @@ export const appCopy: I18nDictionary = {
     networkOfflineDescription: "Niektóre funkcje mogą być niedostępne.",
     retry: "Spróbuj ponownie",
     dismiss: "Zamknij",
+
+    // Review Proposals
+    reviewProposalsTitle: "Przejrzyj propozycje",
+    reviewProposalsSubtitle: "Przejrzyj i zapisz wygenerowane fiszki",
+    noProposalsSession: "Brak sesji propozycji",
+    noProposalsSessionDescription: "Wygeneruj fiszki, aby rozpocząć",
+    selectAll: "Zaznacz wszystkie",
+    selectedOf: "{selected} z {total} zaznaczonych",
+    accepted: "zaakceptowane",
+    deleted: "usunięte",
+    saveAccepted: "Zapisz zaakceptowane ({count})",
+    saveAll: "Zapisz wszystkie",
+    rejectAll: "Odrzuć wszystkie",
+    rejectAllTitle: "Odrzuć wszystkie propozycje",
+    rejectAllDescription:
+      "Czy na pewno chcesz odrzucić wszystkie propozycje? Tej akcji nie można cofnąć i wyczyści wszystkie wygenerowane fiszki z sesji.",
+    rejectAllConfirm: "Odrzuć wszystkie",
+    noItemsToSave: "Brak elementów do zapisania",
+    noItemsToSaveDescription: "Zaakceptuj propozycje przed zapisaniem.",
+    allProposalsDeleted: "Wszystkie propozycje usunięte",
+    allProposalsDeletedDescription: "Wszystkie propozycje zostały usunięte.",
+    saveSuccessful: "Zapisano pomyślnie",
+    saveFailed: "Błąd zapisu",
+    networkError: "Błąd sieci",
+    networkErrorDescription: "Sprawdź połączenie i spróbuj ponownie.",
+    allProposalsRejected: "Wszystkie propozycje odrzucone",
+    allProposalsRejectedDescription: "Wszystkie propozycje zostały odrzucone i wyczyszczone z sesji.",
+    errorRejectingProposals: "Błąd",
+    errorRejectingProposalsDescription: "Nie udało się odrzucić wszystkich propozycji. Spróbuj ponownie.",
+    characters: "znaków",
+    acceptedStatus: "Zaakceptowana",
+    editedStatus: "Edytowana",
+    deletedStatus: "Usunięta",
+    pendingStatus: "Oczekująca",
+    editProposal: "Edytuj propozycję",
+    deleteProposal: "Usuń propozycję",
+    saveEdits: "Zapisz edycje",
+    cancelEdits: "Anuluj edycje",
+    saveCompleted: "Zapisywanie zakończone",
+    saveCompletedDescription: "Przejrzyj wyniki zapisywania fiszek i przejdź do nauki.",
+    flashcardSaved: "fiszka zapisana",
+    flashcardsSaved: "fiszek zapisanych",
+    flashcardSkipped: "fiszka pominięta",
+    flashcardsSkipped: "fiszek pominiętych",
+    skippedDescription: "Te fiszki nie zostały zapisane, ponieważ już istnieją lub mają błędy walidacji.",
+    skippedReason: "Powód: {reason}",
+    andMore: "...i {count} więcej fiszek",
+    goToStudy: "Przejdź do nauki",
+    flashcardsReadyForStudy: "Twoje fiszki są gotowe do nauki!",
+    noFlashcardsSaved: "Nie zapisano żadnych fiszek.",
+    skippedItemsCanBeReviewed: "Pominięte elementy można przejrzeć i edytować w razie potrzeby.",
+    cacheRestored: "Pamięć podręczna przywrócona",
+    sessionExpiresIn: "Sesja wygasa za {time}",
+    clearCache: "Wyczyść pamięć podręczną",
+    duplicatesBannerTitle: "{count} {count, plural, one {fiszka została} other {fiszek zostało}} pominiętych",
+    duplicatesBannerDescription: "Te fiszki nie zostały zapisane, ponieważ już istnieją lub mają błędy walidacji.",
+    clearCacheButton: "Wyczyść pamięć podręczną",
+    flashcardWas: "fiszka została",
+    flashcardsWere: "fiszek zostało",
+    skipped: "pominiętych",
 
     // Settings
     studySettings: "Ustawienia nauki",

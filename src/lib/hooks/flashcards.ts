@@ -22,6 +22,10 @@ export function useFlashcardsList() {
     isSubmitting: false,
   });
 
+  // Ref do przechowywania aktualnej wartości strony
+  const currentPageRef = useRef(state.page);
+  currentPageRef.current = state.page;
+
   const fetchPage = useCallback(async (page: number) => {
     setState((prev) => ({ ...prev, isLoadingList: true, listError: null }));
 
@@ -36,7 +40,7 @@ export function useFlashcardsList() {
       }
 
       const items: FlashcardDTO[] = await response.json();
-      const totalCount = getTotalCountFromHeaders(response);
+      const apiTotalCount = getTotalCountFromHeaders(response);
 
       const vmItems: FlashcardListItemVM[] = items.map((item) => ({
         ...item,
@@ -48,7 +52,7 @@ export function useFlashcardsList() {
       setState((prev) => ({
         ...prev,
         page,
-        totalCount,
+        totalCount: apiTotalCount,
         items: vmItems,
         isLoadingList: false,
       }));
@@ -150,10 +154,25 @@ export function useFlashcardsList() {
 
   const removeWithUndo = useCallback((item: FlashcardListItemVM) => {
     // Optymistyczne usunięcie
-    setState((prev) => ({
-      ...prev,
-      items: prev.items.filter((i) => i.id !== item.id),
-    }));
+    setState((prev) => {
+      const newItems = prev.items.filter((i) => i.id !== item.id);
+      const newTotalCount = prev.totalCount - 1;
+
+      // Sprawdź, czy po usunięciu ostatniego elementu z aktualnej strony
+      // należy przejść na poprzednią stronę
+      let newPage = prev.page;
+      if (newItems.length === 0 && newTotalCount > 0) {
+        // Jeśli nie ma już elementów na aktualnej stronie i są jeszcze jakieś elementy
+        newPage = Math.max(1, prev.page - 1);
+      }
+
+      return {
+        ...prev,
+        items: newItems,
+        totalCount: newTotalCount,
+        page: newPage,
+      };
+    });
 
     // Rzeczywiste usunięcie z API
     fetch(`/api/flashcards/${item.id}`, {
@@ -170,6 +189,7 @@ export function useFlashcardsList() {
         setState((prev) => ({
           ...prev,
           items: [...prev.items, item],
+          totalCount: prev.totalCount + 1,
         }));
       });
   }, []);
@@ -197,9 +217,13 @@ export function useFlashcardsList() {
     [fetchPage, state.page]
   );
 
-  const refresh = useCallback(async () => {
-    await fetchPage(state.page);
-  }, [fetchPage, state.page]);
+  const refresh = useCallback(
+    async (page?: number) => {
+      const targetPage = page ?? currentPageRef.current;
+      await fetchPage(targetPage);
+    },
+    [fetchPage]
+  );
 
   const setPageFromUrl = useCallback(
     (page: number) => {

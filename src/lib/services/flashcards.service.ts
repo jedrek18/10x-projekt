@@ -224,52 +224,55 @@ export async function batchSaveFlashcards(
     uniqueItems.push({ index: i, front: item.front.trim(), back: item.back.trim(), source: item.source, key });
   }
 
-  // Attempt insert while ignoring duplicates against existing rows
-  let saved: FlashcardBatchSaveSavedItem[] = [];
+  // Insert items one by one to handle duplicates gracefully
+  const saved: FlashcardBatchSaveSavedItem[] = [];
   if (uniqueItems.length > 0) {
-    const rows = uniqueItems.map((u) => ({
-      user_id: userId,
-      front: u.front,
-      back: u.back,
-      source: u.source,
-    }));
-
-    // Use upsert to leverage onConflict and ignore duplicates
-    const { data, error } = await supabase
-      .from("flashcards")
-      .upsert(rows, { onConflict: "user_id,content_hash", ignoreDuplicates: true })
-      .select("id, source");
-
-    if (error) {
-      // If constraint violations or others, surface as validation errors
-      if ((error as any)?.code === "23514") {
-        throw new ValidationError(error.message);
-      }
-      throw new Error(`Failed to batch save: ${error.message}`);
-    }
-
-    const inserted = (data ?? []) as { id: UUID; source: string; front?: string; back?: string }[];
-    saved = inserted.map((row) => ({ id: row.id as UUID, source: row.source as any }));
-
-    // Build set of canonical keys that ended up in DB from this request,
-    // so we can identify which uniqueItems were not inserted (duplicates in DB).
-    const insertedKeys = new Set<string>();
-    for (const row of inserted) {
-      const rowFront = typeof row.front === "string" ? row.front : "";
-      const rowBack = typeof row.back === "string" ? row.back : "";
-      const f = await canonicalizeText(supabase, rowFront);
-      const b = await canonicalizeText(supabase, rowBack);
-      insertedKeys.add(`${f.toLowerCase()}|${b.toLowerCase()}`);
-    }
-
     for (const u of uniqueItems) {
-      if (!insertedKeys.has(u.key)) {
-        skipped.push({ front: u.front, reason: "duplicate" });
+      try {
+        const { data, error } = await supabase
+          .from("flashcards")
+          .insert({
+            user_id: userId,
+            front: u.front,
+            back: u.back,
+            source: u.source,
+          })
+          .select("id, source")
+          .single();
+
+        if (error) {
+          // Unique violation -> duplicate (ignore and continue)
+          if ((error as any)?.code === "23505" || (error as any)?.code === "409") {
+            skipped.push({ front: u.front, reason: "duplicate" });
+            continue;
+          }
+          // Constraint violation -> validation failed
+          if ((error as any)?.code === "23514") {
+            throw new ValidationError(error.message);
+          }
+          throw new Error(`Failed to insert flashcard: ${error.message}`);
+        }
+
+        saved.push({ id: data.id as UUID, source: data.source as any });
+      } catch (error) {
+        if (error instanceof ValidationError) {
+          throw error;
+        }
+        // For other errors, skip this item and continue
+        skipped.push({ front: u.front, reason: "error" });
       }
     }
   }
 
   const response: FlashcardBatchSaveResponse = { saved, skipped };
+
+  // Debug logging
+  console.log(
+    `[batchSaveFlashcards] Request items: ${request.items.length}, Saved: ${saved.length}, Skipped: ${skipped.length}`
+  );
+  if (skipped.length > 0) {
+    console.log("[batchSaveFlashcards] Skipped items:", skipped);
+  }
 
   // Log telemetry event; store response in properties for idempotency replay
   try {
@@ -277,7 +280,7 @@ export async function batchSaveFlashcards(
       user_id: userId,
       event_name: "save",
       request_id: requestId,
-      properties: { response },
+      properties: { response: response as any },
     });
   } catch {
     // ignore telemetry failures
