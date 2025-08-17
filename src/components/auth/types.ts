@@ -1,21 +1,21 @@
 // Typy pomocnicze dla formularzy autoryzacji zgodnie z planem implementacji
 
-export type LoginFormValues = {
+export interface LoginFormValues {
   email: string;
   password: string;
-};
+}
 
-export type SignupFormValues = {
+export interface SignupFormValues {
   email: string;
   password: string;
   confirmPassword: string;
-};
+}
 
 export type FieldErrors<T> = Partial<Record<keyof T | "form", string>>;
 
-export type AuthFormState<T> = {
+export interface AuthFormState<T> {
   values: T;
   errors: FieldErrors<T>;
   isSubmitting: boolean;
   redirectTo?: string;
-};
+}

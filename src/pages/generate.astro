@@ -1,0 +1,15 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { GenerateView } from "../components/generate/GenerateView";
+import { RequireSession } from "../components/generate/RequireSession";
+
+export const prerender = false;
+---
+
+<Layout title="Generate Flashcards - 10x Flashcards">
+  <main class="container mx-auto px-4 py-8 max-w-4xl">
+    <RequireSession client:load>
+      <GenerateView client:load />
+    </RequireSession>
+  </main>
+</Layout>

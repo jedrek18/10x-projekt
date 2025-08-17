@@ -1,11 +1,11 @@
 import type { SupabaseClient } from "../../db/supabase.client";
 
-type ErrorPayload = {
+interface ErrorPayload {
   endpoint: string;
   message?: string;
   details?: unknown;
   error?: unknown;
-};
+}
 
 export async function logError(supabase: SupabaseClient | undefined, payload: ErrorPayload): Promise<void> {
   try {

@@ -114,6 +114,51 @@ export interface AppCopy {
   aiEdited: string;
   import: string;
 
+  // Generate
+  generateTitle: string;
+  generateSubtitle: string;
+  sourceText: string;
+  sourceTextPlaceholder: string;
+  sourceTextRequirements: string;
+  proposalsCount: string;
+  proposalsCountDescription: string;
+  generateButton: string;
+  generatingButton: string;
+  cancelButton: string;
+  generateShortcut: string;
+  minCharacters: string;
+  maxCharacters: string;
+  useShortcut: string;
+  generationStatus: string;
+  streaming: string;
+  batch: string;
+  receivedProposals: string;
+  generatedFlashcards: string;
+  receivingProposals: string;
+  processingRequest: string;
+  streamingDescription: string;
+  batchDescription: string;
+  fallbackMessage: string;
+  activeSessionTitle: string;
+  activeSessionDescription: string;
+  whatWillHappen: string;
+  willHappenList: string;
+  recommendation: string;
+  recommendationDescription: string;
+  continue: string;
+  validationFailed: string;
+  unauthorized: string;
+  unauthorizedDescription: string;
+  tooManyRequests: string;
+  tooManyRequestsDescription: string;
+  connectionProblem: string;
+  connectionProblemDescription: string;
+  generationFailed: string;
+  networkOffline: string;
+  networkOfflineDescription: string;
+  retry: string;
+  dismiss: string;
+
   // Settings
   studySettings: string;
   interfacePreferences: string;
@@ -334,6 +379,54 @@ export const appCopy: I18nDictionary = {
     aiEdited: "AI (edited)",
     import: "Import",
 
+    // Generate
+    generateTitle: "Generate flashcards from text",
+    generateSubtitle:
+      "Paste source text (1000-10000 characters) and generate flashcards with AI. You can set the number of proposals and track generation progress in real-time.",
+    sourceText: "Source text",
+    sourceTextPlaceholder: "Paste source text here (1000-10000 characters)...",
+    sourceTextRequirements: "Requirements:",
+    proposalsCount: "Number of proposals",
+    proposalsCountDescription: "Choose the number of flashcards to generate. A larger number may take more time.",
+    generateButton: "Generate flashcards",
+    generatingButton: "Generating...",
+    cancelButton: "Cancel",
+    generateShortcut: "Ctrl+Enter",
+    minCharacters: "Minimum {min} characters",
+    maxCharacters: "Maximum {max} characters",
+    useShortcut: "Use Ctrl+Enter to quickly start generation",
+    generationStatus: "Generation status",
+    streaming: "Streaming",
+    batch: "Batch",
+    receivedProposals: "Received proposals:",
+    generatedFlashcards: "Generated flashcards:",
+    receivingProposals: "Receiving proposals...",
+    processingRequest: "Processing request...",
+    streamingDescription: "Flashcards are being generated in real-time",
+    batchDescription: "Generation may take a few seconds",
+    fallbackMessage: "Streaming unavailable, switched to batch mode...",
+    activeSessionTitle: "Active proposal session",
+    activeSessionDescription: "Found an active proposal session from a previous generation.",
+    whatWillHappen: "What will happen?",
+    willHappenList:
+      "Starting a new generation will clear previous proposals,Unsaved flashcards will be lost,Proposal session will be reset",
+    recommendation: "Recommendation",
+    recommendationDescription:
+      "Go to the proposals view to review and save generated flashcards before starting a new generation.",
+    continue: "Continue",
+    validationFailed: "Validation error",
+    unauthorized: "Unauthorized",
+    unauthorizedDescription: "Your session has expired. You will be redirected to login.",
+    tooManyRequests: "Too many requests",
+    tooManyRequestsDescription: "Request limit exceeded. Try again in a moment.",
+    connectionProblem: "Connection problem",
+    connectionProblemDescription: "Server is not responding. Check your connection and try again.",
+    generationFailed: "Generation error",
+    networkOffline: "No internet connection",
+    networkOfflineDescription: "Some features may be unavailable.",
+    retry: "Try again",
+    dismiss: "Close",
+
     // Settings
     studySettings: "Study Settings",
     interfacePreferences: "Interface Preferences",
@@ -519,6 +612,54 @@ export const appCopy: I18nDictionary = {
     ai: "AI",
     aiEdited: "AI (edytowane)",
     import: "Import",
+
+    // Generate
+    generateTitle: "Generuj fiszki z tekstu",
+    generateSubtitle:
+      "Wklej tekst źródłowy (1000-10000 znaków) i wygeneruj fiszki z pomocą AI. Możesz ustawić liczbę propozycji i śledzić postęp generacji w czasie rzeczywistym.",
+    sourceText: "Tekst źródłowy",
+    sourceTextPlaceholder: "Wklej tutaj tekst źródłowy (1000-10000 znaków)...",
+    sourceTextRequirements: "Wymagania:",
+    proposalsCount: "Liczba propozycji",
+    proposalsCountDescription: "Wybierz liczbę fiszek do wygenerowania. Większa liczba może zająć więcej czasu.",
+    generateButton: "Generuj fiszki",
+    generatingButton: "Generowanie...",
+    cancelButton: "Anuluj",
+    generateShortcut: "Ctrl+Enter",
+    minCharacters: "Minimum {min} znaków",
+    maxCharacters: "Maksimum {max} znaków",
+    useShortcut: "Użyj Ctrl+Enter aby szybko uruchomić generację",
+    generationStatus: "Status generacji",
+    streaming: "Streaming",
+    batch: "Batch",
+    receivedProposals: "Otrzymane propozycje:",
+    generatedFlashcards: "Generowane fiszki:",
+    receivingProposals: "Otrzymuję propozycje...",
+    processingRequest: "Przetwarzam żądanie...",
+    streamingDescription: "Fiszki są generowane w czasie rzeczywistym",
+    batchDescription: "Generowanie może potrwać kilka sekund",
+    fallbackMessage: "Strumieniowanie niedostępne, przełączono na tryb batch...",
+    activeSessionTitle: "Aktywna sesja propozycji",
+    activeSessionDescription: "Znaleziono aktywną sesję propozycji z poprzedniej generacji.",
+    whatWillHappen: "Co się stanie?",
+    willHappenList:
+      "Rozpoczęcie nowej generacji wyczyści poprzednie propozycje,Niezapisane fiszki zostaną utracone,Sesja propozycji zostanie zresetowana",
+    recommendation: "Zalecenie",
+    recommendationDescription:
+      "Przejdź do widoku propozycji, aby przejrzeć i zapisać wygenerowane fiszki, zanim rozpoczniesz nową generację.",
+    continue: "Kontynuuj",
+    validationFailed: "Błąd walidacji",
+    unauthorized: "Brak autoryzacji",
+    unauthorizedDescription: "Twoja sesja wygasła. Zostaniesz przekierowany do logowania.",
+    tooManyRequests: "Zbyt wiele żądań",
+    tooManyRequestsDescription: "Przekroczono limit żądań. Spróbuj ponownie za chwilę.",
+    connectionProblem: "Problem z połączeniem",
+    connectionProblemDescription: "Serwer nie odpowiada. Sprawdź połączenie i spróbuj ponownie.",
+    generationFailed: "Błąd generacji",
+    networkOffline: "Brak połączenia z internetem",
+    networkOfflineDescription: "Niektóre funkcje mogą być niedostępne.",
+    retry: "Spróbuj ponownie",
+    dismiss: "Zamknij",
 
     // Settings
     studySettings: "Ustawienia nauki",

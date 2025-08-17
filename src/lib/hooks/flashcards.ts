@@ -226,7 +226,7 @@ export function useFlashcardsList() {
 }
 
 // Hook do zarządzania mechanizmem Undo
-export function useUndoManager(delayMs: number = 5000) {
+export function useUndoManager(delayMs = 5000) {
   const [entry, setEntry] = useState<UndoEntryVM | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout>();
 

@@ -2,9 +2,15 @@
  * Simple in-memory fixed-window rate limiter used in middleware.
  * Not suitable for multi-instance deployments; intended for local/dev and basic protection.
  */
-export type RateLimitResult = { limited: boolean; retryAfterSeconds?: number };
+export interface RateLimitResult {
+  limited: boolean;
+  retryAfterSeconds?: number;
+}
 
-type StoreEntry = { count: number; start: number };
+interface StoreEntry {
+  count: number;
+  start: number;
+}
 
 function getStore(): Map<string, StoreEntry> {
   const g = globalThis as any;
@@ -15,8 +21,8 @@ function getStore(): Map<string, StoreEntry> {
 export function rateLimitPatchUserSettings(
   ipAddress: string | null | undefined,
   now: number = Date.now(),
-  windowMs: number = 60_000,
-  limit: number = 30
+  windowMs = 60_000,
+  limit = 30
 ): RateLimitResult {
   const ip = ipAddress || "unknown";
   const key = `rl:usersettings:${ip}`;

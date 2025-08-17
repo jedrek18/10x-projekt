@@ -43,7 +43,9 @@ export interface UserDailyProgressUpdateCommand {
 }
 
 // Response wrapper for listing progress entries
-export type GetProgressResponseDTO = { items: UserDailyProgressDTO[] };
+export interface GetProgressResponseDTO {
+  items: UserDailyProgressDTO[];
+}
 
 /**
  * Flashcards

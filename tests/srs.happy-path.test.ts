@@ -7,8 +7,8 @@ function createMockSupabaseSrs(options: {
   userId: string;
   settings?: { daily_goal?: number; new_limit?: number } | null;
   progress?: { goal_override?: number | null; reviews_done?: number; new_introduced?: number } | null;
-  dueCards?: Array<{ id: string; front: string; state: string; due_at: string | null }>;
-  newCards?: Array<{ id: string; front: string; state: string }>;
+  dueCards?: { id: string; front: string; state: string; due_at: string | null }[];
+  newCards?: { id: string; front: string; state: string }[];
 }) {
   const state: any = {
     progress: options.progress ?? { goal_override: null, reviews_done: 0, new_introduced: 0 },

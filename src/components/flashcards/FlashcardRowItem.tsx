@@ -16,7 +16,7 @@ export function FlashcardRowItem({ item, onEdit, onDelete }: FlashcardRowItemPro
     });
   };
 
-  const truncateText = (text: string, maxLength: number = 50) => {
+  const truncateText = (text: string, maxLength = 50) => {
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + "...";
   };
