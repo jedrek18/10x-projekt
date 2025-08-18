@@ -9,7 +9,7 @@ import {
   logEventGeneration,
   UnauthorizedError,
 } from "../../../lib/services/ai.service";
-import { json, errorJson, validationFailed } from "../../../lib/http";
+import { errorJson, validationFailed } from "../../../lib/http";
 
 export const POST: APIRoute = async ({ request, locals }) => {
   try {
@@ -17,7 +17,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     const { userId } = await assertAuthenticated(supabase);
 
     const acceptsSse = (request.headers.get("accept") || "").includes("text/event-stream");
-    const TIMEOUT_MS = 120000; // Zwiększamy timeout do 2 minut
+    const TIMEOUT_MS = 120000; // 2 min
     const contentType = request.headers.get("content-type") || "";
     if (!contentType.includes("application/json")) {
       return errorJson("Unsupported Media Type", "unsupported_media_type", 415);
@@ -37,27 +37,39 @@ export const POST: APIRoute = async ({ request, locals }) => {
       const stream = new ReadableStream<Uint8Array>({
         start: async (controller) => {
           const encoder = new TextEncoder();
-          // Heartbeat ping and timeout handling
+
+          // Heartbeat + kontrola czasu i przerwania
           let pingInterval: ReturnType<typeof setInterval> | undefined;
-          let timeoutId: ReturnType<typeof setTimeout> | undefined;
-          const abortController = new AbortController();
+          const abortController = new AbortController(); // <-- najpierw inicjalizacja
+          const timeoutId = setTimeout(() => abortController.abort(), TIMEOUT_MS);
+
           const onRequestAbort = () => abortController.abort();
           request.signal.addEventListener("abort", onRequestAbort);
-          timeoutId = setTimeout(() => abortController.abort(), TIMEOUT_MS);
+
           try {
-            controller.enqueue(encoder.encode(`:ok\n\n`));
+            // wstępny komentarz SSE (nie blokuje parsowania po stronie klienta)
+            controller.enqueue(encoder.encode(`: ok\n\n`));
+
+            // heartbeat co 15s, aby utrzymać połączenie przy reverse proxy
             pingInterval = setInterval(() => {
               try {
                 controller.enqueue(encoder.encode(`: ping\n\n`));
-              } catch {}
+              } catch {
+                // ignorujemy błędy przy ping
+              }
             }, 15000);
+
+            // forwardujemy eventy z nowego streamu (proposal/progress/error/done)
             for await (const event of generateProposalsStream(supabase, parsed.data, {
               signal: abortController.signal,
             })) {
               const payload = JSON.stringify({ type: event.type, data: event.data });
-              console.log("API: Sending SSE event:", payload);
+              console.log("[api/ai/generate] SSE ->", payload);
+              // pojedynczy event SSE
               controller.enqueue(encoder.encode(`data: ${payload}\n\n`));
+
               if (event.type === "done") {
+                // (opcjonalny) log zbiorczy po zakończeniu
                 try {
                   await logEventGeneration(supabase, userId, {
                     event_name: "generation",
@@ -72,16 +84,17 @@ export const POST: APIRoute = async ({ request, locals }) => {
             }
           } catch (err) {
             const message = (err as Error)?.message || "Stream error";
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "error", data: { message } })}\n\n`));
+            const errorEvent = JSON.stringify({ type: "error", data: { message } });
+            controller.enqueue(encoder.encode(`data: ${errorEvent}\n\n`));
           } finally {
             if (pingInterval) clearInterval(pingInterval);
-            if (timeoutId) clearTimeout(timeoutId);
+            clearTimeout(timeoutId);
             request.signal.removeEventListener("abort", onRequestAbort);
             controller.close();
           }
         },
         cancel: () => {
-          // noop: rely on AbortSignal from the request to stop generation loop
+          // rely on AbortSignal from the request to stop generation loop
         },
       });
 
@@ -89,17 +102,17 @@ export const POST: APIRoute = async ({ request, locals }) => {
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache, no-transform",
         Connection: "keep-alive",
-        "X-Accel-Buffering": "no",
+        "X-Accel-Buffering": "no", // dla Nginx
       });
       return new Response(stream, { status: 200, headers });
     }
 
-    // Non-SSE: enforce timeout via Promise.race and return 408 on timeout
+    // Fallback bez SSE: timeout via Promise.race
     const result = (await Promise.race([
-      generateProposals(supabase, parsed.data, { signal: request.signal }),
+      generateProposals(supabase, parsed.data),
       new Promise((_, reject) => {
         const err = new Error("Request timeout");
-        (err as any).name = "AbortError";
+        (err as Error & { name: string }).name = "AbortError";
         setTimeout(() => reject(err), TIMEOUT_MS);
       }),
     ])) as Awaited<ReturnType<typeof generateProposals>>;
@@ -110,7 +123,10 @@ export const POST: APIRoute = async ({ request, locals }) => {
       properties: { returned_count: result.returned_count },
     });
 
-    return json(result, 200);
+    return new Response(JSON.stringify(result), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error("[api/ai/generate] POST failed", error);

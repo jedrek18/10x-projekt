@@ -37,10 +37,13 @@ export function useStudyQueue(outboxEnqueue?: (item: OutboxItem) => void) {
   }
 
   // Zapisywanie postępu sesji
-  const updateSessionProgress = useCallback((newProgress: number) => {
-    setSessionProgress(newProgress);
-    setSessionDate(new Date().toISOString().split("T")[0]);
-  }, [setSessionProgress, setSessionDate]);
+  const updateSessionProgress = useCallback(
+    (newProgress: number) => {
+      setSessionProgress(newProgress);
+      setSessionDate(new Date().toISOString().split("T")[0]);
+    },
+    [setSessionProgress, setSessionDate]
+  );
 
   // Pobieranie kolejki z API
   const fetchQueue = useCallback(

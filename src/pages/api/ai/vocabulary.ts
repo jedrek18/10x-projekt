@@ -12,9 +12,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
     const { userId } = await assertAuthenticated(supabase);
 
     // Rate limiting
-    const identifier = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
+    const identifier = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
     const { limited } = await rateLimit(identifier);
-    
+
     if (limited) {
       return errorJson("Rate limit exceeded", "rate_limit_exceeded", 429);
     }
@@ -38,25 +38,25 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     // Build prompt based on parameters
     let prompt = `Wyjaśnij słowo "${word}"`;
-    
+
     if (language) {
       prompt += ` w języku ${language}`;
     }
-    
+
     if (context) {
       prompt += ` w kontekście: "${context}"`;
     }
-    
+
     prompt += `.\n\nPodaj definicję`;
-    
+
     if (includeExamples) {
       prompt += `, przykłady użycia`;
     }
-    
+
     if (includeSynonyms) {
       prompt += `, synonimy i antonimy`;
     }
-    
+
     prompt += `.`;
 
     const result = await explainVocabulary(supabase, word, context, userId);
@@ -64,20 +64,20 @@ export const POST: APIRoute = async ({ request, locals }) => {
     return json(result, 200);
   } catch (error) {
     console.error("[api/ai/vocabulary] POST failed", error);
-    
+
     if (error instanceof UnauthorizedError) {
       return errorJson("Unauthorized", "unauthorized", 401);
     }
-    
+
     if (error instanceof Error) {
-      if (error.message.includes('Rate limit')) {
+      if (error.message.includes("Rate limit")) {
         return errorJson("Rate limit exceeded", "rate_limit_exceeded", 429);
       }
-      if (error.message.includes('Invalid API key')) {
+      if (error.message.includes("Invalid API key")) {
         return errorJson("Service temporarily unavailable", "service_unavailable", 503);
       }
     }
-    
+
     return errorJson("Internal Server Error", "server_error", 500);
   }
 };

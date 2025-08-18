@@ -81,22 +81,13 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center space-x-4">
-          <a 
-            href="/generate" 
-            className="text-sm font-medium hover:text-blue-600 transition-colors cursor-pointer"
-          >
+          <a href="/generate" className="text-sm font-medium hover:text-blue-600 transition-colors cursor-pointer">
             {t("generate", language)}
           </a>
-          <a 
-            href="/study" 
-            className="text-sm font-medium hover:text-blue-600 transition-colors cursor-pointer"
-          >
+          <a href="/study" className="text-sm font-medium hover:text-blue-600 transition-colors cursor-pointer">
             {t("study", language)}
           </a>
-          <a 
-            href="/ai-tools" 
-            className="text-sm font-medium hover:text-blue-600 transition-colors cursor-pointer"
-          >
+          <a href="/ai-tools" className="text-sm font-medium hover:text-blue-600 transition-colors cursor-pointer">
             AI Tools
           </a>
           <DropdownMenu>

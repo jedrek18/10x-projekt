@@ -21,7 +21,7 @@ Authorization: Bearer <your-token>
 ## Rate Limiting
 
 - **Default limit**: 10 requests per minute per user
-- **Response headers**: 
+- **Response headers**:
   - `X-RateLimit-Remaining`: Number of requests remaining
   - `X-RateLimit-Reset`: Time when the limit resets (Unix timestamp)
 
@@ -38,6 +38,7 @@ All endpoints return errors in the following format:
 ```
 
 Common error codes:
+
 - `401`: Unauthorized
 - `429`: Rate limit exceeded
 - `400`: Bad request
@@ -64,10 +65,10 @@ Generates flashcards from provided text using AI.
 
 #### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `source_text` | string | Yes | Source text for flashcard generation (1000-10000 characters) |
-| `max_proposals` | number | Yes | Number of flashcards to generate (10-50) |
+| Parameter       | Type   | Required | Description                                                  |
+| --------------- | ------ | -------- | ------------------------------------------------------------ |
+| `source_text`   | string | Yes      | Source text for flashcard generation (1000-10000 characters) |
+| `max_proposals` | number | Yes      | Number of flashcards to generate (10-50)                     |
 
 #### Response
 
@@ -116,11 +117,11 @@ Translates text between languages.
 
 #### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `text` | string | Yes | Text to translate (1-5000 characters) |
-| `targetLanguage` | string | Yes | Target language code (e.g., "en", "pl", "de") |
-| `sourceLanguage` | string | No | Source language code (auto-detected if not provided) |
+| Parameter        | Type   | Required | Description                                          |
+| ---------------- | ------ | -------- | ---------------------------------------------------- |
+| `text`           | string | Yes      | Text to translate (1-5000 characters)                |
+| `targetLanguage` | string | Yes      | Target language code (e.g., "en", "pl", "de")        |
+| `sourceLanguage` | string | No       | Source language code (auto-detected if not provided) |
 
 #### Response
 
@@ -165,11 +166,11 @@ Corrects grammatical errors in text.
 
 #### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `text` | string | Yes | Text to correct (1-2000 characters) |
-| `language` | string | No | Language code for correction |
-| `includeExplanations` | boolean | No | Include explanations for corrections (default: true) |
+| Parameter             | Type    | Required | Description                                          |
+| --------------------- | ------- | -------- | ---------------------------------------------------- |
+| `text`                | string  | Yes      | Text to correct (1-2000 characters)                  |
+| `language`            | string  | No       | Language code for correction                         |
+| `includeExplanations` | boolean | No       | Include explanations for corrections (default: true) |
 
 #### Response
 
@@ -223,13 +224,13 @@ Provides detailed explanations of words or phrases.
 
 #### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `word` | string | Yes | Word or phrase to explain (1-100 characters) |
-| `context` | string | No | Context sentence (max 500 characters) |
-| `language` | string | No | Language code |
-| `includeExamples` | boolean | No | Include usage examples (default: true) |
-| `includeSynonyms` | boolean | No | Include synonyms and antonyms (default: true) |
+| Parameter         | Type    | Required | Description                                   |
+| ----------------- | ------- | -------- | --------------------------------------------- |
+| `word`            | string  | Yes      | Word or phrase to explain (1-100 characters)  |
+| `context`         | string  | No       | Context sentence (max 500 characters)         |
+| `language`        | string  | No       | Language code                                 |
+| `includeExamples` | boolean | No       | Include usage examples (default: true)        |
+| `includeSynonyms` | boolean | No       | Include synonyms and antonyms (default: true) |
 
 #### Response
 
@@ -237,10 +238,7 @@ Provides detailed explanations of words or phrases.
 {
   "word": "serendipity",
   "definition": "The occurrence and development of events by chance in a happy or beneficial way",
-  "examples": [
-    "Finding that book was pure serendipity.",
-    "It was serendipity that led to their meeting."
-  ],
+  "examples": ["Finding that book was pure serendipity.", "It was serendipity that led to their meeting."],
   "synonyms": ["chance", "fortune", "luck"],
   "antonyms": ["misfortune", "bad luck"],
   "partOfSpeech": "noun",
@@ -294,6 +292,7 @@ data: {"type":"done","data":{"returned_count":10,"request_id":"uuid"}}
 ```
 
 Event types:
+
 - `proposal`: Individual flashcard
 - `progress`: Generation progress update
 - `done`: Generation completed
@@ -305,20 +304,20 @@ Event types:
 
 Supported language codes follow ISO 639-1 or ISO 639-2 format:
 
-| Code | Language |
-|------|----------|
-| `en` | English |
-| `pl` | Polish |
-| `de` | German |
-| `fr` | French |
-| `es` | Spanish |
-| `it` | Italian |
+| Code | Language   |
+| ---- | ---------- |
+| `en` | English    |
+| `pl` | Polish     |
+| `de` | German     |
+| `fr` | French     |
+| `es` | Spanish    |
+| `it` | Italian    |
 | `pt` | Portuguese |
-| `ru` | Russian |
-| `ja` | Japanese |
-| `ko` | Korean |
-| `zh` | Chinese |
-| `ar` | Arabic |
+| `ru` | Russian    |
+| `ja` | Japanese   |
+| `ko` | Korean     |
+| `zh` | Chinese    |
+| `ar` | Arabic     |
 
 ---
 
@@ -326,15 +325,15 @@ Supported language codes follow ISO 639-1 or ISO 639-2 format:
 
 The API uses various language models through OpenRouter:
 
-| Model | Provider | Max Tokens | Cost |
-|-------|----------|------------|------|
-| GPT-OSS-20B (Free) | OpenAI | 8,192 | Free |
-| GPT-4o Mini | OpenAI | 16,384 | $0.00015/1K |
-| GPT-4o | OpenAI | 128,000 | $0.005/1K |
-| Claude 3 Haiku | Anthropic | 200,000 | $0.00025/1K |
-| Claude 3 Sonnet | Anthropic | 200,000 | $0.003/1K |
-| Gemini Flash 1.5 | Google | 1,048,576 | $0.000075/1K |
-| Llama 3.1 8B | Meta | 8,192 | $0.00005/1K |
+| Model              | Provider  | Max Tokens | Cost         |
+| ------------------ | --------- | ---------- | ------------ |
+| GPT-OSS-20B (Free) | OpenAI    | 8,192      | Free         |
+| GPT-4o Mini        | OpenAI    | 16,384     | $0.00015/1K  |
+| GPT-4o             | OpenAI    | 128,000    | $0.005/1K    |
+| Claude 3 Haiku     | Anthropic | 200,000    | $0.00025/1K  |
+| Claude 3 Sonnet    | Anthropic | 200,000    | $0.003/1K    |
+| Gemini Flash 1.5   | Google    | 1,048,576  | $0.000075/1K |
+| Llama 3.1 8B       | Meta      | 8,192      | $0.00005/1K  |
 
 ---
 
@@ -346,16 +345,16 @@ Always handle potential errors in your client code:
 
 ```javascript
 try {
-  const response = await fetch('/api/ai/translate', {
-    method: 'POST',
+  const response = await fetch("/api/ai/translate", {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
-      text: 'Hello world',
-      targetLanguage: 'pl'
-    })
+      text: "Hello world",
+      targetLanguage: "pl",
+    }),
   });
 
   if (!response.ok) {
@@ -366,7 +365,7 @@ try {
   const result = await response.json();
   console.log(result.translation);
 } catch (error) {
-  console.error('Translation failed:', error.message);
+  console.error("Translation failed:", error.message);
 }
 ```
 
@@ -380,9 +379,9 @@ async function makeRequestWithRetry(requestFn, maxRetries = 3) {
     try {
       return await requestFn();
     } catch (error) {
-      if (error.message.includes('Rate limit') && attempt < maxRetries - 1) {
+      if (error.message.includes("Rate limit") && attempt < maxRetries - 1) {
         const delay = Math.pow(2, attempt) * 1000; // Exponential backoff
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await new Promise((resolve) => setTimeout(resolve, delay));
         continue;
       }
       throw error;
@@ -398,11 +397,11 @@ Validate inputs before sending requests:
 ```javascript
 function validateTranslationRequest(text, targetLanguage) {
   if (!text || text.length > 5000) {
-    throw new Error('Text must be between 1 and 5000 characters');
+    throw new Error("Text must be between 1 and 5000 characters");
   }
-  
+
   if (!targetLanguage || !/^[a-z]{2,3}(-[A-Z]{2})?$/.test(targetLanguage)) {
-    throw new Error('Invalid language code');
+    throw new Error("Invalid language code");
   }
 }
 ```
@@ -416,20 +415,21 @@ const cache = new Map();
 
 async function getCachedTranslation(text, targetLanguage) {
   const key = `${text}:${targetLanguage}`;
-  
+
   if (cache.has(key)) {
     const cached = cache.get(key);
-    if (Date.now() - cached.timestamp < 3600000) { // 1 hour
+    if (Date.now() - cached.timestamp < 3600000) {
+      // 1 hour
       return cached.data;
     }
   }
-  
+
   const result = await translateText(text, targetLanguage);
   cache.set(key, {
     data: result,
-    timestamp: Date.now()
+    timestamp: Date.now(),
   });
-  
+
   return result;
 }
 ```
@@ -445,19 +445,19 @@ class AIAPI {
   private baseUrl: string;
   private token: string;
 
-  constructor(token: string, baseUrl = 'https://10x-projekt.vercel.app/api/ai') {
+  constructor(token: string, baseUrl = "https://10x-projekt.vercel.app/api/ai") {
     this.token = token;
     this.baseUrl = baseUrl;
   }
 
   private async request(endpoint: string, data: any) {
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.token}`
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${this.token}`,
       },
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
     });
 
     if (!response.ok) {
@@ -469,49 +469,49 @@ class AIAPI {
   }
 
   async generateFlashcards(text: string, count: number = 10) {
-    return this.request('/generate', {
+    return this.request("/generate", {
       source_text: text,
-      max_proposals: count
+      max_proposals: count,
     });
   }
 
   async translateText(text: string, targetLanguage: string, sourceLanguage?: string) {
-    return this.request('/translate', {
+    return this.request("/translate", {
       text,
       targetLanguage,
-      sourceLanguage
+      sourceLanguage,
     });
   }
 
   async correctGrammar(text: string, language?: string) {
-    return this.request('/grammar', {
+    return this.request("/grammar", {
       text,
-      language
+      language,
     });
   }
 
   async explainVocabulary(word: string, context?: string) {
-    return this.request('/vocabulary', {
+    return this.request("/vocabulary", {
       word,
-      context
+      context,
     });
   }
 }
 
 // Usage
-const api = new AIAPI('your-token-here');
+const api = new AIAPI("your-token-here");
 
 // Generate flashcards
-const flashcards = await api.generateFlashcards('Your text here', 5);
+const flashcards = await api.generateFlashcards("Your text here", 5);
 
 // Translate text
-const translation = await api.translateText('Hello world', 'pl');
+const translation = await api.translateText("Hello world", "pl");
 
 // Correct grammar
-const corrected = await api.correctGrammar('I goes to school');
+const corrected = await api.correctGrammar("I goes to school");
 
 // Explain vocabulary
-const explanation = await api.explainVocabulary('serendipity');
+const explanation = await api.explainVocabulary("serendipity");
 ```
 
 ---
@@ -529,6 +529,7 @@ For API support and questions:
 ## Changelog
 
 ### v1.0.0 (Current)
+
 - Initial release
 - Flashcard generation
 - Text translation

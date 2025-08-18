@@ -3,7 +3,7 @@ import type { SupabaseClient } from "../../db/supabase.client";
 export type TypedSupabase = SupabaseClient;
 
 export interface ErrorLogEntry {
-  level: 'error' | 'warn' | 'info';
+  level: "error" | "warn" | "info";
   message: string;
   context?: string;
   userId?: string;
@@ -14,7 +14,7 @@ export interface ErrorLogEntry {
 }
 
 export interface OpenRouterErrorLog extends ErrorLogEntry {
-  service: 'openrouter';
+  service: "openrouter";
   model?: string;
   apiEndpoint?: string;
   responseTime?: number;
@@ -26,8 +26,8 @@ export interface OpenRouterErrorLog extends ErrorLogEntry {
 }
 
 export interface AIErrorLog extends ErrorLogEntry {
-  service: 'ai';
-  operation: 'generate' | 'translate' | 'grammar' | 'vocabulary' | 'analysis';
+  service: "ai";
+  operation: "generate" | "translate" | "grammar" | "vocabulary" | "analysis";
   inputLength?: number;
   model?: string;
   fallbackUsed?: boolean;
@@ -38,7 +38,7 @@ export interface AIErrorLog extends ErrorLogEntry {
 // ============================================================================
 
 export function logError(
-  level: ErrorLogEntry['level'],
+  level: ErrorLogEntry["level"],
   message: string,
   context?: string,
   metadata?: Record<string, any>
@@ -48,12 +48,12 @@ export function logError(
     message,
     context,
     metadata,
-    timestamp: new Date()
+    timestamp: new Date(),
   };
 
   // Console logging
-  const logMethod = level === 'error' ? console.error : level === 'warn' ? console.warn : console.info;
-  logMethod(`[${level.toUpperCase()}] ${context ? `[${context}] ` : ''}${message}`, metadata);
+  const logMethod = level === "error" ? console.error : level === "warn" ? console.warn : console.info;
+  logMethod(`[${level.toUpperCase()}] ${context ? `[${context}] ` : ""}${message}`, metadata);
 
   // TODO: Add integration with external logging services
   // - Sentry for error tracking
@@ -76,23 +76,23 @@ export function logOpenRouterError(
   }
 ): void {
   const entry: OpenRouterErrorLog = {
-    level: 'error',
+    level: "error",
     message: error.message,
     context,
-    service: 'openrouter',
+    service: "openrouter",
     error,
     metadata,
     timestamp: new Date(),
-    ...metadata
+    ...metadata,
   };
 
   // Enhanced console logging for OpenRouter errors
-  console.error('OpenRouter Error:', {
+  console.error("OpenRouter Error:", {
     message: error.message,
     context,
     timestamp: entry.timestamp.toISOString(),
     stack: error.stack,
-    ...metadata
+    ...metadata,
   });
 
   // Log to Supabase if available
@@ -101,7 +101,7 @@ export function logOpenRouterError(
 
 export function logAIError(
   error: Error,
-  operation: AIErrorLog['operation'],
+  operation: AIErrorLog["operation"],
   context: string,
   metadata?: {
     userId?: string;
@@ -112,25 +112,25 @@ export function logAIError(
   }
 ): void {
   const entry: AIErrorLog = {
-    level: 'error',
+    level: "error",
     message: error.message,
     context,
-    service: 'ai',
+    service: "ai",
     operation,
     error,
     metadata,
     timestamp: new Date(),
-    ...metadata
+    ...metadata,
   };
 
   // Enhanced console logging for AI errors
-  console.error('AI Service Error:', {
+  console.error("AI Service Error:", {
     operation,
     message: error.message,
     context,
     timestamp: entry.timestamp.toISOString(),
     stack: error.stack,
-    ...metadata
+    ...metadata,
   });
 
   // Log to Supabase if available
@@ -148,20 +148,20 @@ export function logOpenRouterSuccess(
   }
 ): void {
   const entry: ErrorLogEntry = {
-    level: 'info',
+    level: "info",
     message: `OpenRouter ${operation} completed successfully`,
-    context: 'openrouter',
+    context: "openrouter",
     metadata,
-    timestamp: new Date()
+    timestamp: new Date(),
   };
 
   // Log success metrics
-  console.info('OpenRouter Success:', {
+  console.info("OpenRouter Success:", {
     operation,
     model: metadata.model,
     responseTime: `${metadata.responseTime}ms`,
     tokensUsed: metadata.tokensUsed,
-    timestamp: entry.timestamp.toISOString()
+    timestamp: entry.timestamp.toISOString(),
   });
 
   // Log to Supabase if available
@@ -169,7 +169,7 @@ export function logOpenRouterSuccess(
 }
 
 export function logAISuccess(
-  operation: AIErrorLog['operation'],
+  operation: AIErrorLog["operation"],
   metadata: {
     userId?: string;
     requestId?: string;
@@ -180,21 +180,21 @@ export function logAISuccess(
   }
 ): void {
   const entry: ErrorLogEntry = {
-    level: 'info',
+    level: "info",
     message: `AI ${operation} completed successfully`,
-    context: 'ai',
+    context: "ai",
     metadata,
-    timestamp: new Date()
+    timestamp: new Date(),
   };
 
   // Log success metrics
-  console.info('AI Success:', {
+  console.info("AI Success:", {
     operation,
     inputLength: metadata.inputLength,
     outputLength: metadata.outputLength,
     processingTime: `${metadata.processingTime}ms`,
     model: metadata.model,
-    timestamp: entry.timestamp.toISOString()
+    timestamp: entry.timestamp.toISOString(),
   });
 
   // Log to Supabase if available
@@ -205,27 +205,22 @@ export function logAISuccess(
 // RATE LIMITING AND PERFORMANCE MONITORING
 // ============================================================================
 
-export function logRateLimitHit(
-  userId: string,
-  endpoint: string,
-  limit: number,
-  windowMs: number
-): void {
+export function logRateLimitHit(userId: string, endpoint: string, limit: number, windowMs: number): void {
   const entry: ErrorLogEntry = {
-    level: 'warn',
+    level: "warn",
     message: `Rate limit hit for user ${userId} on ${endpoint}`,
-    context: 'rate-limit',
+    context: "rate-limit",
     metadata: {
       userId,
       endpoint,
       limit,
       windowMs,
-      resetTime: Date.now() + windowMs
+      resetTime: Date.now() + windowMs,
     },
-    timestamp: new Date()
+    timestamp: new Date(),
   };
 
-  console.warn('Rate Limit Hit:', entry.metadata);
+  console.warn("Rate Limit Hit:", entry.metadata);
   logToSupabase(entry).catch(console.error);
 }
 
@@ -240,19 +235,19 @@ export function logPerformanceMetrics(
   }
 ): void {
   const entry: ErrorLogEntry = {
-    level: 'info',
+    level: "info",
     message: `Performance metrics for ${operation}`,
-    context: 'performance',
+    context: "performance",
     metadata: metrics,
-    timestamp: new Date()
+    timestamp: new Date(),
   };
 
   // Log performance metrics
-  console.info('Performance Metrics:', {
+  console.info("Performance Metrics:", {
     operation,
     responseTime: `${metrics.responseTime}ms`,
     memoryUsage: metrics.memoryUsage ? `${Math.round(metrics.memoryUsage / 1024 / 1024)}MB` : undefined,
-    timestamp: entry.timestamp.toISOString()
+    timestamp: entry.timestamp.toISOString(),
   });
 
   // Log to Supabase if available
@@ -266,7 +261,6 @@ export function logPerformanceMetrics(
 async function logToSupabase(entry: ErrorLogEntry): Promise<void> {
   // This function would integrate with Supabase to store error logs
   // For now, it's a placeholder that could be implemented later
-  
   // Example implementation:
   // const supabase = getSupabaseClient();
   // await supabase.from('error_logs').insert({
@@ -285,7 +279,7 @@ async function logToSupabase(entry: ErrorLogEntry): Promise<void> {
 // ============================================================================
 
 export function createErrorContext(operation: string, additionalContext?: string): string {
-  return `[${operation}]${additionalContext ? ` ${additionalContext}` : ''}`;
+  return `[${operation}]${additionalContext ? ` ${additionalContext}` : ""}`;
 }
 
 export function sanitizeErrorForLogging(error: Error): Error {
@@ -293,30 +287,30 @@ export function sanitizeErrorForLogging(error: Error): Error {
   const sanitizedError = new Error(error.message);
   sanitizedError.name = error.name;
   sanitizedError.stack = error.stack;
-  
+
   // Remove API keys from error messages
-  sanitizedError.message = sanitizedError.message.replace(/sk-[a-zA-Z0-9]{20,}/g, 'sk-***');
-  
+  sanitizedError.message = sanitizedError.message.replace(/sk-[a-zA-Z0-9]{20,}/g, "sk-***");
+
   return sanitizedError;
 }
 
 export function formatErrorForUser(error: Error): string {
   // Convert technical errors to user-friendly messages
-  if (error.message.includes('Rate limit')) {
-    return 'Przekroczono limit żądań. Spróbuj ponownie za chwilę.';
+  if (error.message.includes("Rate limit")) {
+    return "Przekroczono limit żądań. Spróbuj ponownie za chwilę.";
   }
-  
-  if (error.message.includes('Invalid API key')) {
-    return 'Błąd konfiguracji usługi. Skontaktuj się z administratorem.';
+
+  if (error.message.includes("Invalid API key")) {
+    return "Błąd konfiguracji usługi. Skontaktuj się z administratorem.";
   }
-  
-  if (error.message.includes('Network error')) {
-    return 'Błąd połączenia sieciowego. Sprawdź swoje połączenie internetowe.';
+
+  if (error.message.includes("Network error")) {
+    return "Błąd połączenia sieciowego. Sprawdź swoje połączenie internetowe.";
   }
-  
-  if (error.message.includes('timeout')) {
-    return 'Żądanie przekroczyło limit czasu. Spróbuj ponownie.';
+
+  if (error.message.includes("timeout")) {
+    return "Żądanie przekroczyło limit czasu. Spróbuj ponownie.";
   }
-  
-  return 'Wystąpił nieoczekiwany błąd. Spróbuj ponownie później.';
+
+  return "Wystąpił nieoczekiwany błąd. Spróbuj ponownie później.";
 }

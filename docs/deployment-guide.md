@@ -134,10 +134,11 @@ The service is configured to use `openai/gpt-oss-20b:free` as the default model.
 
 ```typescript
 // src/lib/config/models.ts
-export const DEFAULT_MODEL = 'openai/gpt-oss-20b:free';
+export const DEFAULT_MODEL = "openai/gpt-oss-20b:free";
 ```
 
 Available models:
+
 - `openai/gpt-oss-20b:free` - Free, good for basic tasks
 - `openai/gpt-4o-mini` - Fast and efficient
 - `openai/gpt-4o` - Most capable
@@ -241,6 +242,7 @@ curl https://your-domain.vercel.app/api/health
 ```
 
 Response:
+
 ```json
 {
   "status": "healthy",
@@ -297,7 +299,8 @@ npm run test:coverage
 #### 1. API Key Issues
 
 **Problem**: `Invalid API key` errors
-**Solution**: 
+**Solution**:
+
 - Verify your OpenRouter API key is correct
 - Ensure the key starts with `sk-or-v1-`
 - Check if the key has sufficient credits
@@ -306,6 +309,7 @@ npm run test:coverage
 
 **Problem**: `Rate limit exceeded` errors
 **Solution**:
+
 - Check your OpenRouter usage limits
 - Implement exponential backoff in your client code
 - Consider upgrading your OpenRouter plan
@@ -314,6 +318,7 @@ npm run test:coverage
 
 **Problem**: `Model not available` errors
 **Solution**:
+
 - Check if the model is available in your OpenRouter plan
 - Switch to a different model in the configuration
 - Verify model names are correct
@@ -322,6 +327,7 @@ npm run test:coverage
 
 **Problem**: High memory usage
 **Solution**:
+
 - Reduce cache size in configuration
 - Clear old cache entries
 - Monitor memory usage through health checks
@@ -335,6 +341,7 @@ AI_DEBUG_MODE=true
 ```
 
 This will log:
+
 - API requests and responses
 - Cache hits and misses
 - Performance metrics
@@ -397,6 +404,7 @@ For issues and questions:
 ## Changelog
 
 ### v1.0.0
+
 - Initial release with OpenRouter integration
 - Flashcard generation, translation, grammar correction, vocabulary explanation
 - Comprehensive error handling and monitoring

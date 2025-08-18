@@ -40,7 +40,7 @@ export class CacheManager {
     hits: 0,
     misses: 0,
     totalAccessTime: 0,
-    accessCount: 0
+    accessCount: 0,
   };
   private cleanupTimer?: NodeJS.Timeout;
 
@@ -51,7 +51,7 @@ export class CacheManager {
       defaultTtl: 3600000, // 1 hour
       cleanupInterval: 300000, // 5 minutes
       enableCompression: true,
-      ...config
+      ...config,
     };
 
     this.startCleanupTimer();
@@ -64,11 +64,15 @@ export class CacheManager {
   /**
    * Set a value in cache
    */
-  set<T>(key: string, data: T, options?: {
-    ttl?: number;
-    tags?: string[];
-    size?: number;
-  }): void {
+  set<T>(
+    key: string,
+    data: T,
+    options?: {
+      ttl?: number;
+      tags?: string[];
+      size?: number;
+    }
+  ): void {
     const entry: CacheEntry<T> = {
       data,
       timestamp: Date.now(),
@@ -76,7 +80,7 @@ export class CacheManager {
       accessCount: 0,
       lastAccessed: Date.now(),
       size: options?.size || this.estimateSize(data),
-      tags: options?.tags
+      tags: options?.tags,
     };
 
     // Check if we need to evict entries
@@ -121,12 +125,12 @@ export class CacheManager {
   has(key: string): boolean {
     const entry = this.cache.get(key);
     if (!entry) return false;
-    
+
     if (this.isExpired(entry)) {
       this.cache.delete(key);
       return false;
     }
-    
+
     return true;
   }
 
@@ -150,14 +154,14 @@ export class CacheManager {
    */
   clearByTags(tags: string[]): number {
     let deletedCount = 0;
-    
+
     for (const [key, entry] of this.cache.entries()) {
-      if (entry.tags && tags.some(tag => entry.tags!.includes(tag))) {
+      if (entry.tags && tags.some((tag) => entry.tags!.includes(tag))) {
         this.cache.delete(key);
         deletedCount++;
       }
     }
-    
+
     return deletedCount;
   }
 
@@ -167,9 +171,7 @@ export class CacheManager {
   getStats(): CacheStats {
     const totalRequests = this.stats.hits + this.stats.misses;
     const hitRate = totalRequests > 0 ? this.stats.hits / totalRequests : 0;
-    const averageAccessTime = this.stats.accessCount > 0 
-      ? this.stats.totalAccessTime / this.stats.accessCount 
-      : 0;
+    const averageAccessTime = this.stats.accessCount > 0 ? this.stats.totalAccessTime / this.stats.accessCount : 0;
 
     let totalSize = 0;
     for (const entry of this.cache.values()) {
@@ -182,7 +184,7 @@ export class CacheManager {
       size: totalSize,
       entries: this.cache.size,
       hitRate,
-      averageAccessTime
+      averageAccessTime,
     };
   }
 
@@ -196,14 +198,14 @@ export class CacheManager {
   /**
    * Get cache entries with metadata
    */
-  entries(): Array<{ key: string; entry: CacheEntry }> {
+  entries(): { key: string; entry: CacheEntry }[] {
     return Array.from(this.cache.entries()).map(([key, entry]) => ({ key, entry }));
   }
 
   /**
    * Warm up cache with multiple entries
    */
-  warmup(entries: Array<{ key: string; data: any; ttl?: number; tags?: string[] }>): void {
+  warmup(entries: { key: string; data: any; ttl?: number; tags?: string[] }[]): void {
     for (const { key, data, ttl, tags } of entries) {
       this.set(key, data, { ttl, tags });
     }
@@ -264,7 +266,7 @@ export class CacheManager {
     }
   }
 
-  private evictEntries(requiredSpace: number = 0, targetEntries?: number): void {
+  private evictEntries(requiredSpace = 0, targetEntries?: number): void {
     const entries = Array.from(this.cache.entries())
       .map(([key, entry]) => ({ key, entry }))
       .sort((a, b) => {
@@ -289,7 +291,7 @@ export class CacheManager {
       deletedCount++;
     }
 
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === "development") {
       console.info(`[CACHE] Evicted ${deletedCount} entries, freed ${Math.round(freedSpace / 1024)}KB`);
     }
   }
@@ -302,17 +304,17 @@ export class CacheManager {
 
   private cleanup(): void {
     const beforeSize = this.cache.size;
-    
+
     for (const [key, entry] of this.cache.entries()) {
       if (this.isExpired(entry)) {
         this.cache.delete(key);
       }
     }
-    
+
     const afterSize = this.cache.size;
     const cleanedCount = beforeSize - afterSize;
-    
-    if (cleanedCount > 0 && process.env.NODE_ENV === 'development') {
+
+    if (cleanedCount > 0 && process.env.NODE_ENV === "development") {
       console.info(`[CACHE] Cleaned up ${cleanedCount} expired entries`);
     }
   }
@@ -327,7 +329,7 @@ export class CacheManager {
       hits: 0,
       misses: 0,
       totalAccessTime: 0,
-      accessCount: 0
+      accessCount: 0,
     };
   }
 
@@ -359,7 +361,7 @@ export const aiCache = new CacheManager({
   maxSize: 100 * 1024 * 1024, // 100MB
   maxEntries: 1000,
   defaultTtl: 3600000, // 1 hour
-  tags: ['ai']
+  tags: ["ai"],
 });
 
 // User-specific cache with shorter TTL
@@ -367,7 +369,7 @@ export const userCache = new CacheManager({
   maxSize: 25 * 1024 * 1024, // 25MB
   maxEntries: 200,
   defaultTtl: 900000, // 15 minutes
-  tags: ['user']
+  tags: ["user"],
 });
 
 // ============================================================================
@@ -386,15 +388,15 @@ export function cached<T extends (...args: any[]) => any>(
     return ((...args: Parameters<T>): ReturnType<T> => {
       const key = keyGenerator(...args);
       const cached = cache.get(key);
-      
+
       if (cached !== null) {
         return cached;
       }
-      
+
       const result = fn(...args);
-      
+
       if (result instanceof Promise) {
-        return result.then(value => {
+        return result.then((value) => {
           cache.set(key, value, options);
           return value;
         }) as ReturnType<T>;
@@ -410,13 +412,15 @@ export function cached<T extends (...args: any[]) => any>(
  * Generate cache key from function name and arguments
  */
 export function generateCacheKey(prefix: string, ...args: any[]): string {
-  const argsString = args.map(arg => {
-    if (typeof arg === 'object') {
-      return JSON.stringify(arg);
-    }
-    return String(arg);
-  }).join(':');
-  
+  const argsString = args
+    .map((arg) => {
+      if (typeof arg === "object") {
+        return JSON.stringify(arg);
+      }
+      return String(arg);
+    })
+    .join(":");
+
   return `${prefix}:${argsString}`;
 }
 
@@ -436,6 +440,6 @@ export function getAllCacheStats(): Record<string, CacheStats> {
   return {
     main: mainCache.getStats(),
     ai: aiCache.getStats(),
-    user: userCache.getStats()
+    user: userCache.getStats(),
   };
 }

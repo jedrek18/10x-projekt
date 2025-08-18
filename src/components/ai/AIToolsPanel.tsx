@@ -24,12 +24,12 @@ interface TranslationResult {
 interface GrammarCorrectionResult {
   original: string;
   corrected: string;
-  corrections: Array<{
+  corrections: {
     original: string;
     corrected: string;
     explanation: string;
     type: string;
-  }>;
+  }[];
   confidence: number;
 }
 
@@ -48,83 +48,87 @@ interface VocabularyResult {
 // ============================================================================
 
 const LANGUAGE_OPTIONS = [
-  { code: 'en', name: 'English' },
-  { code: 'pl', name: 'Polski' },
-  { code: 'de', name: 'Deutsch' },
-  { code: 'fr', name: 'Français' },
-  { code: 'es', name: 'Español' },
-  { code: 'it', name: 'Italiano' },
-  { code: 'pt', name: 'Português' },
-  { code: 'ru', name: 'Русский' },
-  { code: 'ja', name: '日本語' },
-  { code: 'ko', name: '한국어' },
-  { code: 'zh', name: '中文' },
-  { code: 'ar', name: 'العربية' }
+  { code: "en", name: "English" },
+  { code: "pl", name: "Polski" },
+  { code: "de", name: "Deutsch" },
+  { code: "fr", name: "Français" },
+  { code: "es", name: "Español" },
+  { code: "it", name: "Italiano" },
+  { code: "pt", name: "Português" },
+  { code: "ru", name: "Русский" },
+  { code: "ja", name: "日本語" },
+  { code: "ko", name: "한국어" },
+  { code: "zh", name: "中文" },
+  { code: "ar", name: "العربية" },
 ];
 
 // ============================================================================
 // API FUNCTIONS
 // ============================================================================
 
-async function translateText(text: string, targetLanguage: string, sourceLanguage?: string): Promise<TranslationResult> {
-  const response = await fetch('/api/ai/translate', {
-    method: 'POST',
+async function translateText(
+  text: string,
+  targetLanguage: string,
+  sourceLanguage?: string
+): Promise<TranslationResult> {
+  const response = await fetch("/api/ai/translate", {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       text,
       targetLanguage,
-      sourceLanguage
-    })
+      sourceLanguage,
+    }),
   });
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.error || 'Translation failed');
+    throw new Error(error.error || "Translation failed");
   }
 
   return response.json();
 }
 
 async function correctGrammar(text: string, language?: string): Promise<GrammarCorrectionResult> {
-  const response = await fetch('/api/ai/grammar', {
-    method: 'POST',
+  const response = await fetch("/api/ai/grammar", {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       text,
       language,
-      includeExplanations: true
-    })
+      includeExplanations: true,
+    }),
   });
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.error || 'Grammar correction failed');
+    throw new Error(error.error || "Grammar correction failed");
   }
 
   return response.json();
 }
 
 async function explainVocabulary(word: string, context?: string): Promise<VocabularyResult> {
-  const response = await fetch('/api/ai/vocabulary', {
-    method: 'POST',
+  const response = await fetch("/api/ai/vocabulary", {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       word,
       context,
       includeExamples: true,
-      includeSynonyms: true
-    })
+      includeSynonyms: true,
+    }),
   });
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.error || 'Vocabulary explanation failed');
+    throw new Error(error.error || "Vocabulary explanation failed");
   }
 
   return response.json();
@@ -135,9 +139,9 @@ async function explainVocabulary(word: string, context?: string): Promise<Vocabu
 // ============================================================================
 
 function TranslationTab() {
-  const [inputText, setInputText] = useState('');
-  const [targetLanguage, setTargetLanguage] = useState('en');
-  const [sourceLanguage, setSourceLanguage] = useState('');
+  const [inputText, setInputText] = useState("");
+  const [targetLanguage, setTargetLanguage] = useState("en");
+  const [sourceLanguage, setSourceLanguage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<TranslationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -153,7 +157,7 @@ function TranslationTab() {
       const translation = await translateText(inputText, targetLanguage, sourceLanguage || undefined);
       setResult(translation);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Translation failed');
+      setError(err instanceof Error ? err.message : "Translation failed");
     } finally {
       setIsLoading(false);
     }
@@ -170,7 +174,7 @@ function TranslationTab() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="">Auto-detect</SelectItem>
-              {LANGUAGE_OPTIONS.map(lang => (
+              {LANGUAGE_OPTIONS.map((lang) => (
                 <SelectItem key={lang.code} value={lang.code}>
                   {lang.name}
                 </SelectItem>
@@ -185,7 +189,7 @@ function TranslationTab() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {LANGUAGE_OPTIONS.map(lang => (
+              {LANGUAGE_OPTIONS.map((lang) => (
                 <SelectItem key={lang.code} value={lang.code}>
                   {lang.name}
                 </SelectItem>
@@ -205,16 +209,10 @@ function TranslationTab() {
           rows={4}
           maxLength={5000}
         />
-        <div className="text-sm text-muted-foreground">
-          {inputText.length}/5000 characters
-        </div>
+        <div className="text-sm text-muted-foreground">{inputText.length}/5000 characters</div>
       </div>
 
-      <Button 
-        onClick={handleTranslate} 
-        disabled={!inputText.trim() || isLoading}
-        className="w-full"
-      >
+      <Button onClick={handleTranslate} disabled={!inputText.trim() || isLoading} className="w-full">
         {isLoading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -241,16 +239,12 @@ function TranslationTab() {
               <Languages className="h-5 w-5" />
               Translation Result
             </CardTitle>
-            <CardDescription>
-              Confidence: {Math.round(result.confidence * 100)}%
-            </CardDescription>
+            <CardDescription>Confidence: {Math.round(result.confidence * 100)}%</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
               <Label className="text-sm font-medium">Translation</Label>
-              <div className="mt-1 p-3 bg-muted rounded-md">
-                {result.translation}
-              </div>
+              <div className="mt-1 p-3 bg-muted rounded-md">{result.translation}</div>
             </div>
             <div className="flex gap-2">
               <Badge variant="outline">{result.language}</Badge>
@@ -264,8 +258,8 @@ function TranslationTab() {
 }
 
 function GrammarTab() {
-  const [inputText, setInputText] = useState('');
-  const [language, setLanguage] = useState('en');
+  const [inputText, setInputText] = useState("");
+  const [language, setLanguage] = useState("en");
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<GrammarCorrectionResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -281,7 +275,7 @@ function GrammarTab() {
       const correction = await correctGrammar(inputText, language);
       setResult(correction);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Grammar correction failed');
+      setError(err instanceof Error ? err.message : "Grammar correction failed");
     } finally {
       setIsLoading(false);
     }
@@ -296,7 +290,7 @@ function GrammarTab() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {LANGUAGE_OPTIONS.map(lang => (
+            {LANGUAGE_OPTIONS.map((lang) => (
               <SelectItem key={lang.code} value={lang.code}>
                 {lang.name}
               </SelectItem>
@@ -315,16 +309,10 @@ function GrammarTab() {
           rows={4}
           maxLength={2000}
         />
-        <div className="text-sm text-muted-foreground">
-          {inputText.length}/2000 characters
-        </div>
+        <div className="text-sm text-muted-foreground">{inputText.length}/2000 characters</div>
       </div>
 
-      <Button 
-        onClick={handleCorrect} 
-        disabled={!inputText.trim() || isLoading}
-        className="w-full"
-      >
+      <Button onClick={handleCorrect} disabled={!inputText.trim() || isLoading} className="w-full">
         {isLoading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -351,22 +339,16 @@ function GrammarTab() {
               <Edit3 className="h-5 w-5" />
               Grammar Correction
             </CardTitle>
-            <CardDescription>
-              Confidence: {Math.round(result.confidence * 100)}%
-            </CardDescription>
+            <CardDescription>Confidence: {Math.round(result.confidence * 100)}%</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
               <Label className="text-sm font-medium">Original</Label>
-              <div className="mt-1 p-3 bg-muted rounded-md">
-                {result.original}
-              </div>
+              <div className="mt-1 p-3 bg-muted rounded-md">{result.original}</div>
             </div>
             <div>
               <Label className="text-sm font-medium">Corrected</Label>
-              <div className="mt-1 p-3 bg-green-50 border border-green-200 rounded-md">
-                {result.corrected}
-              </div>
+              <div className="mt-1 p-3 bg-green-50 border border-green-200 rounded-md">{result.corrected}</div>
             </div>
             {result.corrections.length > 0 && (
               <div>
@@ -393,8 +375,8 @@ function GrammarTab() {
 }
 
 function VocabularyTab() {
-  const [word, setWord] = useState('');
-  const [context, setContext] = useState('');
+  const [word, setWord] = useState("");
+  const [context, setContext] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<VocabularyResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -410,7 +392,7 @@ function VocabularyTab() {
       const explanation = await explainVocabulary(word, context || undefined);
       setResult(explanation);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Vocabulary explanation failed');
+      setError(err instanceof Error ? err.message : "Vocabulary explanation failed");
     } finally {
       setIsLoading(false);
     }
@@ -439,16 +421,10 @@ function VocabularyTab() {
           rows={2}
           maxLength={500}
         />
-        <div className="text-sm text-muted-foreground">
-          {context.length}/500 characters
-        </div>
+        <div className="text-sm text-muted-foreground">{context.length}/500 characters</div>
       </div>
 
-      <Button 
-        onClick={handleExplain} 
-        disabled={!word.trim() || isLoading}
-        className="w-full"
-      >
+      <Button onClick={handleExplain} disabled={!word.trim() || isLoading} className="w-full">
         {isLoading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -482,9 +458,7 @@ function VocabularyTab() {
           <CardContent className="space-y-4">
             <div>
               <Label className="text-sm font-medium">Definition</Label>
-              <div className="mt-1 p-3 bg-muted rounded-md">
-                {result.definition}
-              </div>
+              <div className="mt-1 p-3 bg-muted rounded-md">{result.definition}</div>
             </div>
 
             {result.examples.length > 0 && (
@@ -546,9 +520,7 @@ export function AIToolsPanel() {
           <Sparkles className="h-6 w-6" />
           AI Language Tools
         </CardTitle>
-        <CardDescription>
-          Translate text, correct grammar, and explore vocabulary with AI assistance
-        </CardDescription>
+        <CardDescription>Translate text, correct grammar, and explore vocabulary with AI assistance</CardDescription>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="translation" className="w-full">
@@ -566,15 +538,15 @@ export function AIToolsPanel() {
               Vocabulary
             </TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="translation" className="mt-6">
             <TranslationTab />
           </TabsContent>
-          
+
           <TabsContent value="grammar" className="mt-6">
             <GrammarTab />
           </TabsContent>
-          
+
           <TabsContent value="vocabulary" className="mt-6">
             <VocabularyTab />
           </TabsContent>

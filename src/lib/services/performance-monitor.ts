@@ -63,7 +63,7 @@ class PerformanceMonitor {
         memoryUsage: this.getMemoryUsage() - startMemory,
         timestamp: Date.now(),
         success: true,
-        metadata
+        metadata,
       });
     };
   }
@@ -71,24 +71,24 @@ class PerformanceMonitor {
   /**
    * Record API performance metrics
    */
-  recordAPIMetric(metric: Omit<APIMetrics, 'timestamp'>): void {
+  recordAPIMetric(metric: Omit<APIMetrics, "timestamp">): void {
     if (!this.isEnabled) return;
 
     this.recordMetric({
       ...metric,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
 
   /**
    * Record AI operation metrics
    */
-  recordAIMetric(metric: Omit<AIMetrics, 'timestamp'>): void {
+  recordAIMetric(metric: Omit<AIMetrics, "timestamp">): void {
     if (!this.isEnabled) return;
 
     this.recordMetric({
       ...metric,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
 
@@ -104,22 +104,22 @@ class PerformanceMonitor {
       timestamp: Date.now(),
       success: false,
       error: error.message,
-      metadata
+      metadata,
     });
   }
 
   /**
    * Get performance statistics
    */
-  getStats(timeWindowMs: number = 60000): {
+  getStats(timeWindowMs = 60000): {
     totalRequests: number;
     averageResponseTime: number;
     errorRate: number;
-    slowestOperations: Array<{ operation: string; avgTime: number }>;
-    mostUsedOperations: Array<{ operation: string; count: number }>;
+    slowestOperations: { operation: string; avgTime: number }[];
+    mostUsedOperations: { operation: string; count: number }[];
   } {
     const cutoff = Date.now() - timeWindowMs;
-    const recentMetrics = this.metrics.filter(m => m.timestamp > cutoff);
+    const recentMetrics = this.metrics.filter((m) => m.timestamp > cutoff);
 
     if (recentMetrics.length === 0) {
       return {
@@ -127,11 +127,11 @@ class PerformanceMonitor {
         averageResponseTime: 0,
         errorRate: 0,
         slowestOperations: [],
-        mostUsedOperations: []
+        mostUsedOperations: [],
       };
     }
 
-    const successfulMetrics = recentMetrics.filter(m => m.success);
+    const successfulMetrics = recentMetrics.filter((m) => m.success);
     const errorCount = recentMetrics.length - successfulMetrics.length;
 
     // Calculate average response time
@@ -140,12 +140,12 @@ class PerformanceMonitor {
 
     // Group by operation for statistics
     const operationStats = new Map<string, { totalTime: number; count: number }>();
-    
-    successfulMetrics.forEach(metric => {
+
+    successfulMetrics.forEach((metric) => {
       const existing = operationStats.get(metric.operation) || { totalTime: 0, count: 0 };
       operationStats.set(metric.operation, {
         totalTime: existing.totalTime + metric.responseTime,
-        count: existing.count + 1
+        count: existing.count + 1,
       });
     });
 
@@ -153,7 +153,7 @@ class PerformanceMonitor {
     const slowestOperations = Array.from(operationStats.entries())
       .map(([operation, stats]) => ({
         operation,
-        avgTime: stats.totalTime / stats.count
+        avgTime: stats.totalTime / stats.count,
       }))
       .sort((a, b) => b.avgTime - a.avgTime)
       .slice(0, 5);
@@ -162,7 +162,7 @@ class PerformanceMonitor {
     const mostUsedOperations = Array.from(operationStats.entries())
       .map(([operation, stats]) => ({
         operation,
-        count: stats.count
+        count: stats.count,
       }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
@@ -172,26 +172,27 @@ class PerformanceMonitor {
       averageResponseTime,
       errorRate: errorCount / recentMetrics.length,
       slowestOperations,
-      mostUsedOperations
+      mostUsedOperations,
     };
   }
 
   /**
    * Get metrics for a specific operation
    */
-  getOperationMetrics(operation: string, timeWindowMs: number = 60000): PerformanceMetrics[] {
+  getOperationMetrics(operation: string, timeWindowMs = 60000): PerformanceMetrics[] {
     const cutoff = Date.now() - timeWindowMs;
     return this.metrics
-      .filter(m => m.operation === operation && m.timestamp > cutoff)
+      .filter((m) => m.operation === operation && m.timestamp > cutoff)
       .sort((a, b) => b.timestamp - a.timestamp);
   }
 
   /**
    * Clear old metrics
    */
-  clearOldMetrics(maxAgeMs: number = 3600000): void { // Default: 1 hour
+  clearOldMetrics(maxAgeMs = 3600000): void {
+    // Default: 1 hour
     const cutoff = Date.now() - maxAgeMs;
-    this.metrics = this.metrics.filter(m => m.timestamp > cutoff);
+    this.metrics = this.metrics.filter((m) => m.timestamp > cutoff);
   }
 
   /**
@@ -214,18 +215,18 @@ class PerformanceMonitor {
 
   private recordMetric(metric: PerformanceMetrics): void {
     this.metrics.push(metric);
-    
+
     // Keep only the last maxMetrics
     if (this.metrics.length > this.maxMetrics) {
       this.metrics = this.metrics.slice(-this.maxMetrics);
     }
 
     // Log to console in development
-    if (process.env.NODE_ENV === 'development') {
-      const level = metric.success ? 'info' : 'error';
+    if (process.env.NODE_ENV === "development") {
+      const level = metric.success ? "info" : "error";
       const message = `${metric.operation} - ${Math.round(metric.responseTime)}ms`;
-      
-      if (level === 'error') {
+
+      if (level === "error") {
         console.error(`[PERF] ${message}`, metric.error);
       } else {
         console.info(`[PERF] ${message}`);
@@ -234,7 +235,7 @@ class PerformanceMonitor {
   }
 
   private getMemoryUsage(): number {
-    if (typeof performance !== 'undefined' && 'memory' in performance) {
+    if (typeof performance !== "undefined" && "memory" in performance) {
       return (performance as any).memory.usedJSHeapSize;
     }
     return 0;
@@ -254,23 +255,20 @@ export const performanceMonitor = new PerformanceMonitor();
 /**
  * Decorator for measuring function performance
  */
-export function measurePerformance<T extends (...args: any[]) => any>(
-  operation: string,
-  fn: T
-): T {
+export function measurePerformance<T extends (...args: any[]) => any>(operation: string, fn: T): T {
   return ((...args: Parameters<T>): ReturnType<T> => {
     const endTimer = performanceMonitor.startTimer(operation);
-    
+
     try {
       const result = fn(...args);
-      
+
       if (result instanceof Promise) {
         return result
-          .then(value => {
+          .then((value) => {
             endTimer();
             return value;
           })
-          .catch(error => {
+          .catch((error) => {
             performanceMonitor.recordError(operation, error);
             throw error;
           }) as ReturnType<T>;
@@ -292,13 +290,13 @@ export function createAPIPerformanceMiddleware() {
   return (req: any, res: any, next: any) => {
     const startTime = performance.now();
     const startMemory = performanceMonitor.getMemoryUsage();
-    
+
     // Override res.end to capture response metrics
     const originalEnd = res.end;
-    res.end = function(chunk: any, encoding: any) {
+    res.end = function (chunk: any, encoding: any) {
       const responseTime = performance.now() - startTime;
       const memoryUsage = performanceMonitor.getMemoryUsage() - startMemory;
-      
+
       performanceMonitor.recordAPIMetric({
         operation: `${req.method} ${req.path}`,
         endpoint: req.path,
@@ -307,15 +305,15 @@ export function createAPIPerformanceMiddleware() {
         responseTime,
         memoryUsage,
         userId: req.user?.id,
-        requestId: req.headers['x-request-id'],
+        requestId: req.headers["x-request-id"],
         success: res.statusCode < 400,
-        requestSize: req.headers['content-length'] ? parseInt(req.headers['content-length']) : undefined,
-        responseSize: chunk ? chunk.length : undefined
+        requestSize: req.headers["content-length"] ? parseInt(req.headers["content-length"]) : undefined,
+        responseSize: chunk ? chunk.length : undefined,
       });
-      
+
       originalEnd.call(this, chunk, encoding);
     };
-    
+
     next();
   };
 }
@@ -325,20 +323,20 @@ export function createAPIPerformanceMiddleware() {
  */
 export function getHealthCheckData() {
   const stats = performanceMonitor.getStats();
-  
+
   return {
-    status: 'healthy',
+    status: "healthy",
     timestamp: new Date().toISOString(),
     performance: {
       totalRequests: stats.totalRequests,
       averageResponseTime: Math.round(stats.averageResponseTime),
       errorRate: Math.round(stats.errorRate * 100) / 100,
-      uptime: process.uptime()
+      uptime: process.uptime(),
     },
     memory: {
       used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
       total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024),
-      external: Math.round(process.memoryUsage().external / 1024 / 1024)
-    }
+      external: Math.round(process.memoryUsage().external / 1024 / 1024),
+    },
   };
 }

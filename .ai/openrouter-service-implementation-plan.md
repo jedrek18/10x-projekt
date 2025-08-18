@@ -151,32 +151,32 @@ class OpenRouterError extends Error {
     public retryable: boolean = false
   ) {
     super(message);
-    this.name = 'OpenRouterError';
+    this.name = "OpenRouterError";
   }
 }
 
 class ValidationError extends OpenRouterError {
   constructor(message: string) {
-    super(message, 'VALIDATION_ERROR', 400, false);
+    super(message, "VALIDATION_ERROR", 400, false);
   }
 }
 
 class AuthenticationError extends OpenRouterError {
   constructor(message: string) {
-    super(message, 'AUTHENTICATION_ERROR', 401, false);
+    super(message, "AUTHENTICATION_ERROR", 401, false);
   }
 }
 
 class RateLimitError extends OpenRouterError {
   constructor(message: string, retryAfter?: number) {
-    super(message, 'RATE_LIMIT_ERROR', 429, true);
+    super(message, "RATE_LIMIT_ERROR", 429, true);
     this.retryAfter = retryAfter;
   }
 }
 
 class ModelUnavailableError extends OpenRouterError {
   constructor(model: string) {
-    super(`Model ${model} is not available`, 'MODEL_UNAVAILABLE', 400, false);
+    super(`Model ${model} is not available`, "MODEL_UNAVAILABLE", 400, false);
   }
 }
 ```
@@ -213,7 +213,7 @@ class ModelUnavailableError extends OpenRouterError {
 // Użycie zmiennych środowiskowych w Supabase
 const apiKey = process.env.OPENROUTER_API_KEY;
 if (!apiKey) {
-  throw new Error('OPENROUTER_API_KEY environment variable is required');
+  throw new Error("OPENROUTER_API_KEY environment variable is required");
 }
 ```
 
@@ -225,12 +225,12 @@ private validateUserInput(input: string): boolean {
   if (input.length > 10000) {
     throw new ValidationError('User message too long');
   }
-  
+
   // Sprawdzenie zawartości
   if (input.includes('__proto__') || input.includes('constructor')) {
     throw new ValidationError('Invalid input content');
   }
-  
+
   return true;
 }
 ```
@@ -243,16 +243,16 @@ private rateLimiter = new Map<string, { count: number; resetTime: number }>();
 private checkRateLimit(userId: string): boolean {
   const now = Date.now();
   const userLimit = this.rateLimiter.get(userId);
-  
+
   if (!userLimit || now > userLimit.resetTime) {
     this.rateLimiter.set(userId, { count: 1, resetTime: now + 60000 });
     return true;
   }
-  
+
   if (userLimit.count >= 10) { // 10 requests per minute
     return false;
   }
-  
+
   userLimit.count++;
   return true;
 }
@@ -263,6 +263,7 @@ private checkRateLimit(userId: string): boolean {
 ### Krok 1: Konfiguracja środowiska
 
 1. Dodaj zmienną środowiskową w Supabase:
+
    ```bash
    OPENROUTER_API_KEY=your_api_key_here
    ```
@@ -277,7 +278,7 @@ private checkRateLimit(userId: string): boolean {
 Utwórz plik `src/lib/services/openrouter.service.ts`:
 
 ```typescript
-import { z } from 'zod';
+import { z } from "zod";
 
 // Definicje typów i interfejsów
 // Implementacja klasy OpenRouterService
@@ -290,13 +291,13 @@ Utwórz plik `src/lib/config/models.ts`:
 
 ```typescript
 export const AVAILABLE_MODELS = {
-  'openai/gpt-4o-mini': {
-    name: 'GPT-4o Mini',
+  "openai/gpt-4o-mini": {
+    name: "GPT-4o Mini",
     maxTokens: 16384,
     costPer1kTokens: 0.00015,
   },
-  'anthropic/claude-3-haiku': {
-    name: 'Claude 3 Haiku',
+  "anthropic/claude-3-haiku": {
+    name: "Claude 3 Haiku",
     maxTokens: 200000,
     costPer1kTokens: 0.00025,
   },
@@ -310,38 +311,38 @@ Utwórz plik `src/lib/schemas/response-schemas.ts`:
 
 ```typescript
 export const TRANSLATION_SCHEMA = {
-  type: 'json_schema',
+  type: "json_schema",
   json_schema: {
-    name: 'translation',
+    name: "translation",
     strict: true,
     schema: {
-      type: 'object',
+      type: "object",
       properties: {
-        translation: { type: 'string' },
-        confidence: { type: 'number', minimum: 0, maximum: 1 },
-        language: { type: 'string' }
+        translation: { type: "string" },
+        confidence: { type: "number", minimum: 0, maximum: 1 },
+        language: { type: "string" },
       },
-      required: ['translation']
-    }
-  }
+      required: ["translation"],
+    },
+  },
 };
 
 export const FLASHCARD_SCHEMA = {
-  type: 'json_schema',
+  type: "json_schema",
   json_schema: {
-    name: 'flashcard',
+    name: "flashcard",
     strict: true,
     schema: {
-      type: 'object',
+      type: "object",
       properties: {
-        front: { type: 'string' },
-        back: { type: 'string' },
-        difficulty: { type: 'string', enum: ['easy', 'medium', 'hard'] },
-        tags: { type: 'array', items: { type: 'string' } }
+        front: { type: "string" },
+        back: { type: "string" },
+        difficulty: { type: "string", enum: ["easy", "medium", "hard"] },
+        tags: { type: "array", items: { type: "string" } },
       },
-      required: ['front', 'back']
-    }
-  }
+      required: ["front", "back"],
+    },
+  },
 };
 ```
 
@@ -350,8 +351,8 @@ export const FLASHCARD_SCHEMA = {
 Zaktualizuj `src/lib/services/ai.service.ts`:
 
 ```typescript
-import { OpenRouterService } from './openrouter.service';
-import { TRANSLATION_SCHEMA, FLASHCARD_SCHEMA } from '../schemas/response-schemas';
+import { OpenRouterService } from "./openrouter.service";
+import { TRANSLATION_SCHEMA, FLASHCARD_SCHEMA } from "../schemas/response-schemas";
 
 export class AiService {
   private openRouter: OpenRouterService;
@@ -359,10 +360,10 @@ export class AiService {
   constructor() {
     this.openRouter = new OpenRouterService({
       apiKey: process.env.OPENROUTER_API_KEY!,
-      defaultModel: 'openai/gpt-4o-mini',
-      systemMessage: 'Jesteś asystentem do nauki języków obcych...',
+      defaultModel: "openai/gpt-4o-mini",
+      systemMessage: "Jesteś asystentem do nauki języków obcych...",
       enableCache: true,
-      cacheTtl: 3600
+      cacheTtl: 3600,
     });
   }
 
@@ -372,8 +373,8 @@ export class AiService {
       responseFormat: FLASHCARD_SCHEMA,
       parameters: {
         temperature: 0.7,
-        max_tokens: 1000
-      }
+        max_tokens: 1000,
+      },
     });
   }
 
@@ -383,8 +384,8 @@ export class AiService {
       responseFormat: TRANSLATION_SCHEMA,
       parameters: {
         temperature: 0.3,
-        max_tokens: 500
-      }
+        max_tokens: 500,
+      },
     });
   }
 }
@@ -395,20 +396,20 @@ export class AiService {
 Zaktualizuj `src/pages/api/ai/generate.ts`:
 
 ```typescript
-import type { APIRoute } from 'astro';
-import { AiService } from '../../../lib/services/ai.service';
-import { rateLimit } from '../../../lib/rate-limit';
+import type { APIRoute } from "astro";
+import { AiService } from "../../../lib/services/ai.service";
+import { rateLimit } from "../../../lib/rate-limit";
 
 export const POST: APIRoute = async ({ request }) => {
   try {
     // Rate limiting
-    const identifier = request.headers.get('x-forwarded-for') || 'unknown';
+    const identifier = request.headers.get("x-forwarded-for") || "unknown";
     const { success } = await rateLimit(identifier);
-    
+
     if (!success) {
-      return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), {
+      return new Response(JSON.stringify({ error: "Rate limit exceeded" }), {
         status: 429,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { "Content-Type": "application/json" },
       });
     }
 
@@ -416,29 +417,28 @@ export const POST: APIRoute = async ({ request }) => {
     const { text, type, count } = body;
 
     const aiService = new AiService();
-    
+
     let result;
     switch (type) {
-      case 'flashcards':
+      case "flashcards":
         result = await aiService.generateFlashcards(text, count);
         break;
-      case 'translation':
+      case "translation":
         result = await aiService.translateText(text, body.targetLanguage);
         break;
       default:
-        throw new Error('Invalid generation type');
+        throw new Error("Invalid generation type");
     }
 
     return new Response(JSON.stringify(result), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { "Content-Type": "application/json" },
     });
-
   } catch (error) {
-    console.error('AI generation error:', error);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+    console.error("AI generation error:", error);
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { "Content-Type": "application/json" },
     });
   }
 };
@@ -449,35 +449,35 @@ export const POST: APIRoute = async ({ request }) => {
 Utwórz plik `tests/openrouter.service.test.ts`:
 
 ```typescript
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { OpenRouterService } from '../src/lib/services/openrouter.service';
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { OpenRouterService } from "../src/lib/services/openrouter.service";
 
-describe('OpenRouterService', () => {
+describe("OpenRouterService", () => {
   let service: OpenRouterService;
 
   beforeEach(() => {
     service = new OpenRouterService({
-      apiKey: 'test-key',
-      defaultModel: 'openai/gpt-4o-mini'
+      apiKey: "test-key",
+      defaultModel: "openai/gpt-4o-mini",
     });
   });
 
-  it('should validate API key format', () => {
+  it("should validate API key format", () => {
     expect(() => {
-      new OpenRouterService({ apiKey: 'invalid-key' });
-    }).toThrow('Invalid API key format');
+      new OpenRouterService({ apiKey: "invalid-key" });
+    }).toThrow("Invalid API key format");
   });
 
-  it('should send message with correct format', async () => {
+  it("should send message with correct format", async () => {
     // Mock fetch
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve({ choices: [{ message: { content: 'test' } }] })
+      json: () => Promise.resolve({ choices: [{ message: { content: "test" } }] }),
     });
 
     const result = await service.sendMessage({
-      userMessage: 'Test message',
-      responseFormat: TRANSLATION_SCHEMA
+      userMessage: "Test message",
+      responseFormat: TRANSLATION_SCHEMA,
     });
 
     expect(result).toBeDefined();
@@ -491,13 +491,13 @@ Dodaj do `src/lib/services/error-logger.ts`:
 
 ```typescript
 export const logOpenRouterError = (error: Error, context: string) => {
-  console.error('OpenRouter Error:', {
+  console.error("OpenRouter Error:", {
     message: error.message,
     context,
     timestamp: new Date().toISOString(),
-    stack: error.stack
+    stack: error.stack,
   });
-  
+
   // Można dodać integrację z systemem monitoringu
   // np. Sentry, LogRocket, etc.
 };
@@ -507,7 +507,7 @@ export const logOpenRouterError = (error: Error, context: string) => {
 
 Zaktualizuj `docs/ai-api.md`:
 
-```markdown
+````markdown
 # AI API Documentation
 
 ## Endpoints
@@ -517,6 +517,7 @@ Zaktualizuj `docs/ai-api.md`:
 Generuje treści AI na podstawie podanego tekstu.
 
 **Request Body:**
+
 ```json
 {
   "text": "Tekst do przetworzenia",
@@ -525,27 +526,33 @@ Generuje treści AI na podstawie podanego tekstu.
   "targetLanguage": "en"
 }
 ```
+````
 
 **Response:**
+
 ```json
 {
-  "choices": [{
-    "message": {
-      "content": "{\"translation\": \"Hello world\", \"confidence\": 0.95}"
+  "choices": [
+    {
+      "message": {
+        "content": "{\"translation\": \"Hello world\", \"confidence\": 0.95}"
+      }
     }
-  }]
+  ]
 }
 ```
-```
+
+````
 
 ### Krok 10: Wdrożenie
 
 1. Przetestuj lokalnie:
    ```bash
    npm run dev
-   ```
+````
 
 2. Sprawdź testy:
+
    ```bash
    npm test
    ```

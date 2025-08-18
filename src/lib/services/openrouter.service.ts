@@ -24,6 +24,10 @@ export interface MessageRequest {
   conversationId?: string;
 }
 
+export interface StreamMessageRequest extends MessageRequest {
+  stream?: boolean;
+}
+
 export interface ResponseFormat {
   type: "json_schema";
   json_schema: {
@@ -67,6 +71,20 @@ export interface OpenRouterResponse {
     completion_tokens: number;
     total_tokens: number;
   };
+  model: string;
+  id: string;
+  created: number;
+}
+
+export interface OpenRouterStreamChunk {
+  choices: {
+    delta: {
+      content?: string;
+      role?: string;
+    };
+    finish_reason: string | null;
+    index: number;
+  }[];
   model: string;
   id: string;
   created: number;
@@ -228,6 +246,46 @@ export class OpenRouterService {
   }
 
   /**
+   * Send a message to OpenRouter API with streaming support
+   */
+  async sendMessageStream(request: StreamMessageRequest): Promise<ReadableStream<Uint8Array>> {
+    // Validate input
+    this.validateUserInput(request.userMessage);
+
+    // Check rate limit
+    const userId = request.conversationId || "default";
+    if (!this.checkRateLimit(userId)) {
+      throw new RateLimitError("Rate limit exceeded. Please try again later.");
+    }
+
+    // Build request with stream: true
+    const headers = this.buildRequestHeaders();
+    const body = this.buildRequestBody({ ...request, stream: true });
+
+    // Send request with retry logic
+    const response = await this.retryWithBackoff(async () => {
+      const response = await fetch(`${this.baseUrl}/chat/completions`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(this.timeout),
+      });
+
+      if (!response.ok) {
+        await this.handleApiError(response);
+      }
+
+      return response;
+    });
+
+    // Return the response body as a readable stream
+    if (!response.body) {
+      throw new OpenRouterError("No response body received", "NO_BODY");
+    }
+    return response.body;
+  }
+
+  /**
    * Set system message
    */
   setSystemMessage(message: string): void {
@@ -346,7 +404,7 @@ export class OpenRouterService {
     };
   }
 
-  private buildRequestBody(request: MessageRequest): object {
+  private buildRequestBody(request: MessageRequest | StreamMessageRequest): object {
     const messages = [];
 
     // Add system message
@@ -381,6 +439,11 @@ export class OpenRouterService {
     // Add response format if specified
     if (request.responseFormat || this.currentResponseFormat) {
       body.response_format = request.responseFormat || this.currentResponseFormat;
+    }
+
+    // Add stream parameter if specified
+    if ("stream" in request && request.stream) {
+      body.stream = true;
     }
 
     console.log("OpenRouter request body:", JSON.stringify(body, null, 2));

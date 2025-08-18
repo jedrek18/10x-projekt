@@ -7,15 +7,18 @@ import { json } from "../../lib/http";
 export const GET: APIRoute = async () => {
   try {
     const healthData = getHealthCheckData();
-    
+
     return json(healthData, 200);
   } catch (error) {
     console.error("[api/health] GET failed", error);
-    
-    return json({
-      status: 'unhealthy',
-      timestamp: new Date().toISOString(),
-      error: 'Health check failed'
-    }, 500);
+
+    return json(
+      {
+        status: "unhealthy",
+        timestamp: new Date().toISOString(),
+        error: "Health check failed",
+      },
+      500
+    );
   }
 };

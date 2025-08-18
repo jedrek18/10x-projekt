@@ -12,9 +12,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
     const { userId } = await assertAuthenticated(supabase);
 
     // Rate limiting
-    const identifier = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
+    const identifier = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
     const { limited } = await rateLimit(identifier);
-    
+
     if (limited) {
       return errorJson("Rate limit exceeded", "rate_limit_exceeded", 429);
     }
@@ -37,7 +37,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     const { text, targetLanguage, sourceLanguage } = parsed.data;
 
     // Add source language to the prompt if provided
-    const prompt = sourceLanguage 
+    const prompt = sourceLanguage
       ? `Przetłumacz następujący tekst z języka ${sourceLanguage} na język ${targetLanguage}: ${text}`
       : `Przetłumacz następujący tekst na język ${targetLanguage}: ${text}`;
 
@@ -46,20 +46,20 @@ export const POST: APIRoute = async ({ request, locals }) => {
     return json(result, 200);
   } catch (error) {
     console.error("[api/ai/translate] POST failed", error);
-    
+
     if (error instanceof UnauthorizedError) {
       return errorJson("Unauthorized", "unauthorized", 401);
     }
-    
+
     if (error instanceof Error) {
-      if (error.message.includes('Rate limit')) {
+      if (error.message.includes("Rate limit")) {
         return errorJson("Rate limit exceeded", "rate_limit_exceeded", 429);
       }
-      if (error.message.includes('Invalid API key')) {
+      if (error.message.includes("Invalid API key")) {
         return errorJson("Service temporarily unavailable", "service_unavailable", 503);
       }
     }
-    
+
     return errorJson("Internal Server Error", "server_error", 500);
   }
 };

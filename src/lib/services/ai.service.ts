@@ -33,7 +33,7 @@ function getOpenRouterService(): OpenRouterService {
     openRouterService = new OpenRouterService({
       apiKey,
       defaultModel: DEFAULT_MODEL,
-      systemMessage: `Jesteś ekspertem w tworzeniu wysokiej jakości fiszek do nauki języków obcych. Twoje zadania:
+      systemMessage: `Jesteś ekspertem w tworzeniu wysokiej jakości fiszek do nauki. Twoje zadania:
 
 GENEROWANIE FISZEK:
 - Twórz jasne, konkretne pytania (front) maksymalnie 100 znaków
@@ -42,14 +42,8 @@ GENEROWANIE FISZEK:
 - Unikaj oczywistych pytań, skup się na kluczowych pojęciach
 - Dodawaj poziom trudności (easy/medium/hard) i tagi tematyczne
 
-INNE FUNKCJE:
-- Tłumaczenie tekstów z wysoką dokładnością
-- Korekta gramatyczna z wyjaśnieniami
-- Wyjaśnianie słownictwa z przykładami
-- Analiza tekstów pod kątem trudności
-
 ZASADY:
-- Zawsze odpowiadaj w języku polskim
+- Zawsze odpowiadaj w języku tekstu wejściowego
 - Używaj precyzyjnego i edukacyjnego języka
 - Dostosowuj poziom trudności do kontekstu
 - Zapewniaj różnorodność w typach pytań`,
@@ -113,19 +107,19 @@ function deduplicateProposals(items: AiGenerationProposalDTO[]): AiGenerationPro
  */
 function cleanAiResponse(content: string): string {
   // Remove markdown code blocks
-  let cleaned = content.replace(/```json\s*/g, '').replace(/```\s*$/g, '');
-  
+  let cleaned = content.replace(/```json\s*/g, "").replace(/```\s*$/g, "");
+
   // Remove any leading/trailing whitespace
   cleaned = cleaned.trim();
-  
+
   // If the content still doesn't start with {, try to find JSON object
-  if (!cleaned.startsWith('{')) {
+  if (!cleaned.startsWith("{")) {
     const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       cleaned = jsonMatch[0];
     }
   }
-  
+
   return cleaned;
 }
 
@@ -135,8 +129,7 @@ function cleanAiResponse(content: string): string {
 
 export async function generateProposals(
   supabase: TypedSupabase,
-  command: AiGenerateCommand,
-  options?: { signal?: AbortSignal }
+  command: AiGenerateCommand
 ): Promise<AiGenerateResponse> {
   const startTime = performance.now();
 
@@ -199,7 +192,7 @@ WAŻNE: Odpowiedz TYLKO w formacie JSON bez dodatkowego tekstu. Struktura:
       // Clean the response from markdown formatting
       const cleanedContent = cleanAiResponse(content);
       console.log("Cleaned AI response:", cleanedContent);
-      
+
       parsedData = JSON.parse(cleanedContent);
       console.log("Parsed AI response:", JSON.stringify(parsedData, null, 2));
     } catch (error) {
@@ -217,7 +210,7 @@ WAŻNE: Odpowiedz TYLKO w formacie JSON bez dodatkowego tekstu. Struktura:
       console.warn("No flashcards found in AI response, but continuing...");
     }
 
-    const items: AiGenerationProposalDTO[] = flashcards.map((card: any) => ({
+    const items: AiGenerationProposalDTO[] = flashcards.map((card: { front?: string; back?: string }) => ({
       front: normalizeProposalText(card.front || "", 100), // Max 100 chars for front
       back: normalizeProposalText(card.back || "", 200), // Max 200 chars for back
     }));
@@ -257,8 +250,6 @@ WAŻNE: Odpowiedz TYLKO w formacie JSON bez dodatkowego tekstu. Struktura:
       request_id,
     };
   } catch (error) {
-    const processingTime = performance.now() - startTime;
-
     // Log error metrics
     logAIError(error as Error, "generate", "generateProposals", {
       userId: "unknown",
@@ -287,96 +278,168 @@ export async function* generateProposalsStream(
     console.log("AI Service: Clearing OpenRouter cache before stream generation");
     service.clearCache();
 
-    // Generate flashcards using OpenRouter with optimized prompt
+    // === JSONL PROMPT: każda linia to osobny obiekt JSON (1 fiszka) ===
     const optimizedPrompt = `Wygeneruj ${command.max_proposals} wysokiej jakości fiszek do nauki języków obcych z podanego tekstu.
+
+FORMAT WYJŚCIA (KLUCZOWE):
+- ZWRACAJ JSONL: jedna linia = jeden obiekt JSON, bez tablicy i bez dodatkowego tekstu.
+- Każda linia dokładnie w formacie:
+{"front":"...", "back":"...", "difficulty":"easy|medium|hard", "tags":["..."]}
 
 ZASADY GENEROWANIA FISZEK:
 1. Front (pytanie) - maksymalnie 100 znaków, jasne i konkretne pytanie
 2. Back (odpowiedź) - maksymalnie 200 znaków, zwięzła ale kompletna odpowiedź
-3. Różnorodność - mieszaj różne typy pytań: definicje, tłumaczenia, uzupełnianie luk, pytania o kontekst
+3. Różnorodność - mieszaj typy pytań: definicje, tłumaczenia, uzupełnianie luk, pytania o kontekst
 4. Jakość - unikaj oczywistych pytań, skup się na kluczowych pojęciach
 5. Język - używaj języka polskiego dla pytań i odpowiedzi
+6. NIE używaj markdownu ani bloków kodu; żadnych wstępów ani podsumowań.
 
 TEKST DO ANALIZY:
-${command.source_text}
+${command.source_text}`;
 
-WAŻNE: Odpowiedz TYLKO w formacie JSON bez dodatkowego tekstu. Struktura:
-{
-  "flashcards": [
-    {
-      "front": "pytanie",
-      "back": "odpowiedź",
-      "difficulty": "easy|medium|hard",
-      "tags": ["tag1", "tag2"]
-    }
-  ]
-}`;
-
-    const response = await service.sendMessage({
+    // Use streaming API
+    const stream = await service.sendMessageStream({
       userMessage: optimizedPrompt,
-      // Usuwamy responseFormat, aby AI zwróciło zwykły tekst JSON
       parameters: {
-        temperature: 0.6, // Niższa temperatura dla bardziej przewidywalnych wyników
-        max_tokens: Math.min(3000, command.max_proposals * 150), // Dynamiczne dostosowanie tokenów
+        temperature: 0.6,
+        max_tokens: Math.min(3000, command.max_proposals * 150),
         top_p: 0.9,
-        frequency_penalty: 0.1, // Zachęca do różnorodności
+        frequency_penalty: 0.1,
         presence_penalty: 0.1,
+        // kluczowe: endpoint musi używać SSE/stream=true — zapewnia to OpenRouterService
       },
       conversationId: userId,
     });
 
-    // Parse the response
-    const content = response.choices[0]?.message?.content;
-    if (!content) {
-      throw new Error("No response content received");
-    }
+    // === Parsowanie strumienia JSONL (1 linia = 1 fiszka) ===
+    const reader = stream.getReader();
+    const decoder = new TextDecoder();
 
-    console.log("AI Stream Response content:", content);
-
-    let parsedData;
-    try {
-      // Clean the response from markdown formatting
-      const cleanedContent = cleanAiResponse(content);
-      console.log("Cleaned AI response:", cleanedContent);
-      
-      parsedData = JSON.parse(cleanedContent);
-      console.log("Parsed AI stream response:", JSON.stringify(parsedData, null, 2));
-    } catch (error) {
-      console.error("Failed to parse AI stream response:", error);
-      console.error("Raw content:", content);
-      throw new Error(`Failed to parse AI response: ${error}`);
-    }
-
-    // Extract flashcards and stream them with length validation
-    const flashcards = parsedData.flashcards || [];
-    console.log("Extracted flashcards count (stream):", flashcards.length);
-
-    // Usuwamy sprawdzanie długości - AI może zwrócić mniej fiszek niż żądane
-    if (flashcards.length === 0) {
-      console.warn("No flashcards found in AI stream response, but continuing...");
-    }
-
-    const items: AiGenerationProposalDTO[] = flashcards.map((card: any) => ({
-      front: normalizeProposalText(card.front || "", 100), // Max 100 chars for front
-      back: normalizeProposalText(card.back || "", 200), // Max 200 chars for back
-    }));
-
-    console.log("Items before deduplication (stream):", items.length);
-    const filtered = deduplicateProposals(items);
-    console.log("Items after deduplication (stream):", filtered.length);
-
+    // sseBuffer składa linie SSE ("data: {...}\n")
+    let sseBuffer = "";
+    // jsonlBuffer składa treść content (może przychodzić fragmentami)
+    let jsonlBuffer = "";
+    // przechowujemy rozpoczętą, ale niekompletną linię JSONL (bez newline)
+    let carryLine = "";
+    // unikalność fiszek
+    const seen = new Set<string>();
+    // licznik wyemitowanych fiszek
     let count = 0;
-    for (const item of filtered) {
-      if (options?.signal?.aborted) {
-        const abortErr = new Error("Aborted");
-        (abortErr as any).name = "AbortError";
-        throw abortErr;
+    let streamFinished = false;
+
+    try {
+      while (true) {
+        if (options?.signal?.aborted) {
+          const abortErr = new Error("Aborted");
+          (abortErr as Error & { name: string }).name = "AbortError";
+          throw abortErr;
+        }
+
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        sseBuffer += decoder.decode(value, { stream: true });
+
+        // przetwarzamy kompletne linie SSE
+        let nlIdx: number;
+        while ((nlIdx = sseBuffer.indexOf("\n")) !== -1) {
+          const rawLine = sseBuffer.slice(0, nlIdx);
+          sseBuffer = sseBuffer.slice(nlIdx + 1);
+
+          const line = rawLine.trim();
+          if (!line || line.startsWith(":")) continue; // komentarze keep-alive itp.
+          if (!line.startsWith("data: ")) continue;
+
+          const data = line.slice(6);
+          if (data === "[DONE]") {
+            streamFinished = true;
+            break; // zewnętrzna pętla odczytu dokończy, bo reader.done==true
+          }
+
+          // obsługa delty OpenAI/OR
+          try {
+            const parsed = JSON.parse(data);
+            const content = parsed?.choices?.[0]?.delta?.content as string | undefined;
+            if (content) {
+              jsonlBuffer += content;
+
+              // z jsonlBuffer wyciągamy kompletne linie
+              let jsonlNl: number;
+              while ((jsonlNl = jsonlBuffer.indexOf("\n")) !== -1) {
+                const oneLineRaw = jsonlBuffer.slice(0, jsonlNl);
+                jsonlBuffer = jsonlBuffer.slice(jsonlNl + 1);
+
+                // sklej z ewentualną nieskończoną poprzednią linią
+                const oneLine = (carryLine + oneLineRaw).trim();
+                carryLine = "";
+
+                if (!oneLine) continue;
+
+                // próbujemy sparsować pojedynczą linię JSON
+                try {
+                  const card = JSON.parse(oneLine) as {
+                    front?: string;
+                    back?: string;
+                    difficulty?: string;
+                    tags?: string[];
+                  };
+
+                  const item: AiGenerationProposalDTO = {
+                    front: normalizeProposalText(card.front || "", 100),
+                    back: normalizeProposalText(card.back || "", 200),
+                  };
+
+                  const key = `${item.front.toLowerCase()}|${item.back.toLowerCase()}`;
+                  const valid = item.front && item.back && item.front.toLowerCase() !== item.back.toLowerCase();
+
+                  if (valid && !seen.has(key)) {
+                    seen.add(key);
+
+                    // emitujemy pojedynczą fiszkę natychmiast
+                    yield { type: "proposal", data: item } as const;
+                    count += 1;
+                    // i progres
+                    yield { type: "progress", data: { count } } as const;
+                  }
+                } catch (e) {
+                  // linia nie była kompletnym JSON (rzadkie) — odłóż do carry i czekaj na kolejne delty
+                  carryLine = (carryLine ? carryLine + "\n" : "") + oneLineRaw;
+                }
+              }
+            }
+          } catch {
+            // ignorujemy nietypowe/przerywające fragmenty SSE
+          }
+        }
       }
-      console.log("AI Service: Yielding proposal event:", item);
-      yield { type: "proposal", data: item } as const;
-      count += 1;
-      console.log("AI Service: Yielding progress event:", count);
-      yield { type: "progress", data: { count } } as const;
+
+      // po zakończeniu strumienia spróbuj przetworzyć ostatnią linię (gdy brak trailing \n)
+      const lastLine = (carryLine + jsonlBuffer).trim();
+      if (lastLine) {
+        try {
+          const card = JSON.parse(lastLine) as { front?: string; back?: string };
+          const item: AiGenerationProposalDTO = {
+            front: normalizeProposalText(card.front || "", 100),
+            back: normalizeProposalText(card.back || "", 200),
+          };
+          const key = `${item.front.toLowerCase()}|${item.back.toLowerCase()}`;
+          const valid = item.front && item.back && item.front.toLowerCase() !== item.back.toLowerCase();
+          if (valid && !seen.has(key)) {
+            seen.add(key);
+            yield { type: "proposal", data: item } as const;
+            count += 1;
+            yield { type: "progress", data: { count } } as const;
+          }
+        } catch {
+          // jeśli ostatni fragment nie jest poprawnym JSON — po prostu pomiń
+        }
+      }
+
+      if (!streamFinished) {
+        console.warn("AI Service: Stream ended without [DONE] token");
+      }
+    } finally {
+      reader.releaseLock();
     }
 
     // Log the generation event
@@ -387,7 +450,7 @@ WAŻNE: Odpowiedz TYLKO w formacie JSON bez dodatkowego tekstu. Struktura:
         source_text_length: command.source_text.length,
         max_proposals: command.max_proposals,
         returned_count: count,
-        model: response.model,
+        model: "streaming-jsonl",
       },
     });
 
@@ -409,7 +472,7 @@ export async function translateText(
   text: string,
   targetLanguage: string,
   userId?: string
-): Promise<any> {
+): Promise<{ translation: string }> {
   try {
     if (!userId) {
       const auth = await assertAuthenticated(supabase);
@@ -439,7 +502,11 @@ export async function translateText(
   }
 }
 
-export async function correctGrammar(supabase: TypedSupabase, text: string, userId?: string): Promise<any> {
+export async function correctGrammar(
+  supabase: TypedSupabase,
+  text: string,
+  userId?: string
+): Promise<{ corrected: string; explanations: string[] }> {
   try {
     if (!userId) {
       const auth = await assertAuthenticated(supabase);
@@ -474,7 +541,7 @@ export async function explainVocabulary(
   word: string,
   context?: string,
   userId?: string
-): Promise<any> {
+): Promise<{ definition: string; examples: string[]; synonyms: string[]; antonyms: string[] }> {
   try {
     if (!userId) {
       const auth = await assertAuthenticated(supabase);

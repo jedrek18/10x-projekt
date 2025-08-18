@@ -25,6 +25,9 @@ const LOCAL_STORAGE_KEYS = {
   proposalsSessionKey: "proposals.session.v1",
 } as const;
 
+// Hook fallback timeout (musi być spójny z useAiGeneration)
+const HOOK_TIMEOUT = 60000;
+
 // Text counter state
 export interface TextCounterState {
   graphemeCount: number;
@@ -41,7 +44,7 @@ export interface GenerationProgress {
   receivedCount: number;
   returnedCount?: number;
   startedAt: number;
-  fallbackArmedAt: number;
+  fallbackArmedAt: number | null;
 }
 
 // Form state
@@ -64,25 +67,11 @@ export interface GenerateViewModel {
 
 /**
  * Główny komponent formularza i procesu generacji.
- *
- * Funkcjonalności:
- * - Walidacja tekstu źródłowego (1000-10000 znaków)
- * - Zarządzanie liczbą propozycji (10-50)
- * - Integracja z API AI (SSE + REST fallback)
- * - Obsługa stanów błędów i offline
- * - Kontrola pojedynczej aktywnej sesji propozycji
- * - Skróty klawiaturowe (Ctrl+Enter)
- * - Dostępność (ARIA attributes)
- *
- * @example
- * ```tsx
- * <GenerateView />
- * ```
  */
 export function GenerateView() {
   // Form state
   const [sourceText, setSourceText] = useLocalStorage(LOCAL_STORAGE_KEYS.sourceTextKey, "");
-  const [maxProposals, setMaxProposals] = useLocalStorage(LOCAL_STORAGE_KEYS.proposalsMaxKey, 30);
+  const [maxProposals, setMaxProposals] = useLocalStorage<number>(LOCAL_STORAGE_KEYS.proposalsMaxKey, 30);
 
   // Ensure sourceText is loaded from localStorage on mount (only once)
   useEffect(() => {
@@ -99,6 +88,7 @@ export function GenerateView() {
         }
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty dependency array - run only once on mount
 
   // Generation state
@@ -124,15 +114,15 @@ export function GenerateView() {
 
   // Custom hooks
   const graphemeCount = useGraphemeCounter(sourceText);
-  const { start: startGeneration, abort: abortGeneration } = useAiGeneration();
+  const { start: startGeneration, abort: abortGeneration } = useAiGeneration({ timeout: HOOK_TIMEOUT });
   const { refresh: refreshStudyCta } = useStudyCtaState();
+
+  // First-activity ref do wykrycia fallbacku REST
+  const firstActivityAtRef = useRef<number | null>(null);
 
   // Check if we should show proposals on mount (if there's a valid session)
   useEffect(() => {
-    // Don't restore if we've already generated in this session
-    if (hasGenerated) {
-      return;
-    }
+    if (hasGenerated) return;
 
     if (typeof window !== "undefined") {
       const sessionData = window.localStorage.getItem(LOCAL_STORAGE_KEYS.proposalsSessionKey);
@@ -142,15 +132,11 @@ export function GenerateView() {
           const now = new Date().getTime();
           const expiresAt = new Date(session.ttlExpiresAt).getTime();
 
-          // Check if session is still valid
           if (now < expiresAt && session.items && session.items.length > 0) {
-            // Show proposals view - ProposalsView will handle loading the session
             setShowProposals(true);
             setRequestId(session.requestId);
-            // Reset hasGenerated when restoring from cache
             setHasGenerated(false);
           } else {
-            // Clear expired session
             window.localStorage.removeItem(LOCAL_STORAGE_KEYS.proposalsSessionKey);
             setShowProposals(false);
           }
@@ -161,7 +147,6 @@ export function GenerateView() {
       }
     }
 
-    // Mark initial load as complete
     isInitialLoadRef.current = false;
   }, [setShowProposals, hasGenerated, setHasGenerated]);
 
@@ -229,7 +214,6 @@ export function GenerateView() {
   const handleTextChange = useCallback(
     (text: string) => {
       setSourceText(text);
-      // Also save directly to localStorage as backup
       try {
         if (typeof window !== "undefined") {
           window.localStorage.setItem(LOCAL_STORAGE_KEYS.sourceTextKey, JSON.stringify(text));
@@ -237,22 +221,29 @@ export function GenerateView() {
       } catch (error) {
         console.warn("Failed to save to localStorage directly:", error);
       }
-      setError(null); // Clear errors when user starts typing
-      
-      // Clear cached proposals when source text changes
+      setError(null);
+
       if (showProposals) {
         setShowProposals(false);
         setGeneratedProposals([]);
         setRequestId(undefined);
         setHasGenerated(false);
         setInputChanged(true);
-        // Clear the proposals session from localStorage
         if (typeof window !== "undefined") {
           window.localStorage.removeItem(LOCAL_STORAGE_KEYS.proposalsSessionKey);
         }
       }
     },
-    [setSourceText, setError, showProposals, setShowProposals, setGeneratedProposals, setRequestId, setHasGenerated, setInputChanged]
+    [
+      setSourceText,
+      setError,
+      showProposals,
+      setShowProposals,
+      setGeneratedProposals,
+      setRequestId,
+      setHasGenerated,
+      setInputChanged,
+    ]
   );
 
   // Handle proposals count change
@@ -260,21 +251,28 @@ export function GenerateView() {
     (count: number) => {
       setMaxProposals(count);
       setError(null);
-      
-      // Clear cached proposals when max proposals changes
+
       if (showProposals) {
         setShowProposals(false);
         setGeneratedProposals([]);
         setRequestId(undefined);
         setHasGenerated(false);
         setInputChanged(true);
-        // Clear the proposals session from localStorage
         if (typeof window !== "undefined") {
           window.localStorage.removeItem(LOCAL_STORAGE_KEYS.proposalsSessionKey);
         }
       }
     },
-    [setMaxProposals, setError, showProposals, setShowProposals, setGeneratedProposals, setRequestId, setHasGenerated, setInputChanged]
+    [
+      setMaxProposals,
+      setError,
+      showProposals,
+      setShowProposals,
+      setGeneratedProposals,
+      setRequestId,
+      setHasGenerated,
+      setInputChanged,
+    ]
   );
 
   // Check for active session
@@ -289,7 +287,7 @@ export function GenerateView() {
             return true;
           }
         } catch {
-          // Invalid JSON, ignore
+          // ignore
         }
       }
     }
@@ -303,14 +301,17 @@ export function GenerateView() {
     // Reset cache restoration flag when starting new generation
     setIsRestoringFromCache(false);
     setHasGenerated(true);
-    setInputChanged(false); // Clear input changed flag when starting new generation
+    setInputChanged(false);
+
+    // reset heurystyki
+    firstActivityAtRef.current = null;
 
     setIsGenerating(true);
     setProgress({
       mode: "sse",
       receivedCount: 0,
       startedAt: Date.now(),
-      fallbackArmedAt: Date.now() + 5000, // 5 seconds
+      fallbackArmedAt: Date.now() + HOOK_TIMEOUT,
     });
     setError(null);
 
@@ -319,54 +320,57 @@ export function GenerateView() {
       max_proposals: maxProposals,
     };
 
-    // Clear previous proposals
     setGeneratedProposals([]);
 
     startGeneration(command, {
       onProposal: (proposal) => {
-        console.log("GenerateView: onProposal called with:", proposal);
         setGeneratedProposals((prev) => [...prev, proposal]);
-        setProgress((prev) =>
-          prev
-            ? {
-                ...prev,
-                receivedCount: prev.receivedCount + 1,
-              }
-            : null
-        );
+
+        // pierwsza aktywność: ustal tryb
+        if (!firstActivityAtRef.current) {
+          firstActivityAtRef.current = Date.now();
+          setProgress((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  mode: prev.fallbackArmedAt && firstActivityAtRef.current > prev.fallbackArmedAt ? "rest" : "sse",
+                  // po pierwszej aktywności nie pokazujemy już odliczania do fallbacku
+                  fallbackArmedAt: null,
+                }
+              : prev
+          );
+        }
+
+        setProgress((prev) => (prev ? { ...prev, receivedCount: prev.receivedCount + 1 } : null));
       },
       onProgress: (count) => {
-        console.log("GenerateView: onProgress called with:", count);
-        setProgress((prev) =>
-          prev
-            ? {
-                ...prev,
-                receivedCount: count,
-              }
-            : null
-        );
+        if (!firstActivityAtRef.current) {
+          firstActivityAtRef.current = Date.now();
+          setProgress((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  mode: prev.fallbackArmedAt && firstActivityAtRef.current > prev.fallbackArmedAt ? "rest" : "sse",
+                  fallbackArmedAt: null,
+                }
+              : prev
+          );
+        }
+        setProgress((prev) => (prev ? { ...prev, receivedCount: count } : null));
       },
-      onDone: (returnedCount, requestId) => {
-        console.log("GenerateView: onDone called with:", returnedCount, requestId);
-        setProgress((prev) =>
-          prev
-            ? {
-                ...prev,
-                returnedCount,
-              }
-            : null
-        );
-        setRequestId(requestId);
+      onDone: (returnedCount, reqId) => {
+        setProgress((prev) => (prev ? { ...prev, returnedCount } : null));
+        setRequestId(reqId);
         setIsGenerating(false);
 
         // Save requestId to sessionStorage for proposals page
-        sessionStorage.setItem("proposals:lastRequestId", requestId);
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem("proposals:lastRequestId", reqId);
+        }
 
-        // Show proposals view instead of navigating
         setShowProposals(true);
       },
       onError: (message) => {
-        console.log("GenerateView: onError called with:", message);
         setError({ code: "generation_failed", message });
         setIsGenerating(false);
         setProgress(null);
@@ -402,7 +406,6 @@ export function GenerateView() {
 
   // Handle session guard confirmation
   const handleSessionGuardConfirm = useCallback(() => {
-    // Clear existing session
     if (typeof window !== "undefined") {
       window.localStorage.removeItem(LOCAL_STORAGE_KEYS.proposalsSessionKey);
     }
@@ -422,9 +425,9 @@ export function GenerateView() {
     setProgress(null);
     setRequestId(undefined);
     setError(null);
-  }, [abortGeneration, setIsGenerating, setProgress, setRequestId, setError]);
+  }, [abortGeneration]);
 
-  // Handle keyboard shortcuts
+  // Keyboard shortcut
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.ctrlKey && e.key === "Enter") {
@@ -435,18 +438,18 @@ export function GenerateView() {
     [handleGenerate]
   );
 
-  // Handle error dismiss
+  // Error dismiss
   const handleErrorDismiss = useCallback(() => {
     setError(null);
-  }, [setError]);
+  }, []);
 
-  // Handle retry
+  // Retry
   const handleRetry = useCallback(() => {
     setError(null);
     handleStartGeneration();
-  }, [handleStartGeneration, setError]);
+  }, [handleStartGeneration]);
 
-  // Handle clear cache
+  // Clear cache
   const handleClearCache = useCallback(() => {
     if (typeof window !== "undefined") {
       window.localStorage.removeItem(LOCAL_STORAGE_KEYS.sourceTextKey);
@@ -461,6 +464,13 @@ export function GenerateView() {
     setHasGenerated(false);
     isInitialLoadRef.current = false;
   }, [setSourceText, setShowProposals, setGeneratedProposals, setRequestId, setIsRestoringFromCache, setHasGenerated]);
+
+  // Abort przy odmontowaniu
+  useEffect(() => {
+    return () => {
+      abortGeneration();
+    };
+  }, [abortGeneration]);
 
   return (
     <div className="space-y-6" onKeyDown={handleKeyDown} aria-busy={isGenerating} aria-live="polite">
@@ -528,7 +538,7 @@ export function GenerateView() {
           )}
         </div>
 
-        <GenerationStatus isGenerating={isGenerating} progress={progress} />
+        <GenerationStatus isGenerating={isGenerating} progress={progress} targetCount={maxProposals} />
       </div>
 
       <OneActiveSessionGuard
@@ -555,24 +565,19 @@ export function GenerateView() {
             isHydrated={isHydrated}
             onGoToStudy={() => {
               setShowProposals(false);
-              // Navigate to study page
               if (typeof window !== "undefined") {
                 window.location.href = "/flashcards";
               }
             }}
             onSaveSuccess={() => {
-              // Clear cache after successful save
               handleClearCache();
-              // Clear study queue cache to ensure fresh data
               try {
                 if (typeof window !== "undefined") {
                   window.localStorage.removeItem("study_queue_cache");
-                  console.log("Study queue cache cleared after AI save");
                 }
               } catch (error) {
                 console.error("Failed to clear study queue cache:", error);
               }
-              // Refresh study CTA state to update queue
               refreshStudyCta();
             }}
           />
